@@ -1,4 +1,4 @@
-(* https://caml.inria.fr/pub/docs/manual-ocaml/advexamples.html *)
+module IO = IOHelpers ;;
 
 module type COINSERVER =
   sig
@@ -50,29 +50,19 @@ class type network_node =
     method active : bool
   end
 
-module type OCAMLCOIN_NODE =
-  sig
-    class node : string -> network_node
-    val from_string : string -> node
-  end
-
-module OCamlcoinNode : OCAMLCOIN_NODE =
-  struct
-    class node description : network_node =
-      let i, p = match Str.split (Str.regexp ",") description with
-        | [ip; port] ->
-            ip, port
-        | _ -> raise (Invalid_argument "Unable to parse peer file") in
-      object
-        val ip = i
-        val port = p
-        method ip () = ip
-        method port () = port
-        method broadcast_message s = true
-        method request_message s = true
-        method active = false
-      end
-    let from_string = new node
+class ocamlcoin_node description : network_node =
+  let i, p = match Str.split (Str.regexp ",") description with
+    | [ip; port] ->
+        ip, port
+    | _ -> raise (Invalid_argument "Unable to parse peer file") in
+  object
+    val ip = i
+    val port = p
+    method ip () = ip
+    method port () = port
+    method broadcast_message s = true
+    method request_message s = true
+    method active = false
   end
 
 class type p2p_network =
@@ -82,52 +72,25 @@ class type p2p_network =
     method broadcast_network : network_node -> unit
   end
 
-module type OCAMLCOINNETWORK =
-  sig class network : p2p_network end
-
-module MakeOCamlcoinNetwork (N : OCAMLCOIN_NODE) : OCAMLCOINNETWORK =
-  struct
-
-    (* Drawn from ps5/http_services *)
-    let page_lines (page : string) : string list =
-
-      (* read in all the lines from a file and concatenate them into a big
-         string *)
-      let rec input_lines (inchan : in_channel) (lines: string list)
-        : string list =
-        try
-          input_lines inchan ((input_line inchan) :: lines)
-        with End_of_file -> List.rev lines in
-
-      input_lines (open_in page) []
-
-    (* store nodes as pairs of (ip address, port) *)
-    class network : p2p_network =
-      object(this)
-        (* store the other people in our network *)
-        val mutable peers : network_node list = []
-        (* load the peers we are aware of *)
-        method load_peers ?(peer_file : string = "peers.txt") () =
-          let loaded_peers = List.map
-            (fun ip_string -> N.from_string ip_string) (page_lines peer_file) in
-          let active_peers = List.filter (fun n -> n#active) loaded_peers in
-          if active_peers = [] then
-            this#initialize_peers
-          else
-            peers <- active_peers;
-            this#synchonize
-        method synchonize =
-          print_endline "synchonize"
-        method broadcast_network (n : network_node) =
-          print_endline "broadcast"
-        method private initialize_peers =
-          print_endline "INITIALIZE PEERS"
-      end
+(* store nodes as pairs of (ip address, port) *)
+class ocamlcoin_network : p2p_network =
+  object(this)
+    (* store the other people in our network *)
+    val mutable peers : network_node list = []
+    (* load the peers we are aware of *)
+    method load_peers ?(peer_file : string = "peers.txt") () =
+      let loaded_peers = List.map
+        (fun ip_string -> new ocamlcoin_node ip_string) (IO.page_lines peer_file) in
+      let active_peers = List.filter (fun n -> n#active) loaded_peers in
+      if active_peers = [] then
+        this#initialize_peers
+      else
+        peers <- active_peers;
+        this#synchonize
+    method synchonize =
+      print_endline "synchonize"
+    method broadcast_network (n : network_node) =
+      print_endline "broadcast"
+    method private initialize_peers =
+      print_endline "INITIALIZE PEERS"
   end
-
-module OCamlcoinNetwork = MakeOCamlcoinNetwork(OCamlcoinNode)
-
-let network = new OCamlcoinNetwork.network ;;
-
-let _ = CoinServer.attach_listener (fun x -> print_endline ("OCamlcoin connection test: " ^ x)) ;;
-let _ = CoinServer.run_server () ;;
