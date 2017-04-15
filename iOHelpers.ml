@@ -10,3 +10,5 @@ let page_lines (page : string) : string list =
     with End_of_file -> List.rev lines in
 
   input_lines (open_in page) []
+
+let write_file (s : string) (fname : string) : unit =
