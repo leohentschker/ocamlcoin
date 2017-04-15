@@ -79,7 +79,7 @@ class type p2p_network =
   object
     method load_peers : ?peer_file:string -> unit -> unit
     method synchonize : unit
-    method broadcast_network : network_node -> unit
+    method broadcast_over_network : Yojson.Basic.json -> unit
   end
 
 class ocamlcoin_network : p2p_network =
@@ -95,11 +95,12 @@ class ocamlcoin_network : p2p_network =
       let _ = if active_peers = [] then this#initialize_peers
         else peers <- active_peers in
       this#synchonize
+    method broadcast_over_network d =
+      List.iter
+        (fun n -> let _ = n#send_message (Yojson.Basic.to_string d) in ()) peers
+    method private initialize_peers =
+      ()
     method synchonize =
-      ()
-    method broadcast_network (n : network_node) =
-      ()
-    method initialize_peers =
       ()
   end
 

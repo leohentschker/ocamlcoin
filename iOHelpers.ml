@@ -11,4 +11,8 @@ let page_lines (page : string) : string list =
 
   input_lines (open_in page) []
 
+(* following https://ocaml.org/learn/tutorials/file_manipulation.html *)
 let write_file (s : string) (fname : string) : unit =
+  let oc = open_out fname in
+  Printf.fprintf oc "%s" s;
+  close_out oc
