@@ -5,6 +5,7 @@ class coinserver =
   object(this)
     val default_port : int = 8332
     val listeners : (string -> unit) list ref = ref []
+    val thread : Thread.t option ref = ref None
     (* helper method to initialize the connection over a socket *)
     method initialize_sock inet_addr port =
       let fd = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
@@ -21,6 +22,8 @@ class coinserver =
         true
       with
         | Unix.Unix_error (_, _, _) -> false
+    method add_listener f =
+      listeners := f :: !listeners
     method run_server () : unit =
       (* bind to a local socket *)
       let fd, sock_addr = this#initialize_sock Unix.inet_addr_any default_port in
@@ -37,8 +40,12 @@ class coinserver =
         (* wait for the next connection *)
         server_loop() in
       server_loop ()
-    method add_listener f =
-      listeners := f :: !listeners
+    method terminate () =
+      match !thread with
+      | None ->
+          failwith "Server not running"
+      | Some t ->
+          Thread.kill t
   end
 
 exception EmptyNetwork ;;
@@ -66,8 +73,6 @@ module OcamlcoinNetwork =
       end
     (* store the other people in our network *)
     let peers : ocamlcoin_node list ref = ref []
-    let synchonize () =
-      ()
     (* load the peers we are aware of *)
     let load_peers ?(peer_file : string = "peers.txt") () =
       let loaded_peers = List.map
@@ -75,8 +80,7 @@ module OcamlcoinNetwork =
         (IO.page_lines peer_file) in
       match List.filter (fun n -> n#active) loaded_peers with
       | _hd :: _tl as active_peers ->
-          peers := active_peers;
-          synchonize ()
+          peers := active_peers
       | [] ->
           raise EmptyNetwork
     let attach_broadcast_listener = server#add_listener
@@ -87,4 +91,5 @@ module OcamlcoinNetwork =
       (* run the server on an asynchronous thread *)
       let _ = Thread.create server#run_server () in
       load_peers ()
+    let terminate = server#terminate
   end
