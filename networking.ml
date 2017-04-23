@@ -3,9 +3,11 @@ module IO = IOHelpers ;;
 (* exposes two-way port communication over the network *)
 class coinserver =
   object(this)
+    (* mirroring the bitcoin protocol choose default port in 8300 range *)
     val default_port : int = 8332
+    (* listeners that get called on receiving data over the network *)
     val listeners : (string -> unit) list ref = ref []
-    val thread : Thread.t option ref = ref None
+    val mutable thread : Thread.t option = None
     (* helper method to initialize the connection over a socket *)
     method initialize_sock inet_addr port =
       let fd = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
@@ -40,8 +42,10 @@ class coinserver =
         (* wait for the next connection *)
         server_loop() in
       server_loop ()
+    method run_server_async () : unit =
+      thread <- Some (Thread.create this#run_server ())
     method terminate () =
-      match !thread with
+      match thread with
       | None ->
           failwith "Server not running"
       | Some t ->
@@ -88,7 +92,7 @@ module OcamlcoinNetwork =
                 !peers
     let run () =
       (* run the server on an asynchronous thread *)
-      let _ = Thread.create server#run_server () in
+      server#run_server_async ();
       load_peers ()
     let terminate = server#terminate
   end
