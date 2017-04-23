@@ -1,0 +1,14 @@
+Name: OCamlcoin
+Version: 0.0.1
+Synopsis: An OCaml implementation of the blockchain
+Authors: Leo Hentschker <lhentschker@gmail.com>
+License: LGPL with OCaml linking exception
+
+Description: OCamlcoin allows you to participate in a blockchain network written in OCaml
+Homepage: http://foobar.org
+OASISFormat: 0.4
+BuildTools: ocamlbuild
+Plugins: META (0.4), DevFiles (0.4)
+Executable "server"
+  Path: src
+  MainIs: server.ml
