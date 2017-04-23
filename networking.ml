@@ -64,8 +64,6 @@ module OcamlcoinNetwork =
       object(this)
         val ip = i
         val port = int_of_string p
-        method ip () = ip
-        method port () = port
         method send_message s =
           server#send_message s (Unix.inet_addr_of_string ip) port
         method active =
@@ -85,8 +83,9 @@ module OcamlcoinNetwork =
           raise EmptyNetwork
     let attach_broadcast_listener = server#add_listener
     let broadcast_over_network d =
-      List.iter
-        (fun n -> let _ = n#send_message (Yojson.Basic.to_string d) in ()) !peers
+      List.iter (fun n ->
+                    let _ = n#send_message (Yojson.Basic.to_string d) in ())
+                !peers
     let run () =
       (* run the server on an asynchronous thread *)
       let _ = Thread.create server#run_server () in
