@@ -7,13 +7,20 @@ let hash_text s =
     let digest = Hash.SHA256.digest (Hash.SHA256.get init) in
     Cstruct.to_string digest ;;
 
-let mine =
+let mine s =
   let ctr = ref 0 in
-  let rec aux s =
+  let leading_zero_size = 1 in
+  let rec aux n =
+    if n = 0 then failwith "COULDNT FIND" else
     ctr := !ctr + 1;
-    let hashed = hash_text (s ^ (string_of_int !ctr)) in
-    print_endline hashed in
-  aux
+    let combo = s ^ (string_of_int !ctr) in
+    let hashed = hash_text combo in
+    let first_chars = Str.first_chars hashed leading_zero_size in
+    if first_chars = "0" then
+      combo
+    else aux (n - 1) in
+  aux 200
 ;;
 
-let _ = mine "ASD" ;;
+let nonce = mine "ASD" ;;
+print_endline ("WORKING NONCE: " ^ nonce) ;;
