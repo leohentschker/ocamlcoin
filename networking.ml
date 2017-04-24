@@ -54,6 +54,9 @@ class coinserver =
 
 exception EmptyNetwork ;;
 
+
+
+
 (* represents the collection of nodes in the network *)
 module OcamlcoinNetwork =
   struct
@@ -87,8 +90,8 @@ module OcamlcoinNetwork =
           raise EmptyNetwork
     let attach_broadcast_listener = server#add_listener
     let broadcast_over_network d =
-      List.iter (fun n ->
-                    let _ = n#send_message (Yojson.Basic.to_string d) in ())
+      List.iter (fun n -> let _ = n#send_message (Yojson.Basic.to_string d)
+                          in ())
                 !peers
     let run () =
       (* run the server on an asynchronous thread *)
