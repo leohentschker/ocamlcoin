@@ -1,3 +1,4 @@
+open Sexplib
 open Nocrypto
 
 let () = Nocrypto_entropy_unix.initialize ()
