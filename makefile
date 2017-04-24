@@ -12,5 +12,8 @@ crypto: crypto.ml
 signature: signature.ml
 	ocamlbuild -use-ocamlfind -pkgs nocrypto.unix signature.byte
 
+mining: mining.ml
+	ocamlbuild -use-ocamlfind -pkgs nocrypto.unix mining.byte
+
 clean:
 	rm -rf _build *.byte

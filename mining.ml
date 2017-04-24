@@ -1,6 +1,6 @@
 open Nocrypto
 
-Module Mining = 
+module Mining = 
   struct
   (* Takes a string and extracts the SHA256 hash of that string*)
   let hash_text s =
@@ -27,11 +27,10 @@ Module Mining =
     let rec iterate_check n =
       if n = 0 then failwith "COULDN'T FIND" else
       nonce := !nonce + 1;
-      if verify leading_zero_size s !nonce
+      if verify leading_zero_size s !nonce then
         combo
       else iterate_check (n - 1) in
     iterate_check iters
-  ;;
   end 
 
 let nonce = mine "ASD" ;;
