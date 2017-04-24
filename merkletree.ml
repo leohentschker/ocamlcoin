@@ -6,12 +6,12 @@
     let tree_hash (s : string) : string =
       ""
 
-    type mtree =
-      Empty | Leaf of string | Tree of string * mtree * mtree
+    type mtr =
+      Leaf of string | Tree of string * mtree * mtree
+    and mtree = mtr ref
 
     let root_hash (t : mtree) =
-      match t with
-      | Empty -> ""
+      match !t with
       | Leaf s -> s
       | Tree (s, l, r) -> s
 
@@ -49,22 +49,25 @@
       let len = List.length lst in
       (sublist lst 0 (exp2 (log2 len) - 1), sublist lst (exp2 (log2 len)) (len - 1))
 
-    let merge_trees (t1 : mtree) (t2 : mtree) : mtree =
-      Tree (tree_hash (root_hash t1) ^ (root_hash t2), t1, t2)
+    let combine_trees (t1 : mtree) (t2 : mtree) : mtree =
+      ref (Tree (tree_hash (root_hash t1) ^ (root_hash t2), t1, t2))
 
-    let rec helpertree (lst : 'a list) =
+    let rec helpertree (lst : 'a list) : mtree =
       let (l, r) = half_list lst in
       match List.length lst with
       | 0 -> failwith "Empty Tree"
-      | 1 -> Leaf (base_hash (List.hd lst))
+      | 1 -> ref (Leaf (base_hash (List.hd lst)))
       | _ -> let ltree, rtree = helpertree l, helpertree r in
-             merge_trees ltree rtree
+             combine_trees ltree rtree
 
-    let rec build_tree (datalist : 'a list) =
+    let rec build_tree (datalist : 'a list) : mtree=
       let (l, r) = split_list datalist in
       if r = [] then helpertree datalist
       else match List.length datalist with
            | 0 | 1 -> helpertree datalist
            | _ -> let ltree, rtree = helpertree l, build_tree r in
-                  merge_trees ltree rtree
+                  combine_trees ltree rtree
+
+    let merge_trees (t1 : mtree) (t2 : mtree) : unit =
+      t1 := !t2
 
