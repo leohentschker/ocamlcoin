@@ -1,5 +1,7 @@
 open Nocrypto
 
+exception Nosolution of string
+
 module Mining = 
   struct
     type nonce = int
@@ -20,11 +22,10 @@ module Mining =
       (* This inner function takes an integer and checks
          the has verify of s^nonce for nonce = 1,..., n *)
       let rec iterate_check n =
-        if n = 0 then failwith "COULDN'T FIND"
+        if n = 0 then raise (Nosolution "couldn't solve block in required iterations")
         else if verify s n then
           n
         else iterate_check (n - 1) in
       iterate_check iters
-    let mine_async (s : string) =
-      Thread.create (fun () -> mine s max_int) ()
+    let mine_async (s : string) = Thread.create (fun () -> mine s max_int) ()
   end
