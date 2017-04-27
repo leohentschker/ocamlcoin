@@ -13,7 +13,7 @@ signature: signature.ml
 	ocamlbuild -use-ocamlfind -pkgs nocrypto.unix signature.byte
 
 mining: mining.ml
-	ocamlbuild -use-ocamlfind -pkgs nocrypto.unix mining.byte
+	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix mining.byte
 
 clean:
 	rm -rf _build *.byte
