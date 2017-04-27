@@ -3,11 +3,7 @@ open Nocrypto
 module Mining = 
   struct
   (* Takes a string and extracts the SHA256 hash of that string*)
-  let hash_text s =
-      let init = Hash.SHA256.init () in
-      Hash.SHA256.feed init (Cstruct.of_string s);
-      let digest = Hash.SHA256.digest (Hash.SHA256.get init) in
-      Cstruct.to_string digest ;;
+  let hash_text = Crypto.SHA256.hash_text
   (* Checks whether or not the hash of str with nonce on the back
      has *size* or more zeroes on the front *)
   let verify (size : int) (str : string) (nonce : int) : bool =
