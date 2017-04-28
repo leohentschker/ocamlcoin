@@ -2,9 +2,11 @@ open Nocrypto
 
 exception Nosolution of string
 
-module Mining = 
+module Mining =
   struct
     type nonce = int
+    let is_mining = ref false
+    let currently_mining () = !is_mining
     let leading_zeros = 2
     (* Takes a string and extracts the SHA256 hash of that string*)
     let hash_text = Crypto.SHA256.hash_text
@@ -13,7 +15,7 @@ module Mining =
     let verify (str : string) (n : nonce) : bool =
       let combo = str ^ (string_of_int n) in
       let hashed = hash_text combo in
-      print_endline hashed;
+      print_string " ";
       let first_chars = String.sub hashed 0 leading_zeros in
       first_chars = String.make leading_zeros '0'
     (* Implementation of the mining algorithm for proof-of-work *)
@@ -22,10 +24,16 @@ module Mining =
       (* This inner function takes an integer and checks
          the has verify of s^nonce for nonce = 1,..., n *)
       let rec iterate_check n =
-        if n = 0 then raise (Nosolution "couldn't solve block in required iterations")
+        if n = 0 then raise (Nosolution "Couldn't solve block")
+        else if currently_mining () = false then
+          raise (Nosolution "Couldn't solve block")
         else if verify s n then
+          let _ = is_mining := false in
           n
         else iterate_check (n - 1) in
       iterate_check iters
-    let mine_async (s : string) = Thread.create (fun () -> mine s max_int) ()
+    let mine_async (s : string) =
+      let _ = Thread.create (fun () -> mine s max_int) () in
+      ()
+    let stop_mining () = is_mining := false
   end
