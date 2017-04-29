@@ -1,10 +1,27 @@
-all: io_helpers networking
+all: io_helpers networking crypto signature
+
+tests: payments_tests
+
+payments_tests: payments_tests.ml
+	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix payments_tests.byte
 
 io_helpers: iOHelpers.ml
 	ocamlbuild -pkg yojson -use-ocamlfind iOHelpers.byte
 
 networking: networking.ml
 	ocamlbuild -lib unix -pkg yojson -ocamlc 'ocamlc -thread str.cma threads.cma' -use-ocamlfind networking.byte
+
+crypto: crypto.ml
+	ocamlbuild -pkgs nocrypto.unix crypto.byte
+
+signature: signature.ml
+	ocamlbuild -use-ocamlfind -pkgs nocrypto.unix signature.byte
+
+mining: mining.ml
+	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix mining.byte
+
+payments: payments.ml
+	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix payments.byte
 
 clean:
 	rm -rf _build *.byte
