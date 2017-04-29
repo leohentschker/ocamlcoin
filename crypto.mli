@@ -4,7 +4,9 @@ module Signature :
     type pub_key
     type signature
     val priv_to_string : priv_key -> string
+    val string_to_priv : string -> priv_key
     val pub_to_string : pub_key -> string
+    val string_to_pub : string -> pub_key
     val generate_keypair : unit -> (priv_key * pub_key)
   end
 
