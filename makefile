@@ -1,4 +1,4 @@
-all: io_helpers networking crypto signature
+all: io_helpers networking crypto signature merkle
 
 io_helpers: iOHelpers.ml
 	ocamlbuild -pkg yojson -use-ocamlfind iOHelpers.byte
@@ -11,6 +11,9 @@ crypto: crypto.ml
 
 signature: signature.ml
 	ocamlbuild -use-ocamlfind -pkgs nocrypto.unix signature.byte
+
+merkle: merkletree.ml
+	ocamlbuild -use-ocamlfind -pkgs nocrypto.unix merkletree.byte
 
 clean:
 	rm -rf _build *.byte
