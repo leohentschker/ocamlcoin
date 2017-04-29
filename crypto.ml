@@ -9,7 +9,9 @@ module Signature =
     type priv_key = Dsa.priv
     type pub_key = Dsa.pub
     let priv_to_string (p : priv_key) = Sexp.to_string (Dsa.sexp_of_priv (p))
+    let string_to_priv (s : string) = Dsa.priv_of_sexp (Sexp.of_string s)
     let pub_to_string (p : pub_key) = Sexp.to_string (Dsa.sexp_of_pub (p))
+    let string_to_pub (s : string) = Dsa.pub_of_sexp (Sexp.of_string s)
     let generate_keypair () =
       let private_key = Dsa.generate (`Fips1024) in
       private_key, Dsa.pub_of_priv private_key
