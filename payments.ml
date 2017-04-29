@@ -18,6 +18,10 @@ class transaction
     method target = target
     method amount = amount
     (* following https://realworldocaml.org/v1/en/html/handling-json-data.html *)
+    method to_json =
+      `Assoc[(c_ORIGINATOR_KEY, `String (Signature.pub_to_string originator));
+             (c_TARGET_KEY, `String (Signature.pub_to_string target));
+             (c_AMOUNT_KEY, `Float (amount))] |> to_string
     method to_string =
       `Assoc[(c_ORIGINATOR_KEY, `String (Signature.pub_to_string originator));
              (c_TARGET_KEY, `String (Signature.pub_to_string target));
@@ -31,3 +35,10 @@ let string_to_transaction (s : string) : transaction =
   let target = string_to_pub (json |> member c_TARGET_KEY |> to_string) in
   let amount = json |> member c_AMOUNT_KEY |> to_float in
   new transaction originator target amount
+
+
+class block (tlist : transaction list) =
+  object
+    val transactions = tlist
+    method string_representation = List.fold_right (fun t a -> a ^ t#to_string) tlist
+  end

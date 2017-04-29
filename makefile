@@ -2,6 +2,9 @@ all: io_helpers networking crypto signature
 
 tests: payments_tests
 
+events: events.ml
+	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix -ocamlc 'ocamlc -thread str.cma threads.cma' events.byte
+
 payments_tests: payments_tests.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix payments_tests.byte
 

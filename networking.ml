@@ -54,9 +54,6 @@ class coinserver =
 
 exception EmptyNetwork ;;
 
-
-
-
 (* represents the collection of nodes in the network *)
 module OcamlcoinNetwork =
   struct
