@@ -2,6 +2,9 @@ all: io_helpers networking crypto signature merkle
 
 tests: payments_tests events_tests
 
+ocamlcoin: ocamlcoin.ml
+	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix -ocamlc 'ocamlc -thread str.cma threads.cma' ocamlcoin.byte
+
 events: events.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix -ocamlc 'ocamlc -thread str.cma threads.cma' events.byte
 
