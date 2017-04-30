@@ -1,5 +1,23 @@
 module IO = IOHelpers ;;
 
+(* attempt to determine a private ip *)
+let rec get_private_ip () =
+  (* uses regex to check if the ip we entered was valid *)
+  let is_valid_ip s =
+    Str.string_match (Str.regexp "\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)") s 0 in
+  let mac_output = IO.syscall "ifconfig en0 | grep 'inet ' | awk '{print $2}'" in
+  if is_valid_ip mac_output then
+    mac_output
+  else
+    let _ = print_string "Enter private ip: " in
+    let manually_entered_ip = read_line () in
+    print_endline "";
+    if is_valid_ip manually_entered_ip then
+      manually_entered_ip
+    else
+      let _ = Printf.printf "Invalid IP: %s" manually_entered_ip in
+      get_private_ip ()
+
 (* exposes two-way port communication over the network *)
 class coinserver =
   object(this)
@@ -97,3 +115,5 @@ module OcamlcoinNetwork =
       load_peers ()
     let terminate = server#terminate
   end
+
+let _ = print_endline (get_private_ip ()) ;;
