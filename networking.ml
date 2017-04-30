@@ -12,8 +12,11 @@ let is_valid_ip s =
 let rec get_private_ip () =
   (* uses regex to check if the ip we entered was valid *)
   let mac_output = IO.syscall "ifconfig en0 | grep 'inet ' | awk '{print $2}'" in
+  let ubuntu_output = IO.syscall "ifconfig -a | grep 'inet addr' | awk {'print $2'} | sed -e 's/^addr://' | sed -n 2p" in
   if is_valid_ip mac_output then
     mac_output
+  else if is_valid_ip ubuntu_output then
+    ubuntu_output
   else
     let _ = print_string "Enter private ip: " in
     let manually_entered_ip = read_line () in
