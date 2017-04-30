@@ -37,9 +37,7 @@ class block (tlist : transaction list) =
   object
     val transactions = tlist
     method transactions = transactions
-    method contains_transaction t = print_endline ("TESTING: " ^ t#to_string);
-        print_endline ("IN BODY" ^ (List.hd transactions)#to_string);
-        List.memq t transactions
+    method contains_transaction t = List.memq t transactions
     method to_string = List.fold_left (fun a t -> a ^ t#to_string) "" tlist
     method to_json : Y.Basic.json = `List (List.map (fun t -> t#to_json) tlist)
   end

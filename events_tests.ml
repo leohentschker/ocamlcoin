@@ -7,7 +7,7 @@ let test_new_transaction_serialization () =
   let t = generate_fake_transaction () in
   let serialized_event = string_to_event (event_to_string (NewTransaction t)) in
   match serialized_event with
-  | NewTransaction serialized_t -> test_transactions_equal t serialized_t
+  | NewTransaction serialized_t -> assert(transactions_equal t serialized_t)
   | _ -> failwith "Returning the incorrect event type"
 
 let test_solved_block_serialization () =
