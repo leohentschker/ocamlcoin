@@ -112,6 +112,7 @@ module OcamlcoinNetwork =
         (IO.page_lines peer_file) in
       match List.filter (fun n -> n#active) loaded_peers with
       | _hd :: _tl as active_peers ->
+          let _ = print_endline "WE HAVE PEEEERS" in
           peers := active_peers
       | [] ->
           raise EmptyNetwork
@@ -125,5 +126,3 @@ module OcamlcoinNetwork =
       server#run_server_async ();
       load_peers ()
   end
-
-let _ = print_endline (get_private_ip ()) ;;
