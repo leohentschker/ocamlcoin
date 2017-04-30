@@ -3,6 +3,9 @@ open Nocrypto
 exception Nosolution of string
 
 type nonce = int
+let nonce_to_string = string_of_int
+let string_to_nonce = int_of_string
+
 let leading_zeros = 2
 
 (* Takes a string and extracts the SHA256 hash of that string*)
