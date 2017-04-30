@@ -3,6 +3,7 @@ open Mining
 open Payments
 
 type network_event =
+  | PingDiscovery
   | NewTransaction of transaction
   | SolvedBlock of (block * nonce)
   | BroadcastNodes of (ocamlcoin_node list)

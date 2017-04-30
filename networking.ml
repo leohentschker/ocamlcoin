@@ -1,5 +1,6 @@
 module IO = IOHelpers ;;
 open Yojson ;;
+open Events ;;
 
 let c_IP_JSON_KEY = "ip"
 let c_PORT_JSON_KEY = "port"
@@ -89,7 +90,7 @@ module OcamlcoinNetwork =
         method send_message s =
           server#send_message s (Unix.inet_addr_of_string ip) port
         method active =
-          this#send_message "PING"
+          this#send_message (event_to_string PingDiscovery)
         method to_json : Basic.json =
           `Assoc [(c_IP_JSON_KEY, `String ip); (c_PORT_JSON_KEY, `Int port)]
       end

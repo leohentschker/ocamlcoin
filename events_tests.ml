@@ -4,6 +4,13 @@ open Payments_tests
 open Mining_tests
 open Events
 
+let test_ping_discovery () =
+  let s = event_to_string PingDiscovery in
+  let e = string_to_event s in
+  match string_to_event (event_to_string PingDiscovery) with
+  | PingDiscovery -> ()
+  | _ -> failwith "Expected ping discovery"
+
 let test_new_transaction_serialization () =
   let t = generate_fake_transaction () in
   let serialized_event = string_to_event (event_to_string (NewTransaction t)) in
@@ -30,6 +37,7 @@ let test_broadcast_nodes_serialization () =
   | _ -> failwith "Broadcast nodes serialization the incorrect event type"
 
 let run_tests () =
+  test_ping_discovery();
   TestHelpers.run_tests test_solved_block_serialization;
   TestHelpers.run_tests test_new_transaction_serialization;
   TestHelpers.run_tests test_broadcast_nodes_serialization

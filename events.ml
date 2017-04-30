@@ -5,6 +5,7 @@ module Y = Yojson
 
 let c_TRANSACTION_TYPE_KEY = "transaction_type"
 let c_JSON_DATA_KEY = "json_data"
+let c_PING_DISCOVERY_TYPE = "ping"
 let c_NEW_TRANSACTION_TYPE = "new_transaction"
 let c_SOLVED_BLOCK_TYPE = "solved_block"
 let c_BROADCAST_NODES_TYPE = "broadcast_nodes"
@@ -13,6 +14,7 @@ let c_NONCE_KEY = "nonce"
 let c_BLOCK_KEY = "block"
 
 type network_event =
+  | PingDiscovery
   | NewTransaction of transaction
   | SolvedBlock of (block * nonce)
   | BroadcastNodes of (ocamlcoin_node list)
@@ -23,6 +25,7 @@ let json_to_event_string (transaction_key : string) (json : Y.Basic.json) : stri
 
 let event_to_string (e : network_event) =
   match e with
+  | PingDiscovery -> json_to_event_string c_PING_DISCOVERY_TYPE (`Bool true)
   | NewTransaction t -> json_to_event_string c_NEW_TRANSACTION_TYPE t#to_json
   | SolvedBlock (b, n) ->
       json_to_event_string c_SOLVED_BLOCK_TYPE 
@@ -46,4 +49,6 @@ let string_to_event (s : string) : network_event =
     match json_data with
     | `List json_list -> BroadcastNodes(List.map json_to_ocamlcoin_node json_list)
     | _ -> failwith "Expected json list type"
+  else if event_type = c_PING_DISCOVERY_TYPE then
+    PingDiscovery
   else failwith ("Unexpected event type: " ^ event_type)
