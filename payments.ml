@@ -25,8 +25,8 @@ class transaction
     method to_json =
       `Assoc[(c_ORIGINATOR_KEY, `String (Signature.pub_to_string originator));
              (c_TARGET_KEY, `String (Signature.pub_to_string target));
-             (c_AMOUNT_KEY, `Float (amount))
-             (c_TIMESTAMP_KEY, `Float (amount))]
+             (c_AMOUNT_KEY, `Float (amount));
+             (c_TIMESTAMP_KEY, `Float (timestamp))]
     method to_string =
       this#to_json |> Y.Basic.to_string
   end

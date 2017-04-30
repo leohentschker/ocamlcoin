@@ -23,28 +23,20 @@ networking: networking.ml
 crypto: crypto.ml
 	ocamlbuild -pkgs nocrypto.unix crypto.byte
 
-<<<<<<< HEAD
-signature: signature.ml
-	ocamlbuild -use-ocamlfind -pkgs nocrypto.unix signature.byte
-
 merkle: merkletree.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs sexplib -pkgs nocrypto.unix merkletree.byte
 
-=======
->>>>>>> master
 mining: mining.ml
 	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix mining.byte
 
 payments: payments.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix payments.byte
 
-<<<<<<< HEAD
 payments_tests: payments_tests.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix payments_tests.byte
-=======
+
 gui: gui.ml
 	ocamlbuild -use-ocamlfind -pkgs lablgtk2 -pkgs nocrypto.unix -ocamlc 'ocamlc -thread threads.cma' gui.byte
->>>>>>> master
 
 clean:
 	rm -rf _build
