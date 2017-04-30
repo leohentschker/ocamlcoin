@@ -1,10 +1,9 @@
 open Sexplib
-open Crypto_fake
-(*
+(* open Crypto_fake *)
+
 open Crypto
 open Signature
 open Payments
-*)
 
 
 module type SERIALIZE =
@@ -23,7 +22,6 @@ module IntSerializable : SERIALIZE =
       (fun () -> Random.int 10000)
   end
 
-(*
 module TransactionSerializable : SERIALIZE =
   struct
     type t = transaction
@@ -37,7 +35,7 @@ module TransactionSerializable : SERIALIZE =
       let originator, target, amount = fake_transaction_data () in
       new transaction originator target amount
   end
-*)
+
 
 module type MERKLETREE =
   sig
@@ -168,4 +166,6 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
 
 module FakeMerkle = MakeMerkle (IntSerializable) (SHA256) ;;
 
-let _ = FakeMerkle.run_tests () ;;
+module RealMerkle = MakeMerkle (TransactionSerializable) (SHA256) ;;
+
+let _ = RealMerkle.run_tests () ;;
