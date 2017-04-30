@@ -81,6 +81,8 @@ module type MERKLETREE =
     val merge_trees : mtree -> mtree -> unit
     val children : mtree -> string list
     val add_element : element -> mtree -> mtree
+    val queryid : pub_key -> mtree -> element list
+    val queryhash : string -> mtree -> element list
     val run_tests : unit -> unit
   end
 
@@ -145,7 +147,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       List.fold_left (fun xs x -> if not (List.mem x l1) then xs @ [x] else xs) l1 l2;;
 
     let combine_trees (t1 : mtree) (t2 : mtree) : mtree =
-      match t1, t2 with
+      match !t1, !t2 with
       | Leaf (s1, e1), Leaf (s2, e2) ->
           let (id11, id12, _, time1), (id21, id22, _, time2) = get e1, get e2 in
           ref (Tree (tree_hash (s1 ^ s2), union [id11; id12] [id21; id22], S.min time1 time2, t1, t2))
@@ -177,20 +179,33 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
     let merge_trees (t1 : mtree) (t2 : mtree) : unit =
       t1 := !t2
 
-    let rec children (t : mtree) : (string * element) list =
+    let rec children (t : mtree) : element list =
       match !t with
-      | Leaf (s, e) -> [(s, e)]
+      | Leaf (_, e) -> [e]
       | Tree (_, _, _, t1, t2) -> (children t1) @ (children t2)
 
     let rec add_element (e : element) (t : mtree) : mtree =
       let newleaf = build_tree [e] in
       match !t with
       | Leaf (_, _) ->
-        combine_trees t newleaf
+          combine_trees t newleaf
       | Tree (_, _, _, t1, t2) ->
-        if List.length (children t1) = List.length (children t2)
-          then combine_trees t newleaf
-        else combine_trees t1 (add_element e t2)
+          if List.length (children t1) = List.length (children t2)
+            then combine_trees t newleaf
+          else combine_trees t1 (add_element e t2)
+
+    let rec queryid (id : pub_key) (t : mtree) : element list =
+      match !t with
+      | Leaf (_, e) ->
+          let (id1, id2, _, _) = get e in
+          if id = id1 || id = id2 then [e] else []
+      | Tree (_, lst, _, l, r) ->
+          if List.mem id lst then (queryid l) @ (queryid r)
+          else []
+
+    let queryhash (hash : string) (t : mtree) : element list =
+      match !t with
+      | Leaf (s, _) | Tree (s, _, _, _, _) -> if hash = s then (children t) else []
 
     let test1 () =
       let e1 = S.gen () in
