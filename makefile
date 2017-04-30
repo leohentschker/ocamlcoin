@@ -11,6 +11,9 @@ payments_tests: payments_tests.ml
 events_tests: events_tests.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix -ocamlc 'ocamlc -thread str.cma threads.cma' events_tests.byte
 
+networking_tests: networking_tests.ml
+	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix -ocamlc 'ocamlc -thread str.cma threads.cma' networking_tests.byte
+
 io_helpers: iOHelpers.ml
 	ocamlbuild -pkg yojson -use-ocamlfind iOHelpers.byte
 

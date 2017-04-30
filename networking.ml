@@ -1,10 +1,16 @@
 module IO = IOHelpers ;;
+open Yojson ;;
+
+let c_IP_JSON_KEY = "ip"
+let c_PORT_JSON_KEY = "port"
+let c_DEFAULT_COIN_PORT = 8332
+
+let is_valid_ip s =
+  Str.string_match (Str.regexp "\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)") s 0 ;;
 
 (* attempt to determine a private ip *)
 let rec get_private_ip () =
   (* uses regex to check if the ip we entered was valid *)
-  let is_valid_ip s =
-    Str.string_match (Str.regexp "\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)") s 0 in
   let mac_output = IO.syscall "ifconfig en0 | grep 'inet ' | awk '{print $2}'" in
   if is_valid_ip mac_output then
     mac_output
@@ -21,8 +27,6 @@ let rec get_private_ip () =
 (* exposes two-way port communication over the network *)
 class coinserver =
   object(this)
-    (* mirroring the bitcoin protocol choose default port in 8300 range *)
-    val default_port : int = 8332
     (* listeners that get called on receiving data over the network *)
     val listeners : (string -> unit) list ref = ref []
     val mutable thread : Thread.t option = None
@@ -46,7 +50,7 @@ class coinserver =
       listeners := f :: !listeners
     method run_server () : unit =
       (* bind to a local socket *)
-      let fd, sock_addr = this#initialize_sock Unix.inet_addr_any default_port in
+      let fd, sock_addr = this#initialize_sock Unix.inet_addr_any c_DEFAULT_COIN_PORT in
       Unix.bind fd sock_addr;
       Unix.listen fd 5;
       let rec server_loop () =
@@ -79,25 +83,35 @@ module OcamlcoinNetwork =
     let server : coinserver = new coinserver
     (* describe the nodes in our network *)
     type peer = string
-    class ocamlcoin_node description =
-      let i, p = match Str.split (Str.regexp ",") description with
-        | [ip; port] ->
-            ip, port
-        | _ -> raise (Invalid_argument "Unable to parse peer description") in
+    class ocamlcoin_node ip_addr port_number =
       object(this)
-        val ip = i
-        val port = int_of_string p
+        val ip = ip_addr
+        val port = port_number
+        method ip = ip
+        method port = port
         method send_message s =
           server#send_message s (Unix.inet_addr_of_string ip) port
         method active =
           this#send_message "PING"
+        method to_json : Basic.json =
+          `Assoc [(c_IP_JSON_KEY, `String ip); (c_PORT_JSON_KEY, `Int port)]
       end
+    let json_to_ocamlcoin_node json =
+      let open Basic.Util in
+      new ocamlcoin_node
+        (json |> member c_IP_JSON_KEY |> to_string)
+        (json |> member c_PORT_JSON_KEY |> to_int)
     (* store the other people in our network *)
     let peers : ocamlcoin_node list ref = ref []
     (* load the peers we are aware of *)
     let load_peers ?(peer_file : string = "peers.txt") () =
       let loaded_peers = List.map
-        (fun ip_string -> new ocamlcoin_node ip_string)
+        (fun peer_description ->
+          match Str.split (Str.regexp ",") peer_description with
+          | [ip; port] ->
+              new ocamlcoin_node ip (int_of_string port)
+          | _ ->
+              raise (Invalid_argument "Unable to parse peer description"))
         (IO.page_lines peer_file) in
       match List.filter (fun n -> n#active) loaded_peers with
       | _hd :: _tl as active_peers ->
