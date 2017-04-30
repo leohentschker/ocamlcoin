@@ -37,10 +37,13 @@ let string_to_event (s : string) : network_event =
   let event_type = json |> member c_TRANSACTION_TYPE_KEY |> to_string in
   let json_data = json |> member c_JSON_DATA_KEY in
   if event_type = c_NEW_TRANSACTION_TYPE then
-    let transaction = json_to_transaction json_data in
-    NewTransaction(transaction)
+    NewTransaction(json_to_transaction json_data)
   else if event_type = c_SOLVED_BLOCK_TYPE then
     let nonce = json_data |> member c_NONCE_KEY |> to_string in
     let block = json_to_block (json_data |> member c_BLOCK_KEY) in
     SolvedBlock(block, Mining.string_to_nonce nonce)
+  else if event_type = c_BROADCAST_NODES_TYPE then
+    match json_data with
+    | `List json_list -> BroadcastNodes(List.map json_to_ocamlcoin_node json_list)
+    | _ -> failwith "Expected json list type"
   else failwith ("Unexpected event type: " ^ event_type)

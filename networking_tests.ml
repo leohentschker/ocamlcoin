@@ -2,6 +2,12 @@ open TestHelpers ;;
 open Networking ;;
 open Networking.OcamlcoinNetwork ;;
 
+let generate_valid_ip () =
+  "10." ^ (string_of_int 255) ^ "." ^ (string_of_int 255) ^ "." ^ (string_of_int 255)
+
+let generate_random_node () =
+  new ocamlcoin_node (generate_valid_ip ()) (800 + Random.int 100) 
+
 let test_is_valid_ip () =
   assert(is_valid_ip "10.255.255.255");
   assert(is_valid_ip "10.252.197.92");
@@ -11,10 +17,11 @@ let test_is_valid_ip () =
   assert(not (is_valid_ip "10.252.197.s92"))
 
 let test_node_instantiation () =
-  let actual_ip = get_private_ip () in
-  let personal_node = new ocamlcoin_node actual_ip c_DEFAULT_COIN_PORT in
-  assert(personal_node#ip = actual_ip);
-  assert(personal_node#port = c_DEFAULT_COIN_PORT)
+  let ip = generate_valid_ip () in
+  let port = Random.int 800 in
+  let node = new ocamlcoin_node ip port in
+  assert(node#ip = ip);
+  assert(node#port = port)
 
 let test_node_serialization () =
   let actual_ip = get_private_ip () in
@@ -25,6 +32,4 @@ let test_node_serialization () =
 
 let run_tests () =
   test_is_valid_ip ();
-  test_node_instantiation ();
-  ()
-let _ = run_tests ()
+  TestHelpers.run_tests test_node_instantiation
