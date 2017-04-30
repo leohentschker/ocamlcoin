@@ -49,5 +49,3 @@ let run_tests () =
   TestHelpers.run_tests test_transaction_serialize;
   TestHelpers.run_tests test_block_instantiation;
   TestHelpers.run_tests test_block_serialize
-
-let _ = run_tests ()

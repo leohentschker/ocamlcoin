@@ -16,3 +16,15 @@ let write_file (s : string) (fname : string) : unit =
   let oc = open_out fname in
   Printf.fprintf oc "%s" s;
   close_out oc
+
+(* following http://www.rosettacode.org/wiki/Execute_a_system_command#OCaml *)
+let syscall (s : string) : string =
+  let ic, oc = Unix.open_process s in
+  let buf = Buffer.create 16 in
+  (try
+     while true do
+       Buffer.add_channel buf ic 1
+     done
+   with End_of_file -> ());
+  let _ = Unix.close_process (ic, oc) in
+  (Buffer.contents buf)
