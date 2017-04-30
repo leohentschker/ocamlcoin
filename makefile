@@ -1,4 +1,4 @@
-all: io_helpers networking crypto signature merkle
+all: io_helpers networking crypto_fake signature merkle
 
 tests: payments_tests events_tests
 
@@ -24,7 +24,7 @@ signature: signature.ml
 	ocamlbuild -use-ocamlfind -pkgs nocrypto.unix signature.byte
 
 merkle: merkletree.ml
-	ocamlbuild -use-ocamlfind -pkgs nocrypto.unix merkletree.byte
+	ocamlbuild -use-ocamlfind -pkgs sexplib merkletree.byte
 
 mining: mining.ml
 	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix mining.byte
@@ -36,4 +36,4 @@ payments_tests: payments_tests.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix payments_tests.byte
 
 clean:
-	rm -rf _build *.byte
+	rm -rf _build
