@@ -54,15 +54,13 @@ class coinserver =
 
 exception EmptyNetwork ;;
 
-
-
-
 (* represents the collection of nodes in the network *)
 module OcamlcoinNetwork =
   struct
     (* run a coinserver *)
     let server : coinserver = new coinserver
     (* describe the nodes in our network *)
+    type peer = string
     class ocamlcoin_node description =
       let i, p = match Str.split (Str.regexp ",") description with
         | [ip; port] ->
