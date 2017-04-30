@@ -1,11 +1,12 @@
 open Crypto.Signature
 
-class transaction : pub_key -> pub_key -> float -> object
+class transaction : pub_key -> pub_key -> float -> float -> object
     method to_json : Yojson.Basic.json
     method to_string : string
     method originator : pub_key
     method target : pub_key
     method amount : float
+    method timestamp : float
   end
 
 val json_to_transaction : Yojson.Basic.json -> transaction

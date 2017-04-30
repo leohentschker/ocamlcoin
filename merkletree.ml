@@ -1,10 +1,9 @@
 open Sexplib
-open Crypto_fake
-(*
+(* open Crypto_fake *)
+
 open Crypto
 open Signature
 open Payments
-*)
 
 type ordering = L | G | E
 
@@ -218,3 +217,4 @@ module FakeMerkle = MakeMerkle (IntSerializable) (SHA256) ;;
 
 let _ = FakeMerkle.run_tests () ;;
 *)
+
