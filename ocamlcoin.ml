@@ -14,6 +14,7 @@ let run_network () =
       | PingDiscovery ->
           print_endline "PING DISCOVERY"
       | BroadcastNodes(nlist) ->
-          print_endline "BROADCAST NODES")
+          print_endline "BROADCAST NODES");
+  OcamlcoinNetwork.broadcast_over_network (event_to_string PingDiscovery)
 
 let _ = run_network () ;;

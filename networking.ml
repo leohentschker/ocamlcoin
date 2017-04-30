@@ -1,6 +1,7 @@
 module IO = IOHelpers ;;
+open Payments ;;
+open Mining ;;
 open Yojson ;;
-open Events ;;
 
 let c_IP_JSON_KEY = "ip"
 let c_PORT_JSON_KEY = "port"
@@ -89,8 +90,6 @@ module OcamlcoinNetwork =
         method port = port
         method send_message s =
           server#send_message s (Unix.inet_addr_of_string ip) port
-        method active =
-          this#send_message (event_to_string PingDiscovery)
         method to_json : Basic.json =
           `Assoc [(c_IP_JSON_KEY, `String ip); (c_PORT_JSON_KEY, `Int port)]
       end
@@ -103,23 +102,17 @@ module OcamlcoinNetwork =
     let peers : ocamlcoin_node list ref = ref []
     (* load the peers we are aware of *)
     let load_peers ?(peer_file : string = "peers.txt") () =
-      let loaded_peers = List.map
+      peers := List.map
         (fun peer_description ->
           match Str.split (Str.regexp ",") peer_description with
           | [ip; port] ->
               new ocamlcoin_node ip (int_of_string port)
           | _ ->
               raise (Invalid_argument "Unable to parse peer description"))
-        (IO.page_lines peer_file) in
-      match List.filter (fun n -> n#active) loaded_peers with
-      | _hd :: _tl as active_peers ->
-          let _ = print_endline "WE HAVE PEEEERS" in
-          peers := active_peers
-      | [] ->
-          raise EmptyNetwork
+        (IO.page_lines peer_file)
     let attach_broadcast_listener = server#add_listener
-    let broadcast_over_network d =
-      List.iter (fun n -> let _ = n#send_message (Yojson.Basic.to_string d)
+    let broadcast_over_network (msg : string) =
+      List.iter (fun n -> let _ = n#send_message msg 
                           in ())
                 !peers
     let run () =
@@ -127,3 +120,9 @@ module OcamlcoinNetwork =
       server#run_server_async ();
       load_peers ()
   end
+
+type network_event =
+  | PingDiscovery
+  | NewTransaction of transaction
+  | SolvedBlock of (block * nonce)
+  | BroadcastNodes of (OcamlcoinNetwork.ocamlcoin_node list)

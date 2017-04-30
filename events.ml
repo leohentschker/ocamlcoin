@@ -1,4 +1,4 @@
-open Networking.OcamlcoinNetwork
+open Networking
 open Payments
 open Mining
 module Y = Yojson
@@ -12,12 +12,6 @@ let c_BROADCAST_NODES_TYPE = "broadcast_nodes"
 
 let c_NONCE_KEY = "nonce"
 let c_BLOCK_KEY = "block"
-
-type network_event =
-  | PingDiscovery
-  | NewTransaction of transaction
-  | SolvedBlock of (block * nonce)
-  | BroadcastNodes of (ocamlcoin_node list)
 
 let json_to_event_string (transaction_key : string) (json : Y.Basic.json) : string =
   Y.Basic.to_string (`Assoc [(c_TRANSACTION_TYPE_KEY, `String transaction_key);
@@ -47,7 +41,7 @@ let string_to_event (s : string) : network_event =
     SolvedBlock(block, Mining.string_to_nonce nonce)
   else if event_type = c_BROADCAST_NODES_TYPE then
     match json_data with
-    | `List json_list -> BroadcastNodes(List.map json_to_ocamlcoin_node json_list)
+    | `List json_list -> BroadcastNodes(List.map OcamlcoinNetwork.json_to_ocamlcoin_node json_list)
     | _ -> failwith "Expected json list type"
   else if event_type = c_PING_DISCOVERY_TYPE then
     PingDiscovery
