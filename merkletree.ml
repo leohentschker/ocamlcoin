@@ -9,17 +9,16 @@ type ordering = L | G | E
 
 module type SERIALIZE =
   sig
-    type id
     type amount
     type time
     type t =
-      {id1 : id;
-       id2 : id;
+      {id1 : pub_key;
+       id2 : pub_key;
        amount : amount;
-       time : time;}
+       time : time}
     val serialize : t -> string
     val gen : unit -> t
-    val get : t -> (id * id * amount * time)
+    val get : t -> (pub_key * pub_key * amount * time)
     val compare : time -> time -> ordering
     val min : time -> time -> time
   end
@@ -38,7 +37,6 @@ module IntSerializable : SERIALIZE =
 
 module TransactionSerializable : SERIALIZE =
   struct
-    type id = pub_key
     type amount = float
     type time = float
     type t = transaction
@@ -65,10 +63,9 @@ module TransactionSerializable : SERIALIZE =
 module type MERKLETREE =
   sig
     type element
-    type id
     type amount
     type time
-    val get : element -> id * id * amount * time
+    val get : element -> pub_key * pub_key * amount * time
     val serializelist : element list -> string list
     val base_hash : element -> string
     val tree_hash : string -> string
@@ -88,14 +85,14 @@ module type MERKLETREE =
   end
 
 module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S.t
-                                                            and type id = S.id
+                                                            and type id = pub_key
                                                             and type amount = S.amount
                                                             and type time = S.time) =
   struct
 
     type element = S.t
 
-    type id = S.id
+    type id = pub_key
     type amount = S.amount
     type time = S.time
 
@@ -110,7 +107,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       H.hash_text s
 
     type mtr =
-      Leaf of string * element | Tree of string * id list * time * mtree * mtree
+      Leaf of string * element | Tree of string * pub_key list * time * mtree * mtree
     and mtree = mtr ref
 
     let root_hash (t : mtree) : string =
