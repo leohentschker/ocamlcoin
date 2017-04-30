@@ -47,7 +47,8 @@ module TransactionSerializable : SERIALIZE =
       let _, originator = generate_keypair () in
       let _, target = generate_keypair () in
       let amount = Random.float 1000. in
-      originator, target, amount
+      let timestamp = Random.float 10000. in
+      originator, target, amount, timestamp
     let gen () =
       let originator, target, amount timestamp = fake_transaction_data () in
       new transaction originator target amount timestamp
