@@ -1,4 +1,4 @@
-all: io_helpers networking crypto signature
+all: io_helpers networking crypto signature gui
 
 tests: payments_tests events_tests
 
@@ -28,6 +28,9 @@ mining: mining.ml
 
 payments: payments.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix payments.byte
+
+gui: gui.ml
+	ocamlbuild -use-ocamlfind -pkgs lablgtk2 -pkgs nocrypto.unix -ocamlc 'ocamlc -thread threads.cma' gui.byte
 
 clean:
 	rm -rf _build *.byte
