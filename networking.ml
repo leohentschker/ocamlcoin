@@ -29,7 +29,6 @@ class coinserver =
   object(this)
     (* listeners that get called on receiving data over the network *)
     val listeners : (string -> unit) list ref = ref []
-    val mutable thread : Thread.t option = None
     (* helper method to initialize the connection over a socket *)
     method initialize_sock inet_addr port =
       let fd = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
@@ -65,13 +64,8 @@ class coinserver =
         server_loop() in
       server_loop ()
     method run_server_async () : unit =
-      thread <- Some (Thread.create this#run_server ())
-    method terminate () =
-      match thread with
-      | None ->
-          failwith "Server not running"
-      | Some t ->
-          Thread.kill t
+      let _ = Thread.create this#run_server () in
+      ()
   end
 
 exception EmptyNetwork ;;
@@ -127,7 +121,6 @@ module OcamlcoinNetwork =
       (* run the server on an asynchronous thread *)
       server#run_server_async ();
       load_peers ()
-    let terminate = server#terminate
   end
 
 let _ = print_endline (get_private_ip ()) ;;
