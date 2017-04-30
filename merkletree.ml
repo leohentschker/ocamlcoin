@@ -1,31 +1,42 @@
 open Sexplib
 open Crypto_fake
+open Payments
 
 module type SERIALIZE =
   sig
     type t
     val serialize : t -> string
-  end ;;
+    type serializable
+    val of_t : t -> serializable
+  end
+
+module TransactionSerializable =
+  object
+    type t = block
+    let serialize t = t#to_string
+    type serializable = block
+    let of_t t = t
+  end
 
 module type MERKLETREE =
   sig
     type element
     val serializelist : element list -> string list
-    val base_hash : string -> string
+    val base_hash : element -> string
     val tree_hash : string -> string
     type mtr
     type mtree
     val root_hash: mtree -> string
-    val sublist : string list -> int -> int -> string list
+    val sublist : 'a list -> int -> int -> 'a list
     (* Don't think we need log2 or exp2? Come back. *)
-    val half_list : string list -> string list * string list
-    val split_list : string list -> string list * string list
+    val half_list : 'a list -> 'a list * 'a list
+    val split_list : 'a list -> 'a list * 'a list
     val combine_trees : mtree -> mtree -> mtree
-    val tree_helper : string list -> mtree
-    val build_tree : string list -> mtree
+    val tree_helper : element list -> mtree
+    val build_tree : element list -> mtree
     val merge_trees : mtree -> mtree -> unit
     val children : mtree -> string list
-    val add_string : string -> mtree -> mtree
+    val add_element : element -> mtree -> mtree
     (* add testing *)
   end
 
@@ -68,14 +79,6 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       match n with
       | 0 -> 1
       | _ -> 2 * exp2 (n - 1)
-
-(*
-    let rec split_list (lst : string list) : (string list) list =
-      match List.length lst with
-      | 0 -> []
-      | len ->
-      (sublist lst 0 (exp2 (log2 len) - 1)) :: split_list (sublist lst (exp2 (log2 len)) (len - 1))
-*)
 
     let half_list (lst : 'a list) : 'a list * 'a list =
       let len = List.length lst in
@@ -125,8 +128,17 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
     let test1 () =
       let list1 = ["hi"; "my"; "name"; "is"] in
       let list2 = list1 @ ["daniel"] in
-      let t1 = add_string "daniel" (build_tree list1) in
+      let t1 = add_element "daniel" (build_tree list1) in
       let t2 = build_tree list2 in
       assert ((root_hash t1) = (root_hash t2))
 
+    let run_tests () =
+      test1 () ;
+      print_endline "All tests passed" ;
+      ()
+
   end
+
+module fakeMerkle = MakeMerkle TransactionSerializable SHA256 ;;
+
+let _ = fakeMerkle.run_tests () ;;
