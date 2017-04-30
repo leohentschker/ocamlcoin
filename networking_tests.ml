@@ -3,7 +3,7 @@ open Networking ;;
 open Networking.OcamlcoinNetwork ;;
 
 let generate_valid_ip () =
-  "10." ^ (string_of_int 255) ^ "." ^ (string_of_int 255) ^ "." ^ (string_of_int 255)
+  (string_of_int 255) ^ "." ^ (string_of_int 255) ^ "." ^ (string_of_int 255) ^ "." ^ (string_of_int 255)
 
 let generate_random_node () =
   new ocamlcoin_node (generate_valid_ip ()) (800 + Random.int 100) 
