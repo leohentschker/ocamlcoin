@@ -49,8 +49,8 @@ module TransactionSerializable : SERIALIZE =
       let amount = Random.float 1000. in
       originator, target, amount
     let gen () =
-      let originator, target, amount = fake_transaction_data () in
-      new transaction originator target amount
+      let originator, target, amount timestamp = fake_transaction_data () in
+      new transaction originator target amount timestamp
     let get t = (t.originator, t.target, t.amount, t.timestamp)
     let compare (t1 : time) (t2 : time) : ordering =
       if t1 < t2 then L
