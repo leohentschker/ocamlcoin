@@ -1,31 +1,62 @@
 open Sexplib
-open Crypto_fake
+(* open Crypto_fake *)
+
+open Crypto
+open Signature
+open Payments
+
 
 module type SERIALIZE =
   sig
     type t
     val serialize : t -> string
-  end ;;
+    val gen : unit -> t
+  end
+
+module IntSerializable : SERIALIZE =
+  struct
+    type t = int
+    let serialize = string_of_int
+    let gen =
+      let _ = Random.self_init () in
+      (fun () -> Random.int 10000)
+  end
+
+module TransactionSerializable : SERIALIZE =
+  struct
+    type t = transaction
+    let serialize t = t#to_string
+    let fake_transaction_data () =
+      let _, originator = generate_keypair () in
+      let _, target = generate_keypair () in
+      let amount = Random.float 1000. in
+      originator, target, amount
+    let gen () =
+      let originator, target, amount = fake_transaction_data () in
+      new transaction originator target amount
+  end
+
 
 module type MERKLETREE =
   sig
     type element
     val serializelist : element list -> string list
-    val base_hash : string -> string
+    val base_hash : element -> string
     val tree_hash : string -> string
     type mtr
     type mtree
     val root_hash: mtree -> string
-    val sublist : string list -> int -> int -> string list
+    val sublist : 'a list -> int -> int -> 'a list
     (* Don't think we need log2 or exp2? Come back. *)
-    val half_list : string list -> string list * string list
-    val split_list : string list -> string list * string list
+    val half_list : 'a list -> 'a list * 'a list
+    val split_list : 'a list -> 'a list * 'a list
     val combine_trees : mtree -> mtree -> mtree
-    val tree_helper : string list -> mtree
-    val build_tree : string list -> mtree
+    val tree_helper : element list -> mtree
+    val build_tree : element list -> mtree
     val merge_trees : mtree -> mtree -> unit
     val children : mtree -> string list
-    val add_string : string -> mtree -> mtree
+    val add_element : element -> mtree -> mtree
+    val run_tests : unit -> unit
     (* add testing *)
   end
 
@@ -69,14 +100,6 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       | 0 -> 1
       | _ -> 2 * exp2 (n - 1)
 
-(*
-    let rec split_list (lst : string list) : (string list) list =
-      match List.length lst with
-      | 0 -> []
-      | len ->
-      (sublist lst 0 (exp2 (log2 len) - 1)) :: split_list (sublist lst (exp2 (log2 len)) (len - 1))
-*)
-
     let half_list (lst : 'a list) : 'a list * 'a list =
       let len = List.length lst in
       (sublist lst 0 (len / 2 - 1), sublist lst (len / 2) (len - 1))
@@ -89,7 +112,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       ref (Tree (tree_hash ((root_hash t1) ^ (root_hash t2)), t1, t2))
 
     let rec tree_helper (lst : element list) : mtree =
-      let (l, r) = half_list (serializelist lst) in
+      let (l, r) = half_list lst in
       match List.length lst with
       | 0 -> failwith "Empty Tree"
       | 1 -> ref (Leaf (base_hash (List.hd lst)))
@@ -97,7 +120,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
              combine_trees ltree rtree
 
     let rec build_tree (datalist : element list) : mtree=
-      let (l, r) = split_list (serializelist datalist) in
+      let (l, r) = split_list datalist in
       if r = [] then tree_helper datalist
       else match List.length datalist with
            | 0 | 1 -> tree_helper datalist
@@ -123,10 +146,26 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
         else combine_trees t1 (add_element e t2)
 
     let test1 () =
-      let list1 = ["hi"; "my"; "name"; "is"] in
-      let list2 = list1 @ ["daniel"] in
-      let t1 = add_string "daniel" (build_tree list1) in
-      let t2 = build_tree list2 in
-      assert ((root_hash t1) = (root_hash t2))
+      let e1 = S.gen () in
+      let e2 = S.gen () in
+      let e3 = S.gen () in
+      let e4 = S.gen () in
+      let e5 = S.gen () in
+      let l1 = [e1; e2; e3; e4] in
+      let l2 = l1 @ [e5] in
+      let t1 = add_element e5 (build_tree l1) in
+      let t2 = build_tree l2 in
+      assert (root_hash t1 = root_hash t2)
+
+    let run_tests () =
+      test1 () ;
+      print_endline "All tests passed" ;
+      ()
 
   end
+
+module FakeMerkle = MakeMerkle (IntSerializable) (SHA256) ;;
+
+module RealMerkle = MakeMerkle (TransactionSerializable) (SHA256) ;;
+
+let _ = RealMerkle.run_tests () ;;

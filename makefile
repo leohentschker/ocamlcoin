@@ -1,4 +1,4 @@
-all: io_helpers networking crypto_fake signature merkle
+all: io_helpers networking crypto signature merkle
 
 tests: payments_tests events_tests
 
@@ -28,7 +28,7 @@ signature: signature.ml
 	ocamlbuild -use-ocamlfind -pkgs nocrypto.unix signature.byte
 
 merkle: merkletree.ml
-	ocamlbuild -use-ocamlfind -pkgs sexplib merkletree.byte
+	ocamlbuild -use-ocamlfind -pkg yojson -pkgs sexplib -pkgs nocrypto.unix merkletree.byte
 
 =======
 >>>>>>> master
