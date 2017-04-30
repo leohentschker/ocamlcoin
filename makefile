@@ -23,9 +23,6 @@ networking: networking.ml
 crypto: crypto.ml
 	ocamlbuild -pkgs nocrypto.unix crypto.byte
 
-signature: signature.ml
-	ocamlbuild -use-ocamlfind -pkgs nocrypto.unix signature.byte
-
 mining: mining.ml
 	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix mining.byte
 
