@@ -17,7 +17,6 @@ module Signature =
       private_key, Dsa.pub_of_priv private_key
     let sign (pk : priv_key) = Dsa.sign ~key:pk
     let verify (plaintext : string) (pub : pub_key) (s : signature) = Dsa.verify ~key:pub s (Cstruct.of_string plaintext)
-
   end
 
 module type HASH = sig val hash_text : string -> string end
@@ -32,7 +31,7 @@ module MakeHash(H : Hash.S) : HASH =
   end
 
 module MD5 = MakeHash(Hash.MD5)
-module SHA1 = MakeHash(Hash.SHA1) 
+module SHA1 = MakeHash(Hash.SHA1)
 module SHA224 = MakeHash(Hash.SHA224)
 module SHA256 = MakeHash(Hash.SHA256)
 module SHA384 = MakeHash(Hash.SHA384)
