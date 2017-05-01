@@ -101,18 +101,6 @@ module OcamlcoinNetwork =
       new ocamlcoin_node
         (json |> member c_IP_JSON_KEY |> to_string)
         (json |> member c_PORT_JSON_KEY |> to_int)
-    (* store the other people in our network *)
-    let peers : ocamlcoin_node list ref = ref []
-    (* load the peers we are aware of *)
-    let load_peers ?(peer_file : string = "peers.txt") () =
-      peers := List.map
-        (fun peer_description ->
-          match Str.split (Str.regexp ",") peer_description with
-          | [ip; port] ->
-              new ocamlcoin_node ip (int_of_string port)
-          | _ ->
-              raise (Invalid_argument "Unable to parse peer description"))
-        (IO.page_lines peer_file)
     let attach_broadcast_listener f =
       server#add_listener
         (fun s ->
@@ -121,17 +109,17 @@ module OcamlcoinNetwork =
           f (json |> member c_DATA_JSON_KEY)
             (new ocamlcoin_node (json |> member c_IP_JSON_KEY |> to_string)
               (json |> member c_PORT_JSON_KEY |> to_int)))
-    let broadcast_over_network (json_msg : Yojson.Basic.json) =
+    let broadcast_to_nodes (json_msg : Yojson.Basic.json)
+                           (nlist : ocamlcoin_node list) =
       (* attach the port and the ip to the json *)
       let str_message = Yojson.Basic.to_string
         (`Assoc [(c_DATA_JSON_KEY, json_msg);
                  (c_PORT_JSON_KEY, `Int c_DEFAULT_COIN_PORT);
                  (c_IP_JSON_KEY, `String server#ip)]) in
-      List.iter (fun n -> let _ = n#send_message str_message in ()) !peers
+      List.iter (fun n -> let _ = n#send_message str_message in ()) nlist
     let run () =
       (* run the server on an asynchronous thread *)
       server#run_server_async ();
-      load_peers ()
   end
 
 type network_event =
