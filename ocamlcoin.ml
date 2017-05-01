@@ -30,7 +30,7 @@ module OcamlcoinRunner =
           | SolvedBlock(block, nonce) ->
               print_endline "SOLVED BLOCK"
           | PingDiscovery ->
-              print_endline ("PING DISCOVERY from ip: " ^ node#ip);
+              print_endline ("PING DISCOVERY from ip: " ^ node#ip ^ "asd");
               broadcast_event (BroadcastNodes(!peers)) node;
               if not(List.memq node !peers) then
                 peers := node :: !peers

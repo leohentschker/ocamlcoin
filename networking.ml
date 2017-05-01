@@ -87,7 +87,7 @@ module OcamlcoinNetwork =
     type peer = string
     class ocamlcoin_node ip_addr port_number =
       object(this)
-        val ip = ip_addr
+        val ip = String.trim ip_addr
         val port = port_number
         method ip = ip
         method port = port
