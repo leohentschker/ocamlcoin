@@ -109,14 +109,14 @@ module OcamlcoinNetwork =
           f (json |> member c_DATA_JSON_KEY)
             (new ocamlcoin_node (json |> member c_IP_JSON_KEY |> to_string)
               (json |> member c_PORT_JSON_KEY |> to_int)))
-    let broadcast_to_nodes (json_msg : Yojson.Basic.json)
-                           (nlist : ocamlcoin_node list) =
+    let broadcast_to_node (json_msg : Yojson.Basic.json)
+                           (node : ocamlcoin_node)  =
       (* attach the port and the ip to the json *)
-      let str_message = Yojson.Basic.to_string
+      let _ = node#send_message(Yojson.Basic.to_string
         (`Assoc [(c_DATA_JSON_KEY, json_msg);
                  (c_PORT_JSON_KEY, `Int c_DEFAULT_COIN_PORT);
-                 (c_IP_JSON_KEY, `String server#ip)]) in
-      List.iter (fun n -> let _ = n#send_message str_message in ()) nlist
+                 (c_IP_JSON_KEY, `String server#ip)])) in
+      ()
     let run () =
       (* run the server on an asynchronous thread *)
       server#run_server_async ();

@@ -17,8 +17,8 @@ module OcamlcoinRunner =
           | _ ->
               raise (Invalid_argument "Unable to parse peer description"))
         (IO.page_lines peer_file)
-    let broadcast_over_network msg =
-      OcamlcoinNetwork.broadcast_to_nodes msg !peers
+    let broadcast_event event node =
+      OcamlcoinNetwork.broadcast_to_node (event_to_json event) node
     let run () =
       OcamlcoinNetwork.run ();
       OcamlcoinNetwork.attach_broadcast_listener
@@ -29,11 +29,14 @@ module OcamlcoinRunner =
           | SolvedBlock(block, nonce) ->
               print_endline "SOLVED BLOCK"
           | PingDiscovery ->
-              print_endline ("PING DISCOVERY from ip: " ^ node#ip)
+              print_endline ("PING DISCOVERY from ip: " ^ node#ip);
+              broadcast_event (BroadcastNodes(!peers)) node;
+              if not(List.memq node !peers) then
+                peers := node :: !peers
           | BroadcastNodes(nlist) ->
               print_endline "BROADCAST NODES");
       load_peers ();
-      broadcast_over_network (event_to_json PingDiscovery);
+      List.iter (broadcast_event PingDiscovery) !peers;
       Unix.sleep 1000
   end
 
