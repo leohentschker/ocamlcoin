@@ -3,13 +3,19 @@ open Networking
 open Networking.OcamlcoinNetwork
 open Events
 
+let c_AVERAGE_PING_WAITTIME = 5
+let c_MAX_NODE_TIMEOUT = 1000.
+
+let random_chance a = a = Random.int (a + 1)
+
 module OcamlcoinRunner =
   struct
     (* store the other people in our network *)
-    let peers : ocamlcoin_node list ref = ref []
+    let peers : (ocamlcoin_node * float) list ref = ref []
+    let peer_nodes () = List.map fst !peers
     (* load the peers we are aware of *)
-    let load_peers ?(peer_file : string = "peers.txt") () =
-      peers := List.map
+    let get_previous_nodes ?(peer_file : string = "peers.txt") () =
+      List.map
         (fun peer_description ->
           match Str.split (Str.regexp ",") peer_description with
           | [ip; port] ->
@@ -20,6 +26,18 @@ module OcamlcoinRunner =
     let broadcast_event event node =
       try OcamlcoinNetwork.broadcast_to_node (event_to_json event) node with
       Failure(a) -> Printf.printf "Error broadcasting to node: %s" a
+    let add_peer n =
+      if not(List.memq n (peer_nodes ())) then peers := (n, Unix.time ()) :: !peers
+    (* ping a list of nodes *)
+    let ping_nodes nlist  =
+      List.iter (broadcast_event PingDiscovery) nlist
+    (* update our list of stored nodes and store it in a file *)
+    let update_stored_nodes () =
+      (* filter out old peers *)
+      peers := List.filter (fun (n, t) -> t -. Unix.time () < c_MAX_NODE_TIMEOUT) !peers;
+      let file_contents = List.fold_left (fun a n -> n#serialize ^ "\n") "" (peer_nodes ()) in
+      print_endline ("STORED NODES: " ^ file_contents)
+    (* run everything! *)
     let run () =
       OcamlcoinNetwork.run ();
       OcamlcoinNetwork.attach_broadcast_listener
@@ -31,14 +49,18 @@ module OcamlcoinRunner =
               print_endline "SOLVED BLOCK"
           | PingDiscovery ->
               print_endline ("PING DISCOVERY from ip: " ^ node#ip ^ "asd");
-              broadcast_event (BroadcastNodes(!peers)) node;
-              if not(List.memq node !peers) then
-                peers := node :: !peers
+              broadcast_event (BroadcastNodes(peer_nodes ())) node;
+              add_peer node;
           | BroadcastNodes(nlist) ->
-              print_endline "BROADCAST NODES");
-      load_peers ();
-      List.iter (broadcast_event PingDiscovery) !peers;
-      Unix.sleep 1000
+              print_endline "BROADCAST NODES";
+              List.iter add_peer nlist);
+      ping_nodes (get_previous_nodes ());
+      let rec network_loop () =
+        if random_chance c_AVERAGE_PING_WAITTIME then ping_nodes (peer_nodes ());
+        update_stored_nodes ();
+        Unix.sleep 5;
+        network_loop () in
+      network_loop ()
   end
 
 

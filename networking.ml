@@ -43,9 +43,14 @@ class coinserver =
       let sock_addr = Unix.ADDR_INET (inet_addr, port) in
       Unix.setsockopt fd Unix.SO_REUSEADDR true;
       fd, sock_addr
+    (* handle an incoming message over the network *)
+    method handle_message s = List.iter (fun a -> a s) !listeners
     (* sends the message s over the internet address *)
     method send_message s inet_addr port =
-      try
+      if !TestHelpers.c_TESTS_RUNNING then
+        let _ = this#handle_message s in
+        true
+      else try
         let fd, sock_addr = this#initialize_sock inet_addr port in
         Unix.connect fd sock_addr;
         let buf = Bytes.of_string s in
@@ -66,7 +71,7 @@ class coinserver =
         let buf = Bytes.create 4096 in
         let len = Unix.recv client_fd buf 0 (String.length buf) [] in
         let request = String.sub buf 0 len in
-        List.iter (fun a -> a request) !listeners;
+        this#handle_message request;
         Unix.close client_fd;
         (* wait for the next connection *)
         server_loop() in
@@ -91,6 +96,7 @@ module OcamlcoinNetwork =
         val port = port_number
         method ip = ip
         method port = port
+        method serialize = this#ip ^ "," ^ (string_of_int this#port)
         method send_message s =
           server#send_message s (Unix.inet_addr_of_string ip) port
         method to_json : Basic.json =
