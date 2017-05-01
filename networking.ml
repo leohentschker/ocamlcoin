@@ -5,10 +5,11 @@ open Yojson ;;
 
 let c_IP_JSON_KEY = "ip"
 let c_PORT_JSON_KEY = "port"
+let c_DATA_JSON_KEY = "message_data"
 let c_DEFAULT_COIN_PORT = 8332
 
-let is_valid_ip s =
-  Str.string_match (Str.regexp "\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)") s 0 ;;
+let is_valid_ip ip_str =
+  Str.string_match (Str.regexp "\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)") ip_str 0 ;;
 
 (* attempt to determine a private ip *)
 let rec get_private_ip () =
@@ -34,6 +35,8 @@ class coinserver =
   object(this)
     (* listeners that get called on receiving data over the network *)
     val listeners : (string -> unit) list ref = ref []
+    val ip = get_private_ip ()
+    method ip = ip
     (* helper method to initialize the connection over a socket *)
     method initialize_sock inet_addr port =
       let fd = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
@@ -110,11 +113,21 @@ module OcamlcoinNetwork =
           | _ ->
               raise (Invalid_argument "Unable to parse peer description"))
         (IO.page_lines peer_file)
-    let attach_broadcast_listener = server#add_listener
-    let broadcast_over_network (msg : string) =
-      List.iter (fun n -> let _ = n#send_message msg 
-                          in ())
-                !peers
+    let attach_broadcast_listener f =
+      server#add_listener
+        (fun s ->
+          let open Yojson.Basic.Util in
+          let json = Yojson.Basic.from_string s in
+          f (json |> member c_DATA_JSON_KEY)
+            (new ocamlcoin_node (json |> member c_IP_JSON_KEY |> to_string)
+              (json |> member c_PORT_JSON_KEY |> to_int)))
+    let broadcast_over_network (json_msg : Yojson.Basic.json) =
+      (* attach the port and the ip to the json *)
+      let str_message = Yojson.Basic.to_string
+        (`Assoc [(c_DATA_JSON_KEY, json_msg);
+                 (c_PORT_JSON_KEY, `Int c_DEFAULT_COIN_PORT);
+                 (c_IP_JSON_KEY, `String server#ip)]) in
+      List.iter (fun n -> let _ = n#send_message str_message in ()) !peers
     let run () =
       (* run the server on an asynchronous thread *)
       server#run_server_async ();
