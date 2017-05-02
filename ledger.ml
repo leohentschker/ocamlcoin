@@ -8,14 +8,13 @@ open Wallet
 module MT = MakeMerkle (TransactionSerializable) (SHA256)
 module W = MakeWallet
 
-let verify_transaction (t : transaction) (w : W.dict) (m : MT.mtree) : bool =
+let verify_transaction (t : transaction) (w : W.dict ref) (m : MT.mtree) : bool =
   let id1, id2, amount = t#originator, t#target, t#amount in
-  match W.find id1 with
+  match W.find !w id1 with
   | None -> false
-  | Some b -> not (W.find id2 = None) && b < amount
+  | Some b -> not (W.find !w id2 = None) && b < amount
 
-
-let add_transaction (t : transaction) (w : W.dict ref) (m : MT.tree) : unit =
+let add_transaction (t : transaction) (w : W.dict ref) (m : MT.mtree) : unit =
   if verify_transaction t !w m then
     m := (MT.add_element t m);
     let id1, id2, amount = t#originator, t#target, t#amount
