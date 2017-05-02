@@ -1,6 +1,5 @@
 module IO = IOHelpers ;;
 open Payments ;;
-open Mining ;;
 open Yojson ;;
 
 let c_IP_JSON_KEY = "ip"
@@ -124,5 +123,5 @@ module OcamlcoinNetwork =
 type network_event =
   | PingDiscovery
   | NewTransaction of transaction
-  | SolvedBlock of (block * nonce)
+  | SolvedBlock of (block * Mining.Miner.nonce)
   | BroadcastNodes of (OcamlcoinNetwork.ocamlcoin_node list)

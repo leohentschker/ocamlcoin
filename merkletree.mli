@@ -8,7 +8,6 @@ module type MERKLETREE
   type mtr
   type mtree
   val root_hash: mtree -> string
-  val sublist : 'a list -> int -> int -> 'a list
   (* Don't think we need log2 or exp2? Come back. *)
   val half_list : 'a list -> 'a list * 'a list
   val split_list : 'a list -> 'a list * 'a list

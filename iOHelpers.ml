@@ -1,3 +1,14 @@
+(* helper function to get a sublist *)
+let rec sublist (lst : 'a list) (a : int) (b : int) : 'a list =
+  if b < a then []
+  else match lst with
+       | [] -> []
+       | h :: t ->
+          (match (a, b) with
+           | (0, 0) -> [h]
+           | (0, _) -> [h] @ sublist t a (b - 1)
+           | (_, _) -> sublist t (a - 1) (b - 1))
+
 (* Drawn from ps5/http_services *)
 let page_lines (page : string) : string list =
 

@@ -1,4 +1,5 @@
 open Sexplib
+open IOHelpers
 open Crypto
 open Crypto.Keychain
 open Payments
@@ -72,7 +73,6 @@ module type MERKLETREE =
     type mtr
     type mtree
     val root_hash: mtree -> string
-    val sublist : 'a list -> int -> int -> 'a list
     val half_list : 'a list -> 'a list * 'a list
     val split_list : 'a list -> 'a list * 'a list
     val combine_trees : mtree -> mtree -> mtree
@@ -116,16 +116,6 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       match !t with
       | Leaf (s, _) -> s
       | Tree (s, _, _, _, _) -> s
-
-    let rec sublist (lst : 'a list) (a : int) (b : int) : 'a list =
-      if b < a then []
-      else match lst with
-           | [] -> failwith "Empty List"
-           | h :: t ->
-              (match (a, b) with
-               | (0, 0) -> [h]
-               | (0, _) -> [h] @ sublist t a (b - 1)
-               | (_, _) -> sublist t (a - 1) (b - 1))
 
     let log2 (n : int) : int =
       truncate (log (float n) /. (log 2.))

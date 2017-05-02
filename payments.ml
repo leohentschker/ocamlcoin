@@ -1,3 +1,4 @@
+module IO = IOHelpers
 open Crypto.Keychain
 module Y = Yojson
 
@@ -5,6 +6,7 @@ let c_ORIGINATOR_KEY = "originator"
 let c_TARGET_KEY = "target"
 let c_AMOUNT_KEY = "amount"
 let c_TIMESTAMP_KEY = "timestamp"
+let c_BLOCK_SIZE = 10
 
 class transaction
     (originator : pub_key)
@@ -51,3 +53,14 @@ let json_to_block (json : Y.Basic.json) : block =
   | `List jsonlist ->
       new block (List.map (fun tjson -> json_to_transaction tjson) jsonlist)
   | _ -> failwith "Blocks can only serialize json lists"
+
+(* Store a global list of unverified transactions *)
+let unverified_transactions = ref []
+let add_unverified_transaction (t : transaction) =
+  unverified_transactions := t :: !unverified_transactions
+
+exception NoUnverified
+let get_unverified_block () =
+  match IO.sublist !unverified_transactions 0 c_BLOCK_SIZE with
+  | [] -> raise NoUnverified
+  | lst -> new block lst

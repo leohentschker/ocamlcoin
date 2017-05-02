@@ -1,5 +1,5 @@
+open Mining.Miner
 open Payments
-open Mining
 exception EmptyNetwork
 
 val c_DEFAULT_COIN_PORT : int
