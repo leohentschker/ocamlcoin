@@ -1,8 +1,6 @@
 open Sexplib
-(* open Crypto_fake *)
-
 open Crypto
-open Crypto.Signature
+open Crypto.Keychain
 open Payments
 
 type ordering = L | G | E

@@ -21,3 +21,4 @@ setup.log
 
 # remove swapfiles
 *.swp
+profile.json
