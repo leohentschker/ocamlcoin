@@ -14,7 +14,7 @@ module OcamlcoinRunner =
   struct
     (* store the other people in our network *)
     let peer_tuples : (ocamlcoin_node * float) list ref = ref []
-    let get_peers () = List.map fst !peer_tuples
+    let get_peers = fun () -> List.map fst !peer_tuples
     (* load the peers we are aware of *)
     let broadcast_event event node =
       try OcamlcoinNetwork.broadcast_to_node (event_to_json event) node with
@@ -23,7 +23,8 @@ module OcamlcoinRunner =
       if not(List.memq n (get_peers ())) then
         peer_tuples := (n, Unix.time ()) :: !peer_tuples
     (* ping a list of nodes *)
-    let ping_peers  =
+    let ping_peers () =
+      Printf.printf "Length of peers in ping: %d\n" (List.length (get_peers ()));
       List.iter (broadcast_event PingDiscovery) (get_peers ())
     (* update our list of stored nodes and store it in a file *)
     let update_stored_nodes () =
@@ -52,9 +53,9 @@ module OcamlcoinRunner =
               print_endline "BROADCAST NODES";
               List.iter add_peer nlist);
       peer_tuples := List.map (fun p -> (p, Unix.time ())) (User.stored_nodes);
-      ping_peers;
+      ping_peers ();
       let rec network_loop () =
-        if random_chance c_AVERAGE_PING_WAITTIME then ping_peers;
+        if random_chance c_AVERAGE_PING_WAITTIME then ping_peers ();
         update_stored_nodes ();
         User.export_nodes (get_peers ());
         Unix.sleep 5;

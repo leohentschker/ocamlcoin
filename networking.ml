@@ -44,11 +44,11 @@ class coinserver =
       Unix.setsockopt fd Unix.SO_REUSEADDR true;
       fd, sock_addr
     (* handle an incoming message over the network *)
-    method handle_message s = List.iter (fun a -> a s) !listeners
+    method handle_message s =
+      List.iter (fun a -> a s) !listeners
     (* sends the message s over the internet address *)
     method send_message s inet_addr port =
       if !c_USE_LOCAL_NETWORK then
-        let _ = print_endline "USING LOCAL NETWORK" in
         let _ = this#handle_message s in
         true
       else try
