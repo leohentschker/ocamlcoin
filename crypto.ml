@@ -21,9 +21,33 @@ open Keychain
 module Signature =
   struct
     type signature = Cstruct.t * Cstruct.t
-    (* remove partial application to destroy optional args *)
-    let sign (pk : priv_key) (s : string) = Dsa.sign ~key:pk (Cstruct.of_string s)
-    let verify (plaintext : string) (pub : pub_key) (s : signature) = Dsa.verify ~key:pub s (Cstruct.of_string plaintext)
+    type priv_key = Dsa.priv
+    type pub_key = Dsa.pub
+    let priv_to_string (p : priv_key) = Sexp.to_string (Dsa.sexp_of_priv p)
+    let string_to_priv (s : string) = Dsa.priv_of_sexp (Sexp.of_string s)
+    let pub_to_string (p : pub_key) = Sexp.to_string (Dsa.sexp_of_pub p)
+    let string_to_pub (s : string) = Dsa.pub_of_sexp (Sexp.of_string s)
+    let generate_keypair () =
+      let private_key = Dsa.generate (`Fips1024) in
+      private_key, Dsa.pub_of_priv private_key
+    let sign (pk : priv_key) = Dsa.sign ~key:pk
+    let verify (plaintext : string) (pub : pub_key) (s : signature) =
+      Dsa.verify ~key:pub s (Cstruct.of_string plaintext)
+
+    (* Testing in module because verify and sign are abstracted away *)
+    let test_generate_keypair () =
+      let (priv_key, pub_key) = generate_keypair () in
+      assert (pub_key = pub_priv priv_key)
+
+    let test_sign () =
+      let (priv_key, pub_key) = generate_keypair () in
+      let message = string_of_int (Random.int 10000000) in
+      let signed = sign priv_key message in
+      assert (verify message pub_key signed)
+
+    let run_tests () =
+      TestHelpers.run_tests test_generate_keypair;
+      TestHelpers.run_tests test_sign
   end
 
 module type HASH = sig val hash_text : string -> string end
