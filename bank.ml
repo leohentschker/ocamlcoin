@@ -16,7 +16,7 @@ let verify_transaction (t : transaction) : bool =
   let total_amount = List.fold_left (fun acc x -> acc +. x#amount) 0. timedlst in
   not (eltlst = []) && (total_amount < amount) && 
   (if amount < 0. then not (MT.queryid id2 !ledger = []) else true) &&
-  (Crypto.Signature.verify t#to_string t#pub_key t#signature)
+  authenticate_transaction t
 
 let add_transaction (t : transaction) : unit =
   if verify_transaction t then
