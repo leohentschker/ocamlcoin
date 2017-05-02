@@ -18,3 +18,6 @@ class block : transaction list -> object
   end
 
 val json_to_block : Yojson.Basic.json -> block
+
+val add_unverified_transaction : transaction -> unit
+val get_unverified_block : unit -> block
