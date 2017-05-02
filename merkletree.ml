@@ -20,8 +20,8 @@ module type SERIALIZE =
   end
 
 
-module TransactionSerializable : (SERIALIZE with type amount = float 
-                                             and type time = float 
+module TransactionSerializable : (SERIALIZE with type amount = float
+                                             and type time = float
                                              and type t = transaction
                                              and type id = pub_key) =
   struct
@@ -96,10 +96,11 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       H.hash_text s
 
     type mtree =
-      Leaf of string * element | Tree of string * id list * time * mtree * mtree
+      Empty | Leaf of string * element | Tree of string * id list * time * mtree * mtree
 
     let root_hash (t : mtree) : string =
       match t with
+      | Empty -> ""
       | Leaf (s, _) -> s
       | Tree (s, _, _, _, _) -> s
 
@@ -135,11 +136,14 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
           (Tree (tree_hash (s1 ^ s2), union lst [id1; id2], S.min time1 time2, t1, t2))
       | Tree (s1, l1, time1, _, _), Tree (s2, l2, time2, _, _) ->
           (Tree (tree_hash (s1 ^ s2), union l1 l2, S.min time1 time2, t1, t2))
+      | Empty, _ -> t2
+      | _, Empty -> t1
+      | Empty, Empty -> _
 
     let rec tree_helper (lst : element list) : mtree =
       let (l, r) = half_list lst in
       match List.length lst with
-      | 0 -> failwith "Empty Tree"
+      | 0 -> Empty
       | 1 -> let e = List.hd lst in (Leaf (base_hash e, e))
       | _ -> let ltree, rtree = tree_helper l, tree_helper r in
              combine_trees ltree rtree
@@ -154,13 +158,14 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
 
     let rec children (t : mtree) : element list =
       match t with
+      | Empty -> failwith "empty"
       | Leaf (_, e) -> [e]
       | Tree (_, _, _, t1, t2) -> (children t1) @ (children t2)
 
     let rec add_element (e : element) (t : mtree) : mtree =
       let newleaf = build_tree [e] in
       match t with
-      | Leaf (_, _) ->
+      | Empty | Leaf (_, _) ->
           combine_trees t newleaf
       | Tree (_, _, _, t1, t2) ->
           if List.length (children t1) = List.length (children t2)
@@ -169,6 +174,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
 
     let rec queryid (id : id) (t : mtree) : element list =
       match t with
+      | Empty -> []
       | Leaf (_, e) ->
           let (id1, id2, _, _) = get e in
           if id = id1 || id = id2 then [e] else []
@@ -178,6 +184,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
 
     let queryhash (hash : string) (t : mtree) : element list =
       match t with
+      | Empty -> []
       | Leaf (s, _) | Tree (s, _, _, _, _) -> if hash = s then (children t) else []
 
     let test1 () =
@@ -192,24 +199,24 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       let t2 = build_tree l2 in
       assert (root_hash t1 = root_hash t2)
 
-    let test_combine_trees () = 
+    let test_combine_trees () =
       let e1 = S.gen () in
       let e2 = S.gen () in
       let e3 = S.gen () in
       let e4 = S.gen () in
-      let e5 = S.gen () in 
+      let e5 = S.gen () in
       let e6 = S.gen () in
       let e7 = S.gen () in
       let l1 = [e1; e2; e3; e4] in
       let l2 = [e5; e6; e7] in
-      let lcomb = l1 @ l2 in 
+      let lcomb = l1 @ l2 in
       let t1 = build_tree l1 in
       let t2 = build_tree l2 in
       assert (root_hash (combine_trees t1 t2) = root_hash (build_tree lcomb))
 
     let run_tests () =
       test1 () ;
-      test_combine_trees () ; 
+      test_combine_trees () ;
       print_endline "All tests passed" ;
       ()
 
