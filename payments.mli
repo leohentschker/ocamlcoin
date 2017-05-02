@@ -1,9 +1,11 @@
+open Crypto.Signature
 open Crypto.Keychain
 
-class transaction : pub_key -> pub_key -> float -> float -> object
+class transaction : pub_key -> pub_key -> float -> float -> signature -> object
     method to_json : Yojson.Basic.json
     method to_string : string
     method originator : pub_key
+    method signature : signature
     method target : pub_key
     method amount : float
     method timestamp : float
