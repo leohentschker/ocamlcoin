@@ -43,7 +43,7 @@ let merge_trees (tree1 : MT.mtree ref)
           || (!tree2 = MT.empty)) then ()
   else List.iter (fun e -> (add_transaction e tree1))
                  (List.filter (fun e -> List.memq e (MT.children !tree1))
-                              (MT.children !tree2));;
+                              (MT.children !tree2)) ;;
 
 let query (s : string) (m : MT.mtree ref) : transaction list =
   (MT.queryid (string_to_pub s) !m) @ (MT.queryhash s !m)
