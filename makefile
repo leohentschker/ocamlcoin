@@ -1,4 +1,4 @@
-all: io_helpers networking crypto merkle profile
+all: io_helpers networking crypto merkle profile gui
 
 tests: payments_tests events_tests
 
@@ -40,7 +40,7 @@ payments: payments.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix payments.byte
 
 gui: gui.ml
-	ocamlbuild -use-ocamlfind -pkgs lablgtk2 -pkgs nocrypto.unix -ocamlc 'ocamlc -thread threads.cma' gui.byte
+	ocamlbuild -use-ocamlfind -pkg yojson -pkgs lablgtk2 -pkgs nocrypto.unix -ocamlc 'ocamlc -thread threads.cma' gui.byte
 
 clean:
 	rm -rf _build

@@ -1,6 +1,7 @@
 (* Follow tutorial of https://ocaml.org/learn/tutorials/introduction_to_gtk.html *)
-open GMain
 open GdkKeysyms
+open Mining
+open GMain
 
 let locale = GtkMain.Main.init () ;;
 let c_WINDOW_WIDTH = 320 ;;
@@ -9,10 +10,10 @@ let c_YPAD = 20 ;;
 let c_TITLE_FONT = "Verdana 20" ;;
 let c_HEADER_FONT = "Verdana 15" ;;
 let c_MINING_TEXT = "Mine OCamlcoins" ;;
+let c_NO_BLOCKS_MINING_TEXT = "No blocks to mine. Try again?" ;;
 let c_STOP_MINING_TEXT = "Stop Mining OCamlcoins" ;;
 let c_BACKGROUND_COLOR = [(`NORMAL, (`RGB (65535, 65535, 65535)))] ;;
 let c_BUTTON_COLOR = [(`NORMAL, (`RGB (66000, 113000, 255000)))] ;;
-open Mining ;;
 
 class gui =
   object (this)
@@ -23,15 +24,18 @@ class gui =
     val mutable payment_target_edit = GEdit.entry ()
     val mutable payment_total_edit = GEdit.entry ()
     (* variabeles for mining *)
-    val mutable mining_thread : Thread.t option = None
     val mutable mining_button = GButton.button ()
+    (* User toggled the mining button *)
     method toggle_mining () =
-      if Mining.currently_mining () then
-        let _ = Mining.stop_mining () in
+      if Miner.currently_mining () then
+        let _ = Miner.stop_mining () in
         mining_button#set_label c_STOP_MINING_TEXT
       else
-        Mining.mine_async "asd";
-        mining_button#set_label c_MINING_TEXT
+        try
+          Miner.mine_async ();
+          mining_button#set_label c_MINING_TEXT
+        with Payments.NoUnverified ->
+          mining_button#set_label c_NO_BLOCKS_MINING_TEXT
     method make_payment () =
       print_endline (payment_target_edit#text ^ " " ^ payment_total_edit#text)
     method initialize () =

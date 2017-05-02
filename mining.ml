@@ -28,11 +28,10 @@ module Miner =
       first_chars = String.make leading_zeros '0'
 
     (* Implementation of the mining algorithm for proof-of-work *)
-    let mine (iters: int) : nonce =
+    let mine (b : Payments.block) (iters: int) : nonce =
       (* This inner function takes an integer and checks
          the has verify of s^nonce for nonce = 1,..., n *)
       is_mining := true;
-      let b = Payments.get_unverified_block () in
       let blockstring = b#to_string in
       let rec iterate_check n =
         if n = 0 then raise (Nosolution "Couldn't solve block")
@@ -45,6 +44,7 @@ module Miner =
       iterate_check iters
 
     let mine_async () =
-      let _ = Thread.create (fun () -> mine max_int) () in
+      let b = Payments.get_unverified_block () in
+      let _ = Thread.create (fun () -> mine b max_int) () in
       ()
   end
