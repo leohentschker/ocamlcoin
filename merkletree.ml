@@ -38,7 +38,8 @@ module TransactionSerializable : (SERIALIZE with type amount = float
       originator, target, amount, timestamp
     let gen () =
       let originator, target, amount, timestamp = fake_transaction_data () in
-      new transaction originator target amount timestamp
+      let pub, priv = Keychain.generate_keypair () in
+      new transaction originator target amount timestamp (sign )
     let get (t : transaction) = (t#originator, t#target, t#amount, t#timestamp)
     let compare (t1 : time) (t2 : time) : ordering =
       if t1 < t2 then L

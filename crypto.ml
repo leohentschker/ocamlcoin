@@ -23,13 +23,11 @@ module Signature =
     type signature = Cstruct.t * Cstruct.t
     let signature_to_json ((c1, c2) : signature) =
       `List[`String (Cstruct.to_string c1); `String (Cstruct.to_string c2)]
-    let json_to_signature (json : Yojson.Basic.json) =
+    let json_to_signature (json : Yojson.Basic.json) : signature =
       match json with
       | `List [`String s1; `String s2] ->
         (Cstruct.of_string s1, Cstruct.of_string s2)
       | _ -> failwith "Unexpected format"
-    (* remove partial application to destroy optional args *)
-    let to_string (s : signature) : string = ""
     let sign (pk : priv_key) (s : string) =
       Dsa.sign ~key:pk (Cstruct.of_string s)
     let verify (plaintext : string) (pub : pub_key) (s : signature) =
