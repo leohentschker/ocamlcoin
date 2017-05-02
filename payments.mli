@@ -14,6 +14,8 @@ class transaction : pub_key -> pub_key -> float -> float -> signature -> object
 
 val create_transaction : pub_key -> pub_key -> float -> float -> priv_key -> transaction
 
+val authenticate_transaction : transaction -> pub_key -> bool
+
 val json_to_transaction : Yojson.Basic.json -> transaction
 
 class block : transaction list -> object

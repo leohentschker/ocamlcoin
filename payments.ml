@@ -38,12 +38,16 @@ class transaction
              (c_SIGNATURE_KEY, Crypto.Signature.signature_to_json this#signature)]
   end
 
-let string_of_transaction_data orig target amount timestamp priv =
+let string_of_transaction_data orig target amount timestamp =
   string_of_float amount
 
 let create_transaction orig target amount timestamp priv =
-  let signature = Crypto.Signature.sign priv (string_of_transaction_data orig target amount timestamp priv) in
+  let signature = Crypto.Signature.sign priv (string_of_transaction_data orig target amount timestamp) in
   new transaction orig target amount timestamp signature
+
+let authenticate_transaction t pub_key = Crypto.Signature.verify 
+  (string_of_transaction_data t#originator t#target t#amount t#timestamp)
+  t#originator t#signature
 
 let json_to_transaction (json : Y.Basic.json) : transaction =
   let open Y.Basic.Util in
