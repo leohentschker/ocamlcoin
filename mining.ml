@@ -58,7 +58,6 @@ module Miner =
       assert (not (verify word bad));
       let blockk = new block ([generate_fake_transaction ()]) in
       let t = string_of_int (mine blockk 100000) in 
-      print_endline ((hash_text(blockk#to_string ^ t))) 
+      assert (String.sub (hash_text(blockk#to_string ^ t)) 0 2 = "00") 
      end
-  let _ = Miner.test_mining ();
-  print_endline ("All tests passed!")
+  let _ = Miner.test_mining ()
