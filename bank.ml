@@ -18,7 +18,7 @@ let verify_transaction (t : transaction) (l: MT.mtree ref): bool =
   in
   not (eltlst = []) && (total_amount < amount) && 
   (if amount < 0. then not (MT.queryid id2 !l = []) else true) &&
-  (Crypto.Signature.verify t#to_string t#originator t#signature)
+  authenticate_transaction t
 
 let add_transaction (t : transaction) : unit =
   if verify_transaction t then

@@ -45,7 +45,7 @@ let create_transaction orig target amount timestamp priv =
   let signature = Crypto.Signature.sign priv (string_of_transaction_data orig target amount timestamp) in
   new transaction orig target amount timestamp signature
 
-let authenticate_transaction t pub_key = Crypto.Signature.verify 
+let authenticate_transaction t = Crypto.Signature.verify 
   (string_of_transaction_data t#originator t#target t#amount t#timestamp)
   t#originator t#signature
 

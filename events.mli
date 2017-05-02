@@ -1,5 +1,5 @@
 open Networking
-open Mining
+open Mining.Miner
 open Payments
 
 type network_event =
