@@ -36,7 +36,7 @@ mining: mining.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix mining.byte
 
 payments: payments.ml
-	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix payments.byte
+	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix -ocamlc 'ocamlc -thread str.cma threads.cma' payments.byte
 
 gui: gui.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs lablgtk2 -pkgs nocrypto.unix -ocamlc 'ocamlc -thread threads.cma' gui.byte

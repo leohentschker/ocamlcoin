@@ -13,6 +13,12 @@ let c_BROADCAST_NODES_TYPE = "broadcast_nodes"
 let c_NONCE_KEY = "nonce"
 let c_BLOCK_KEY = "block"
 
+type network_event =
+  | PingDiscovery
+  | NewTransaction of transaction
+  | SolvedBlock of (block * Mining.Miner.nonce)
+  | BroadcastNodes of (OcamlcoinNetwork.ocamlcoin_node list)
+
 let make_event_json (transaction_key : string) (json : Y.Basic.json) : Y.Basic.json =
   `Assoc [(c_TRANSACTION_TYPE_KEY, `String transaction_key);
           (c_JSON_DATA_KEY, json)]

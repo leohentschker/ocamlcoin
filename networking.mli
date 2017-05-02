@@ -20,10 +20,3 @@ module OcamlcoinNetwork :
     val attach_broadcast_listener : (Yojson.Basic.json -> ocamlcoin_node -> unit) -> unit
     val json_to_ocamlcoin_node : Yojson.Basic.json -> ocamlcoin_node
   end
-
-type network_event =
-  | PingDiscovery
-  | NewTransaction of transaction
-  | SolvedBlock of (block * nonce)
-  | BroadcastNodes of (OcamlcoinNetwork.ocamlcoin_node list)
-

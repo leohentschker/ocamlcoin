@@ -1,5 +1,4 @@
 module IO = IOHelpers ;;
-open Payments ;;
 open Yojson ;;
 
 let c_IP_JSON_KEY = "ip"
@@ -129,9 +128,3 @@ module OcamlcoinNetwork =
       (* run the server on an asynchronous thread *)
       server#run_server_async ();
   end
-
-type network_event =
-  | PingDiscovery
-  | NewTransaction of transaction
-  | SolvedBlock of (block * Mining.Miner.nonce)
-  | BroadcastNodes of (OcamlcoinNetwork.ocamlcoin_node list)
