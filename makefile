@@ -1,4 +1,4 @@
-all: io_helpers networking crypto signature merkle
+all: crypto_tests
 
 tests: payments_tests events_tests
 
@@ -11,7 +11,7 @@ events: events.ml
 payments_tests: payments_tests.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix payments_tests.byte
 
-events_tests: events_tests.ml
+events_tests: events_tests.mli
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix -ocamlc 'ocamlc -thread str.cma threads.cma' events_tests.byte
 
 networking_tests: networking_tests.ml
