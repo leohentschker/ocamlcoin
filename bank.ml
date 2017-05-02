@@ -35,5 +35,25 @@ let rec verify (t : MT.mtree) (n : int) : bool =
 
 let verify_tree (t : MT.mtree) = verify t (List.length (MT.children t) - 1)
 
+let merge_trees (tree1 : MT.mtree ref)
+                (tree2 : MT.mtree ref) : unit =
+  let rec merge_helper (subtree1 : MT.mtree ref)
+                       (subtree2 : MT.mtree ref) : unit =
+    if not ((verify_tree !subtree1) || (verify_tree !subtree2))
+      then raise (Invalid_argument "Stop trying to cheat")
+    else if (MT.root_hash subtree1 = MT.root_hash subtree2) then ()
+    else
+      match !subtree1, !subtree2 with
+      | Empty, _ -> subtree1 := !subtree2
+      | _, Empty -> subtree2 := !subtree1
+      | _, Leaf (s2, e2) -> add_transaction e2 t1
+      | Leaf (_, _), Tree (_, _, _, lt, lr) -> merge_helper t1 lt;
+                                               merge_helper t1 lr
+      | Tree (_, _, _, lt1, lr1), Tree (_, _, _, lt2, lr2) ->
+          merge_helper lt1 lt2;
+          merge_helper lr1 lr2
+  in
+merge_helper tree1 tree2 ;;
+
 let query (s : string) (m : MT.mtree ref) : transaction list =
   (MT.queryid (string_to_pub s) !m) @ (MT.queryhash s !m)
