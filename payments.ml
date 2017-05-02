@@ -37,13 +37,6 @@ class transaction
   end
 
 
-(* let make_transaction (private_key : priv_key)
-                     (public_key : pub_key)
-                     (amount : float)
-                     (target : pub_key) =
-  new transaction public_key target  *)
-
-
 let json_to_transaction (json : Y.Basic.json) : transaction =
   let open Y.Basic.Util in
   let originator = string_to_pub (json |> member c_ORIGINATOR_KEY |> to_string) in
