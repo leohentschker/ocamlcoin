@@ -1,5 +1,5 @@
 module IO = IOHelpers
-open Crypto.Signature
+open Crypto.Keychain
 module Y = Yojson
 
 let c_PROFILE_FILE_NAME = "profile.json"

@@ -1,6 +1,5 @@
-open Crypto
+open Crypto.Keychain
 module Y = Yojson
-open Signature
 
 let c_ORIGINATOR_KEY = "originator"
 let c_TARGET_KEY = "target"
@@ -19,8 +18,8 @@ class transaction
     method amount = amount
     (* following https://realworldocaml.org/v1/en/html/handling-json-data.html *)
     method to_json =
-      `Assoc[(c_ORIGINATOR_KEY, `String (Signature.pub_to_string originator));
-             (c_TARGET_KEY, `String (Signature.pub_to_string target));
+      `Assoc[(c_ORIGINATOR_KEY, `String (pub_to_string originator));
+             (c_TARGET_KEY, `String (pub_to_string target));
              (c_AMOUNT_KEY, `Float (amount))]
     method to_string =
       this#to_json |> Y.Basic.to_string

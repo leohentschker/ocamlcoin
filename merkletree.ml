@@ -2,7 +2,7 @@ open Sexplib
 (* open Crypto_fake *)
 
 open Crypto
-open Signature
+open Keychain
 open Payments
 
 

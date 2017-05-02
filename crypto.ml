@@ -3,9 +3,8 @@ open Nocrypto
 
 let () = Nocrypto_entropy_unix.initialize ()
 
-module Signature =
+module Keychain =
   struct
-    type signature = Cstruct.t * Cstruct.t
     type priv_key = Dsa.priv
     type pub_key = Dsa.pub
     let priv_to_string (p : priv_key) = Sexp.to_string (Dsa.sexp_of_priv (p))
@@ -15,7 +14,15 @@ module Signature =
     let generate_keypair () =
       let private_key = Dsa.generate (`Fips1024) in
       private_key, Dsa.pub_of_priv private_key
-    let sign (pk : priv_key) = Dsa.sign ~key:pk
+  end
+
+open Keychain
+
+module Signature =
+  struct
+    type signature = Cstruct.t * Cstruct.t
+    (* remove partial application to destroy optional args *)
+    let sign (pk : priv_key) (s : string) = Dsa.sign ~key:pk (Cstruct.of_string s)
     let verify (plaintext : string) (pub : pub_key) (s : signature) = Dsa.verify ~key:pub s (Cstruct.of_string plaintext)
 
   end
