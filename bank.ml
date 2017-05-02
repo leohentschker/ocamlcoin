@@ -3,7 +3,7 @@ open Crypto
 open Crypto.Keychain
 open Payments
 open Merkletree
-open IOhelpers
+open IOHelpers
 
 (* let MasterId = generate_keypair () *)
 module MT = MakeMerkle (TransactionSerializable) (SHA256)
