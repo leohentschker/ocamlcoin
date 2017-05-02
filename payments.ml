@@ -8,6 +8,7 @@ let c_TARGET_KEY = "target"
 let c_AMOUNT_KEY = "amount"
 let c_TIMESTAMP_KEY = "timestamp"
 let c_SIGNATURE_KEY = "signature"
+let c_SOLUTION_KEY = "solution"
 let c_BLOCK_SIZE = 10
 
 module Transaction =
@@ -17,18 +18,21 @@ module Transaction =
         (target : pub_key)
         (amount : float)
         (timestamp : float)
-        (auth_sig : signature) =
+        (auth_sig : signature)
+        (solution : int) =
       object(this)
         val originator = originator
         val target = target
         val amount = amount
         val timestamp = timestamp
         val signature = auth_sig
+        val solution = solution
         method originator = originator
         method target = target
         method amount = amount
         method timestamp = timestamp
         method signature = signature
+        method solution = solution
         method to_string =
           this#to_json |> Y.Basic.to_string
         method authenticated =
@@ -38,9 +42,11 @@ module Transaction =
           `Assoc[(c_ORIGINATOR_KEY, `String (pub_to_string originator));
                  (c_TARGET_KEY, `String (pub_to_string target));
                  (c_AMOUNT_KEY, `Float amount);
-                 (c_SIGNATURE_KEY, Crypto.Signature.signature_to_json this#signature)]
+                 (c_TIMESTAMP_KEY, 'Float timestamp);
+                 (c_SIGNATURE_KEY, Crypto.Signature.signature_to_json this#signature);
+                 (c_SOLUTION_KEY 'Int solution)]
       end
-
+      (* DO WE WANNA MAKE THIS CONSISTENT???? *)
     let string_of_transaction_data (orig : pub_key)
                                    (target : pub_key)
                                    (amount : float)
@@ -48,10 +54,10 @@ module Transaction =
       string_of_float amount
 
     let create_transaction (orig : pub_key) (target : pub_key) (amount : float)
-                           (timestamp : float) (priv : priv_key) : transaction =
+                           (timestamp : float) (priv : priv_key) (solution : int): transaction =
       let signature = Crypto.Signature.sign priv
         (string_of_transaction_data orig target amount timestamp) in
-      new transaction orig target amount timestamp signature
+      new transaction orig target amount timestamp signature solution
 
     let authenticate_transaction (t : transaction) : bool =
         Crypto.Signature.verify (string_of_transaction_data
@@ -65,7 +71,8 @@ module Transaction =
       let amount = json |> member c_AMOUNT_KEY |> to_float in
       let timestamp = json |> member c_TIMESTAMP_KEY |> to_float in
       let auth_sig = json |> member c_SIGNATURE_KEY |> json_to_signature in
-      new transaction originator target amount timestamp auth_sig
+      let solution = json |> member c_SOLUTION_KEY |> json_to_signature in
+      new transaction originator target amount timestamp auth_sig solution
   end
 
 open Transaction
