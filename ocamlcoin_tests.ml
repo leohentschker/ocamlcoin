@@ -2,4 +2,5 @@ open Ocamlcoin
 open TestHelpers
 open Networking
 
-let _ = Networking.c_USE_LOCAL_NETWORK := true ;;
+(* Set c_USE_LOCAL_NETWORK to true before running *)
+
