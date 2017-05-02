@@ -2,7 +2,7 @@ open Sexplib
 (* open Crypto_fake *)
 
 open Crypto
-open Signature
+open Crypto.Signature
 open Payments
 
 type ordering = L | G | E
@@ -11,14 +11,11 @@ module type SERIALIZE =
   sig
     type amount
     type time
-    type t =
-      {id1 : pub_key;
-       id2 : pub_key;
-       amount : amount;
-       time : time}
+    type t
+    type id
     val serialize : t -> string
     val gen : unit -> t
-    val get : t -> (pub_key * pub_key * amount * time)
+    val get : t -> (id * id * amount * time)
     val compare : time -> time -> ordering
     val min : time -> time -> time
   end
@@ -35,11 +32,15 @@ module IntSerializable : SERIALIZE =
 *)
 
 
-module TransactionSerializable : SERIALIZE =
+module TransactionSerializable : (SERIALIZE with type amount = float 
+                                             and type time = float 
+                                             and type t = transaction
+                                             and type id = pub_key) =
   struct
     type amount = float
     type time = float
     type t = transaction
+    type id = pub_key
     let serialize t = t#to_string
     let fake_transaction_data () =
       let _, originator = generate_keypair () in
@@ -48,12 +49,12 @@ module TransactionSerializable : SERIALIZE =
       let timestamp = Random.float 10000. in
       originator, target, amount, timestamp
     let gen () =
-      let originator, target, amount timestamp = fake_transaction_data () in
+      let originator, target, amount, timestamp = fake_transaction_data () in
       new transaction originator target amount timestamp
-    let get t = (t.originator, t.target, t.amount, t.timestamp)
+    let get (t : transaction) = (t#originator, t#target, t#amount, t#timestamp)
     let compare (t1 : time) (t2 : time) : ordering =
       if t1 < t2 then L
-      if t1 > t2 then G
+      else if t1 > t2 then G
       else E
     let min (t1 : time) (t2 : time) : time =
       if compare t1 t2 = L then t1 else t2
@@ -64,8 +65,9 @@ module type MERKLETREE =
   sig
     type element
     type amount
+    type id
     type time
-    val get : element -> pub_key * pub_key * amount * time
+    val get : element -> id * id * amount * time
     val serializelist : element list -> string list
     val base_hash : element -> string
     val tree_hash : string -> string
@@ -79,22 +81,22 @@ module type MERKLETREE =
     val tree_helper : element list -> mtree
     val build_tree : element list -> mtree
     val merge_trees : mtree -> mtree -> unit
-    val children : mtree -> string list
+    val children : mtree -> element list
     val add_element : element -> mtree -> mtree
-    val queryid : pub_key -> mtree -> element list
+    val queryid : id -> mtree -> element list
     val queryhash : string -> mtree -> element list
     val run_tests : unit -> unit
   end
 
 module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S.t
-                                                            and type id = pub_key
+                                                            and type id = S.id
                                                             and type amount = S.amount
                                                             and type time = S.time) =
   struct
 
     type element = S.t
 
-    type id = pub_key
+    type id = S.id
     type amount = S.amount
     type time = S.time
 
@@ -109,7 +111,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       H.hash_text s
 
     type mtr =
-      Leaf of string * element | Tree of string * pub_key list * time * mtree * mtree
+      Leaf of string * element | Tree of string * id list * time * mtree * mtree
     and mtree = mtr ref
 
     let root_hash (t : mtree) : string =
@@ -154,10 +156,10 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       | Leaf (s1, e), Tree (s2, lst, time2, _, _) ->
           let (id1, id2, _, time1) = get e in
           ref (Tree (tree_hash (s1 ^ s2), union [id1; id2] lst, S.min time1 time2, t1, t2))
-      | Tree (s1, lst, time1, _, _), Leaf (s2, e)
+      | Tree (s1, lst, time1, _, _), Leaf (s2, e) ->
           let (id1, id2, _, time2) = get e in
           ref (Tree (tree_hash (s1 ^ s2), union lst [id1; id2], S.min time1 time2, t1, t2))
-      | Tree (s1, l1, time1, _, _), Tree (s2, l2, time2, _, _)
+      | Tree (s1, l1, time1, _, _), Tree (s2, l2, time2, _, _) ->
           ref (Tree (tree_hash (s1 ^ s2), union l1 l2, S.min time1 time2, t1, t2))
 
     let rec tree_helper (lst : element list) : mtree =
@@ -194,13 +196,13 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
             then combine_trees t newleaf
           else combine_trees t1 (add_element e t2)
 
-    let rec queryid (id : pub_key) (t : mtree) : element list =
+    let rec queryid (id : id) (t : mtree) : element list =
       match !t with
       | Leaf (_, e) ->
           let (id1, id2, _, _) = get e in
           if id = id1 || id = id2 then [e] else []
       | Tree (_, lst, _, l, r) ->
-          if List.mem id lst then (queryid l) @ (queryid r)
+          if List.mem id lst then (queryid id l) @ (queryid id r)
           else []
 
     let queryhash (hash : string) (t : mtree) : element list =
