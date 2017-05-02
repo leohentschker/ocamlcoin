@@ -40,11 +40,11 @@ module OcamlcoinRunner =
           match json_to_event json with
           | NewTransaction t ->
               print_endline "NEW TRANS";
-              if Bank.verify_transaction t then
+              if Bank.verify_transaction t Bank.ledger then
                 Payments.add_unmined_transaction t
           | SolvedBlock(block, nonce) ->
               print_endline "SOLVED BLOCK";
-              List.iter Bank.add_transaction block#transactions
+              List.iter (fun t -> Bank.add_transaction t Bank.ledger) block#transactions
           | PingDiscovery ->
               print_endline ("PING DISCOVERY from ip: " ^ node#ip ^ "asd");
               broadcast_event (BroadcastNodes(get_peers ())) node;
