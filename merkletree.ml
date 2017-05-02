@@ -219,9 +219,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
 
     let run_tests () =
       test1 () ;
-      test_combine_trees () ;
-      print_endline "All tests passed" ;
-      ()
+      test_combine_trees () 
 
   end
 
