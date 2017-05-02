@@ -26,7 +26,6 @@ networking: networking.ml
 crypto: crypto.ml
 	ocamlbuild -pkgs nocrypto.unix crypto.byte
 
-
 merkle: merkletree.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs sexplib -pkgs nocrypto.unix merkletree.byte
 
