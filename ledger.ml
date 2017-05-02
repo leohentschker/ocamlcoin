@@ -4,8 +4,8 @@ open Crypto.Keychain
 open Payments
 open Merkletree
 open Wallet
-(* module Ledger =
-  struct *)
+module Ledger =
+  struct 
   module MT = MakeMerkle (TransactionSerializable) (SHA256)
   module W = MakeWallet
 
@@ -29,4 +29,4 @@ open Wallet
 
   let query (s : string) (m : MT.mtree ref) : transaction list =
     (MT.queryid (string_to_pub s) !m) @ (MT.queryhash s !m)
- (* end *)
+ end 
