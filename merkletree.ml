@@ -2,7 +2,7 @@ open Sexplib
 open IOHelpers
 open Crypto
 open Crypto.Keychain
-open Payments
+open Payments.Transaction
 
 type ordering = L | G | E
 

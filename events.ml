@@ -1,5 +1,6 @@
 open Networking
-open Payments
+open Payments.Transaction
+open Payments.Block
 open Mining.Miner
 module Y = Yojson
 

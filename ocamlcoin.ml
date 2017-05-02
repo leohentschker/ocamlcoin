@@ -32,6 +32,8 @@ module OcamlcoinRunner =
       peer_tuples := List.filter
         (fun (n, t) -> t -. Unix.time () < c_MAX_NODE_TIMEOUT) !peer_tuples;
       if !peer_tuples = [] then raise EmptyNetwork
+    let broadcast_event_over_network (e : network_event) =
+      List.iter (broadcast_event e) (get_peers ())
     (* run everything! *)
     let run () =
       OcamlcoinNetwork.run ();

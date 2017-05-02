@@ -1,7 +1,7 @@
 open Sexplib
 open Crypto
 open Crypto.Keychain
-open Payments
+open Payments.Transaction
 open Merkletree
 open IOHelpers
 
