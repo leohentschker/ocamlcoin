@@ -20,6 +20,10 @@ module Signature =
       Dsa.verify ~key:pub s (Cstruct.of_string plaintext)
 
     (* Testing in module because verify and sign are abstracted away *)
+    let test_generate_keypair () =
+      let (priv_key, pub_key) = generate_keypair () in
+      assert (pub_key = pub_priv priv_key)
+
     let test_sign () =
       let (priv_key, pub_key) = generate_keypair () in
       let message = string_of_int (Random.int 10000000) in
@@ -27,6 +31,7 @@ module Signature =
       assert (verify message pub_key signed)
 
     let run_tests () =
+      TestHelpers.run_tests test_generate_keypair;
       TestHelpers.run_tests test_sign
   end
 
