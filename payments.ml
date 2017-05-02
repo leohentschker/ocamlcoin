@@ -55,12 +55,12 @@ let json_to_block (json : Y.Basic.json) : block =
   | _ -> failwith "Blocks can only serialize json lists"
 
 (* Store a global list of unverified transactions *)
-let unverified_transactions = ref []
-let add_unverified_transaction (t : transaction) =
-  unverified_transactions := t :: !unverified_transactions
+let unmined_transactions = ref []
+let add_unmined_transaction (t : transaction) =
+  unmined_transactions := t :: !unmined_transactions
 
 exception NoUnverified
-let get_unverified_block () =
-  match IO.sublist !unverified_transactions 0 c_BLOCK_SIZE with
+let get_unmined_block () =
+  match IO.sublist !unmined_transactions 0 c_BLOCK_SIZE with
   | [] -> raise NoUnverified
   | lst -> new block lst

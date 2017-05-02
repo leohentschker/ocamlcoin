@@ -21,5 +21,5 @@ class block : transaction list -> object
 val json_to_block : Yojson.Basic.json -> block
 
 exception NoUnverified
-val add_unverified_transaction : transaction -> unit
-val get_unverified_block : unit -> block
+val add_unmined_transaction : transaction -> unit
+val get_unmined_block : unit -> block

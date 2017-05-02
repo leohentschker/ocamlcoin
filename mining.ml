@@ -44,7 +44,7 @@ module Miner =
       iterate_check iters
 
     let mine_async () =
-      let b = Payments.get_unverified_block () in
+      let b = Payments.get_unmined_block () in
       let _ = Thread.create (fun () -> mine b max_int) () in
       ()
   end

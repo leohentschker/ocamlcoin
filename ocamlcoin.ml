@@ -8,9 +8,11 @@ let run_network () =
       print_endline s;
       match string_to_event s with
       | NewTransaction t ->
-          print_endline "NEW TRANS"
+          print_endline "NEW TRANS";
+          if Bank.verify_transaction t then Payments.add_unmined_transaction t
       | SolvedBlock(block, nonce) ->
-          print_endline "SOLVED BLOCK"
+          print_endline "SOLVED BLOCK";
+          List.iter Bank.add_transaction block#transactions
       | PingDiscovery ->
           print_endline "PING DISCOVERY"
       | BroadcastNodes(nlist) ->
