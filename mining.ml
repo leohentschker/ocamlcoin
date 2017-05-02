@@ -1,4 +1,4 @@
-open Payments
+open Payments.Block
 open Payments_tests
 exception Nosolution of string
 
@@ -30,7 +30,7 @@ module Miner =
       first_chars = String.make leading_zeros '0'
 
     (* Implementation of the mining algorithm for proof-of-work *)
-    let mine (b : Payments.block) (iters: int) : nonce =
+    let mine (b : block) (iters: int) : nonce =
       (* This inner function takes an integer and checks
          the has verify of s^nonce for nonce = 1,..., n *)
       is_mining := true;

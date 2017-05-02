@@ -1,4 +1,6 @@
 open Payments
+open Transaction
+open Block
 open TestHelpers
 open Crypto.Keychain
 

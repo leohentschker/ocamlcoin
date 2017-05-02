@@ -1,6 +1,7 @@
 open Networking
 open Mining.Miner
-open Payments
+open Payments.Transaction
+open Payments.Block
 
 type network_event =
   | PingDiscovery
