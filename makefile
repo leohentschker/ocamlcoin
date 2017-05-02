@@ -44,8 +44,8 @@ gui: gui.ml
 wallet : wallet.ml
 	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix -pkg yojson wallet.byte
 
-ledger : ledger.ml
-	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix -pkg yojson ledger.byte
+bank : bank.ml
+	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix -pkg yojson bank.byte
 
 clean:
 	rm -rf _build
