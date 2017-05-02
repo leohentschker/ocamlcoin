@@ -1,4 +1,4 @@
-open Crypto.Signature
+open Crypto.Keychain
 
 class transaction : pub_key -> pub_key -> float -> float -> object
     method to_json : Yojson.Basic.json
