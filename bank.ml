@@ -14,7 +14,7 @@ let verify_transaction (t : transaction) (l: MT.mtree ref): bool =
   let eltlst = MT.queryid id1 !l in 
   let timedlst = List.filter (fun x -> x#timestamp < timestamp) eltlst in 
   let total_amount = List.fold_left (fun acc x -> if x#originator = id1 then acc - x#amount 
-                                     else acc + x#amount) 0. timedlst 
+                                     else acc +. x#amount) 0. timedlst 
   in
   not (eltlst = []) && (total_amount < amount) && 
   (if amount < 0. then not (MT.queryid id2 !l = []) else true) &&
