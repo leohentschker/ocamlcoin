@@ -9,9 +9,9 @@ module type DICT =
     type value
     type dict
     val empty : dict
-    val compare : value -> value -> ordering
+    val compare : key -> key -> ordering
     val find : dict -> key -> value option
-    val add : dict -> key -> value -> dict
+    val insert : dict -> key -> value -> dict
   end
 
 module MakeWallet : (DICT with type key = pub_key and type value = float) =
@@ -19,7 +19,7 @@ module MakeWallet : (DICT with type key = pub_key and type value = float) =
     type key = pub_key
     type value = float
     type dict =
-      Empty | Tree of dict * key * value * dict
+      Empty | Tree of dict * (key * value) * dict
 
     let empty = Empty
 
@@ -28,10 +28,10 @@ module MakeWallet : (DICT with type key = pub_key and type value = float) =
         let i = String.compare s1 s2 in
         if i = 0 then E else if i < 0 then G else L
 
-    let find d k =
+    let rec find d k =
       match d with
       | Empty -> None
-      | Tree (d1, k', v', d2) ->
+      | Tree (d1, (k', v'), d2) ->
           match compare k k' with
           | E -> Some v'
           | L -> find d1 k
@@ -39,12 +39,12 @@ module MakeWallet : (DICT with type key = pub_key and type value = float) =
 
     let rec insert d k v =
       match d with
-        | Empty -> Tree (Empty, (k,v), Empty)
+        | Empty -> Tree (Empty, (k, v), Empty)
         | Tree (dl, ((k1, _v1) as kv), dr) ->
-           (match D.compare k k1 with
-            | Equal -> Tree (dl, (k,v), dr)
-            | Less -> Tree (insert dl k v, kv, dr)
-            | Greater -> Tree (dl, kv, insert dr k v)) ;;
+           (match compare k k1 with
+            | E -> Tree (dl, (k, v), dr)
+            | L -> Tree (insert dl k v, kv, dr)
+            | G -> Tree (dl, kv, insert dr k v)) ;;
   end
 
 

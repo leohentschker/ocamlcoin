@@ -20,17 +20,6 @@ module type SERIALIZE =
     val min : time -> time -> time
   end
 
-(*
-module IntSerializable : SERIALIZE =
-  struct
-    type t = int
-    let serialize = string_of_int
-    let gen =
-      let _ = Random.self_init () in
-      (fun () -> Random.int 10000)
-  end
-*)
-
 
 module TransactionSerializable : (SERIALIZE with type amount = float 
                                              and type time = float 
@@ -221,15 +210,30 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       let t2 = build_tree l2 in
       assert (root_hash t1 = root_hash t2)
 
+    let test_combine_trees () = 
+      let e1 = S.gen () in
+      let e2 = S.gen () in
+      let e3 = S.gen () in
+      let e4 = S.gen () in
+      let e5 = S.gen () in 
+      let e6 = S.gen () in
+      let l1 = [e1; e2; e3] in
+      let l2 = [e4; e5; e6] in
+      let lcomb = l1 @ l2 in 
+      let t1 = build_tree l1 in
+      let t2 = build_tree l2 in
+      assert (root_hash (combine_trees t1 t2) = root_hash (build_tree lcomb))
+
     let run_tests () =
       test1 () ;
+      test_combine_trees () ; 
       print_endline "All tests passed" ;
       ()
 
   end
-(*
-module FakeMerkle = MakeMerkle (IntSerializable) (SHA256) ;;
 
-let _ = FakeMerkle.run_tests () ;;
-*)
+module FakeMerkle = MakeMerkle (TransactionSerializable) (SHA256) ;;
+
+let _ = FakeMerkle.run_tests ();;
+
 

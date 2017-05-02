@@ -41,5 +41,11 @@ payments_tests: payments_tests.ml
 gui: gui.ml
 	ocamlbuild -use-ocamlfind -pkgs lablgtk2 -pkgs nocrypto.unix -ocamlc 'ocamlc -thread threads.cma' gui.byte
 
+wallet : wallet.ml
+	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix -pkg yojson wallet.byte
+
+ledger : ledger.ml
+	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix -pkg yojson ledger.byte
+
 clean:
 	rm -rf _build
