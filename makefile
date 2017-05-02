@@ -48,4 +48,4 @@ bank : bank.ml
 	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix -pkg yojson bank.byte
 
 clean:
-	rm -rf _build
+	rm -rf _build && rm -rf *.byte
