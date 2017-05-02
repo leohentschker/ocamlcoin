@@ -26,7 +26,7 @@ module Signature =
       Dsa.verify ~key:pub s (Cstruct.of_string plaintext)
 
     (* Testing in module because verify and sign are abstracted away *)
-    let test_generate_keypair () =i
+    let test_generate_keypair () =
       let (priv_key, pub_key) = generate_keypair () in
       assert (pub_key = pub_priv priv_key)
 
