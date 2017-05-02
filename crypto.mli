@@ -12,6 +12,7 @@ module Keychain :
 module Signature :
   sig
     type signature
+    val signature_to_string : signature -> string
     val sign : Keychain.priv_key -> string -> signature
     val verify : string -> Keychain.pub_key -> signature -> bool
   end
