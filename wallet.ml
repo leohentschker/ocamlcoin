@@ -1,6 +1,6 @@
 open Payments
 open Crypto
-open Crypto.Signature
+open Crypto.Keychain
 open Order
 
 module type DICT =

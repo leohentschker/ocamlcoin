@@ -1,6 +1,6 @@
 open Sexplib
 open Crypto
-open Crypto.Signature
+open Crypto.Keychain
 open Payments
 open Merkletree
 open Wallet
