@@ -8,6 +8,8 @@ let c_PORT_JSON_KEY = "port"
 let c_DATA_JSON_KEY = "message_data"
 let c_DEFAULT_COIN_PORT = 8332
 
+let c_USE_LOCAL_NETWORK = ref true
+
 let is_valid_ip ip_str =
   Str.string_match (Str.regexp "\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)") ip_str 0 ;;
 
@@ -47,7 +49,7 @@ class coinserver =
     method handle_message s = List.iter (fun a -> a s) !listeners
     (* sends the message s over the internet address *)
     method send_message s inet_addr port =
-      if !TestHelpers.c_TESTS_RUNNING then
+      if !c_USE_LOCAL_NETWORK then
         let _ = this#handle_message s in
         true
       else try
