@@ -1,3 +1,5 @@
+open Payments.Block
+open Payments_tests
 exception Nosolution of string
 
 module Miner =
@@ -28,7 +30,7 @@ module Miner =
       first_chars = String.make leading_zeros '0'
 
     (* Implementation of the mining algorithm for proof-of-work *)
-    let mine (b : Payments.block) (iters: int) : nonce =
+    let mine (b : block) (iters: int) : nonce =
       (* This inner function takes an integer and checks
          the has verify of s^nonce for nonce = 1,..., n *)
       is_mining := true;
@@ -44,7 +46,18 @@ module Miner =
       iterate_check iters
 
     let mine_async () =
-      let b = Payments.get_unverified_block () in
+      let b = Payments.get_unmined_block () in
       let _ = Thread.create (fun () -> mine b max_int) () in
       ()
-  end
+    let generate_fake_nonce () =
+      string_to_nonce (string_of_int (Random.int 1000))
+
+    let test_mining () = 
+      let word = "hello" in
+      let bad = generate_fake_nonce () in
+      assert (not (verify word bad));
+      let blockk = new block ([generate_fake_transaction ()]) in
+      let t = string_of_int (mine blockk 100000) in 
+      assert (String.sub (hash_text(blockk#to_string ^ t)) 0 2 = "00") 
+     end
+  let _ = Miner.test_mining ()

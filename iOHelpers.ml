@@ -28,6 +28,9 @@ let write_file (s : string) (fname : string) : unit =
   Printf.fprintf oc "%s" s;
   close_out oc
 
+let write_json (json : Yojson.Basic.json) (fname : string) : unit =
+  write_file (Yojson.Basic.to_string json) fname
+
 (* following http://www.rosettacode.org/wiki/Execute_a_system_command#OCaml *)
 let syscall (s : string) : string =
   let ic, oc = Unix.open_process s in

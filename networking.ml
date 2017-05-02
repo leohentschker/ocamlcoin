@@ -1,13 +1,15 @@
 module IO = IOHelpers ;;
-open Payments ;;
 open Yojson ;;
 
 let c_IP_JSON_KEY = "ip"
 let c_PORT_JSON_KEY = "port"
+let c_DATA_JSON_KEY = "message_data"
 let c_DEFAULT_COIN_PORT = 8332
 
-let is_valid_ip s =
-  Str.string_match (Str.regexp "\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)") s 0 ;;
+let c_USE_LOCAL_NETWORK = ref true
+
+let is_valid_ip ip_str =
+  Str.string_match (Str.regexp "\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)") ip_str 0 ;;
 
 (* attempt to determine a private ip *)
 let rec get_private_ip () =
@@ -33,15 +35,23 @@ class coinserver =
   object(this)
     (* listeners that get called on receiving data over the network *)
     val listeners : (string -> unit) list ref = ref []
+    val ip = get_private_ip ()
+    method ip = ip
     (* helper method to initialize the connection over a socket *)
     method initialize_sock inet_addr port =
       let fd = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
       let sock_addr = Unix.ADDR_INET (inet_addr, port) in
       Unix.setsockopt fd Unix.SO_REUSEADDR true;
       fd, sock_addr
+    (* handle an incoming message over the network *)
+    method handle_message s =
+      List.iter (fun a -> a s) !listeners
     (* sends the message s over the internet address *)
     method send_message s inet_addr port =
-      try
+      if !c_USE_LOCAL_NETWORK then
+        let _ = this#handle_message s in
+        true
+      else try
         let fd, sock_addr = this#initialize_sock inet_addr port in
         Unix.connect fd sock_addr;
         let buf = Bytes.of_string s in
@@ -62,7 +72,7 @@ class coinserver =
         let buf = Bytes.create 4096 in
         let len = Unix.recv client_fd buf 0 (String.length buf) [] in
         let request = String.sub buf 0 len in
-        List.iter (fun a -> a request) !listeners;
+        this#handle_message request;
         Unix.close client_fd;
         (* wait for the next connection *)
         server_loop() in
@@ -83,10 +93,11 @@ module OcamlcoinNetwork =
     type peer = string
     class ocamlcoin_node ip_addr port_number =
       object(this)
-        val ip = ip_addr
+        val ip = String.trim ip_addr
         val port = port_number
         method ip = ip
         method port = port
+        method serialize = this#ip ^ "," ^ (string_of_int this#port)
         method send_message s =
           server#send_message s (Unix.inet_addr_of_string ip) port
         method to_json : Basic.json =
@@ -97,31 +108,23 @@ module OcamlcoinNetwork =
       new ocamlcoin_node
         (json |> member c_IP_JSON_KEY |> to_string)
         (json |> member c_PORT_JSON_KEY |> to_int)
-    (* store the other people in our network *)
-    let peers : ocamlcoin_node list ref = ref []
-    (* load the peers we are aware of *)
-    let load_peers ?(peer_file : string = "peers.txt") () =
-      peers := List.map
-        (fun peer_description ->
-          match Str.split (Str.regexp ",") peer_description with
-          | [ip; port] ->
-              new ocamlcoin_node ip (int_of_string port)
-          | _ ->
-              raise (Invalid_argument "Unable to parse peer description"))
-        (IO.page_lines peer_file)
-    let attach_broadcast_listener = server#add_listener
-    let broadcast_over_network (msg : string) =
-      List.iter (fun n -> let _ = n#send_message msg 
-                          in ())
-                !peers
+    let attach_broadcast_listener f =
+      server#add_listener
+        (fun s ->
+          let open Yojson.Basic.Util in
+          let json = Yojson.Basic.from_string s in
+          f (json |> member c_DATA_JSON_KEY)
+            (new ocamlcoin_node (json |> member c_IP_JSON_KEY |> to_string)
+              (json |> member c_PORT_JSON_KEY |> to_int)))
+    let broadcast_to_node (json_msg : Yojson.Basic.json)
+                           (node : ocamlcoin_node)  =
+      (* attach the port and the ip to the json *)
+      let _ = node#send_message(Yojson.Basic.to_string
+        (`Assoc [(c_DATA_JSON_KEY, json_msg);
+                 (c_PORT_JSON_KEY, `Int c_DEFAULT_COIN_PORT);
+                 (c_IP_JSON_KEY, `String server#ip)])) in
+      ()
     let run () =
       (* run the server on an asynchronous thread *)
       server#run_server_async ();
-      load_peers ()
   end
-
-type network_event =
-  | PingDiscovery
-  | NewTransaction of transaction
-  | SolvedBlock of (block * Mining.Miner.nonce)
-  | BroadcastNodes of (OcamlcoinNetwork.ocamlcoin_node list)

@@ -21,9 +21,17 @@ open Keychain
 module Signature =
   struct
     type signature = Cstruct.t * Cstruct.t
-    (* remove partial application to destroy optional args *)
-    let sign (pk : priv_key) (s : string) = Dsa.sign ~key:pk (Cstruct.of_string s)
-    let verify (plaintext : string) (pub : pub_key) (s : signature) = Dsa.verify ~key:pub s (Cstruct.of_string plaintext)
+    let signature_to_json ((c1, c2) : signature) =
+      `List[`String (Cstruct.to_string c1); `String (Cstruct.to_string c2)]
+    let json_to_signature (json : Yojson.Basic.json) : signature =
+      match json with
+      | `List [`String s1; `String s2] ->
+        (Cstruct.of_string s1, Cstruct.of_string s2)
+      | _ -> failwith "Unexpected format"
+    let sign (pk : priv_key) (s : string) =
+      Dsa.sign ~key:pk (Cstruct.of_string s)
+    let verify (plaintext : string) (pub : pub_key) (s : signature) =
+      Dsa.verify ~key:pub s (Cstruct.of_string plaintext)
   end
 
 module type HASH = sig val hash_text : string -> string end

@@ -2,6 +2,7 @@
 open GdkKeysyms
 open Mining
 open GMain
+open Payments
 
 let locale = GtkMain.Main.init () ;;
 let c_WINDOW_WIDTH = 320 ;;
@@ -37,10 +38,12 @@ class gui =
         with Payments.NoUnverified ->
           mining_button#set_label c_NO_BLOCKS_MINING_TEXT
     method make_payment () =
+      let target_ip = payment_target_edit#text in
+      let amount = payment_total_edit#text in
       print_endline (payment_target_edit#text ^ " " ^ payment_total_edit#text)
     method initialize () =
       (* Kill the program when we close the window *)
-      window#connect#destroy ~callback:Main.quit;
+      let _ = window#connect#destroy ~callback:Main.quit in
 
       (* make the background of the window white *)
       window#misc#modify_bg c_BACKGROUND_COLOR;
@@ -58,20 +61,20 @@ class gui =
       let payment_label = GMisc.label ~text:"Make Payment" ~ypad:c_YPAD
                                       ~packing:payment_vbox#pack () in
       payment_label#misc#modify_font_by_name c_HEADER_FONT;
-      let _ = GEdit.entry ~text:"Number of OCamlcoins"
-                          ~packing:payment_vbox#pack () in
+      let payment_total_edit = GEdit.entry ~text:"Number of OCamlcoins"
+                                           ~packing:payment_vbox#pack () in
       payment_target_edit <- GEdit.entry ~text:"IP of person to pay"
                                          ~packing:payment_vbox#pack ();
       let payment_button = GButton.button ~label:"Make Payment"
                                           ~packing:payment_vbox#pack () in
       payment_button#misc#modify_bg c_BUTTON_COLOR;
-      payment_button#connect#clicked ~callback: this#make_payment;
+      let _ = payment_button#connect#clicked ~callback: this#make_payment in
       (* mining UI elements *)
       let mining_vbox = GPack.vbox ~packing:vbox#pack ~border_width:20 () in
       mining_button <- GButton.button ~label:"Mine OCamlcoins"
                                          ~packing:mining_vbox#pack ();
       mining_button#misc#modify_bg c_BUTTON_COLOR;
-      mining_button#connect#clicked ~callback: this#toggle_mining;
+      let _ = mining_button#connect#clicked ~callback: this#toggle_mining in
 
       (* Display the windows and enter Gtk+ main loop *)
       window#show ();

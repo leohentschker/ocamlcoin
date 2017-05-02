@@ -1,24 +1,26 @@
 open Payments
+open Transaction
+open Block
 open TestHelpers
-open Crypto.Signature
+open Crypto.Keychain
 
 let fake_transaction_data () =
-  let _, originator = generate_keypair () in
+  let priv, originator = generate_keypair () in
   let _, target = generate_keypair () in
   let amount = Random.float 1000. in
   let timestamp = Random.float 100000. in
-  originator, target, amount, timestamp
+  originator, target, amount, timestamp, priv
 
 let generate_fake_transaction () =
-  let originator, target, amount, timestamp = fake_transaction_data () in
-  new transaction originator target amount timestamp
+  let originator, target, amount, timestamp, priv = fake_transaction_data () in
+  create_transaction originator target amount timestamp priv
 
 let transactions_equal t1 t2 =
   (t1#amount = t2#amount) && (t1#originator = t2#originator) && (t1#target = t2#target) && (t1#timestamp = t2#timestamp)
 
 let test_transaction_instantiation () =
-  let originator, target, amount, timestamp = fake_transaction_data () in
-  let transaction = new transaction originator target amount timestamp in
+  let originator, target, amount, timestamp, priv = fake_transaction_data () in
+  let transaction = create_transaction originator target amount timestamp priv in
   assert(transaction#originator = originator);
   assert(transaction#target = target);
   assert(transaction#amount = amount);

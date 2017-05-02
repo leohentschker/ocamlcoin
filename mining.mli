@@ -1,4 +1,4 @@
-open Payments
+open Payments.Block
 
 module Miner :
   sig

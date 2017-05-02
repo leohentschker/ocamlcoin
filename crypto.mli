@@ -11,7 +11,9 @@ module Keychain :
 
 module Signature :
   sig
-    type signature
+    type signature = Cstruct.t * Cstruct.t
+    val signature_to_json : signature -> Yojson.Basic.json
+    val json_to_signature : Yojson.Basic.json -> signature
     val sign : Keychain.priv_key -> string -> signature
     val verify : string -> Keychain.pub_key -> signature -> bool
   end

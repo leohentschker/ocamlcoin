@@ -2,7 +2,7 @@ open Sexplib
 open IOHelpers
 open Crypto
 open Crypto.Keychain
-open Payments
+open Payments.Transaction
 
 type ordering = L | G | E
 
@@ -38,7 +38,8 @@ module TransactionSerializable : (SERIALIZE with type amount = float
       originator, target, amount, timestamp
     let gen () =
       let originator, target, amount, timestamp = fake_transaction_data () in
-      new transaction originator target amount timestamp
+      let priv, pub = Keychain.generate_keypair () in
+      create_transaction originator target amount timestamp priv
     let get (t : transaction) = (t#originator, t#target, t#amount, t#timestamp)
     let compare (t1 : time) (t2 : time) : ordering =
       if t1 < t2 then L
@@ -60,6 +61,7 @@ module type MERKLETREE =
     val base_hash : element -> string
     val tree_hash : string -> string
     type mtree
+    val empty : mtree
     val root_hash: mtree -> string
     val half_list : 'a list -> 'a list * 'a list
     val split_list : 'a list -> 'a list * 'a list
@@ -97,6 +99,8 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
 
     type mtree =
       Empty | Leaf of string * element | Tree of string * id list * time * mtree * mtree
+
+    let empty = Empty
 
     let root_hash (t : mtree) : string =
       match t with
@@ -138,7 +142,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
           (Tree (tree_hash (s1 ^ s2), union l1 l2, S.min time1 time2, t1, t2))
       | Empty, _ -> t2
       | _, Empty -> t1
-      | Empty, Empty -> _
+      | Empty, Empty -> Empty
 
     let rec tree_helper (lst : element list) : mtree =
       let (l, r) = half_list lst in
@@ -219,11 +223,8 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       test_combine_trees () ;
       print_endline "All tests passed" ;
       ()
-
   end
 
 module FakeMerkle = MakeMerkle (TransactionSerializable) (SHA256) ;;
 
 let _ = FakeMerkle.run_tests ();;
-
-
