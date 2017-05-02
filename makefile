@@ -27,7 +27,7 @@ networking: networking.ml
 	ocamlbuild -lib unix -pkg sexplib -pkgs nocrypto.unix -pkgs yojson -ocamlc 'ocamlc -thread str.cma threads.cma' -use-ocamlfind networking.byte
 
 crypto: crypto.ml
-	ocamlbuild -pkgs sexplib -pkgs nocrypto.unix crypto.byte
+	ocamlbuild -pkgs sexplib -pkg yojson -pkgs nocrypto.unix crypto.byte
 
 merkle: merkletree.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs sexplib -pkgs nocrypto.unix merkletree.byte

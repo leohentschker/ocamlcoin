@@ -43,7 +43,7 @@ let json_to_transaction (json : Y.Basic.json) : transaction =
   let target = string_to_pub (json |> member c_TARGET_KEY |> to_string) in
   let amount = json |> member c_AMOUNT_KEY |> to_float in
   let timestamp = json |> member c_TIMESTAMP_KEY |> to_float in
-  new transaction originator target amount timestamp
+  new transaction originator target amount timestamp (Cstruct.of_string "", Cstruct.of_string "")
 
 class block (tlist : transaction list) =
   object
