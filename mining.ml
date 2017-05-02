@@ -47,4 +47,16 @@ module Miner =
       let b = Payments.get_unmined_block () in
       let _ = Thread.create (fun () -> mine b max_int) () in
       ()
+    let generate_fake_nonce () =
+  string_to_nonce (string_of_int (Random.int 1000))
+
+  let test_mining () = 
+    let word = "hello" in
+    let bad = generate_fake_nonce () in
+    assert (not (verify word bad));
+    let t = string_of_int (mine word 2000000) in 
+    assert ((String.sub t 0 2) = "00")
   end
+  let K = Miner
+  let _ = run_tests (K.test_mining);
+  print_endline ("All tests passed!")
