@@ -1,3 +1,5 @@
+open Payments
+open Payments_tests
 exception Nosolution of string
 
 module Miner =
@@ -48,15 +50,15 @@ module Miner =
       let _ = Thread.create (fun () -> mine b max_int) () in
       ()
     let generate_fake_nonce () =
-  string_to_nonce (string_of_int (Random.int 1000))
+      string_to_nonce (string_of_int (Random.int 1000))
 
-  let test_mining () = 
-    let word = "hello" in
-    let bad = generate_fake_nonce () in
-    assert (not (verify word bad));
-    let t = string_of_int (mine word 2000000) in 
-    assert ((String.sub t 0 2) = "00")
-  end
-  let K = Miner
-  let _ = run_tests (K.test_mining);
+    let test_mining () = 
+      let word = "hello" in
+      let bad = generate_fake_nonce () in
+      assert (not (verify word bad));
+      let blockk = new block ([generate_fake_transaction ()]) in
+      let t = string_of_int (mine blockk 100000) in 
+      print_endline ((hash_text(blockk#to_string ^ t))) 
+     end
+  let _ = Miner.test_mining ();
   print_endline ("All tests passed!")
