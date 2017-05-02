@@ -6,30 +6,43 @@ let c_ORIGINATOR_KEY = "originator"
 let c_TARGET_KEY = "target"
 let c_AMOUNT_KEY = "amount"
 let c_TIMESTAMP_KEY = "timestamp"
+let c_SIGNATURE = "signature"
 let c_BLOCK_SIZE = 10
 
 class transaction
     (originator : pub_key)
     (target : pub_key)
     (amount : float)
-    (timestamp : float) =
+    (timestamp : float)
+    (signature : Crypto.Signature.signature) =
   object(this)
     val originator = originator
     val target = target
     val amount = amount
     val timestamp = timestamp
+    val signature = signature
     method originator = originator
     method target = target
     method amount = amount
     method timestamp = timestamp
+    method signature = signature
     (* following https://realworldocaml.org/v1/en/html/handling-json-data.html *)
     method to_json =
       `Assoc[(c_ORIGINATOR_KEY, `String (pub_to_string originator));
              (c_TARGET_KEY, `String (pub_to_string target));
-             (c_AMOUNT_KEY, `Float (amount))]
+             (c_AMOUNT_KEY, `Float (amount));
+             (c_SIGNATURE, `String (Crypto.Signature.to_string signature))]
     method to_string =
       this#to_json |> Y.Basic.to_string
   end
+
+
+(* let make_transaction (private_key : priv_key)
+                     (public_key : pub_key)
+                     (amount : float)
+                     (target : pub_key) =
+  new transaction public_key target  *)
+
 
 let json_to_transaction (json : Y.Basic.json) : transaction =
   let open Y.Basic.Util in

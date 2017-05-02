@@ -20,15 +20,19 @@ open Keychain
 
 module Signature =
   struct
-    type signature = Cstruct.t * Cstruct.t  
-    let sign (pk : priv_key) = Dsa.sign ~key:pk
+    type signature = Cstruct.t * Cstruct.t
+    (* remove partial application to destroy optional args *)
+    let signature_to_string (s : signature) : string =
+      (Cstruct.to_string (fst s)) ^ (Cstruct.to_string (snd s))
+    let sign (pk : priv_key) (s : string) =
+      Dsa.sign ~key:pk (Cstruct.of_string s)
     let verify (plaintext : string) (pub : pub_key) (s : signature) =
       Dsa.verify ~key:pub s (Cstruct.of_string plaintext)
 
     (* Testing in module because verify and sign are abstracted away *)
     let test_generate_keypair () =
       let (priv_key, pub_key) = generate_keypair () in
-      assert (pub_key = pub_priv priv_key)
+      assert (pub_key = Dsa.pub_of_priv priv_key)
 
     let test_sign () =
       let (priv_key, pub_key) = generate_keypair () in
