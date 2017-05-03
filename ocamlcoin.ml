@@ -3,7 +3,7 @@ open Networking
 open Networking.OcamlcoinNetwork
 open Events
 open Profile
-open Bank
+open Ledger
 
 let c_DATA_JSON_KEY = "message_data"
 let c_NODE_JSON_KEY = "node"
@@ -47,7 +47,7 @@ module OcamlcoinRunner =
       List.iter (broadcast_event e) (get_peers ())
     let store_state () =
       User.export_nodes (get_peers ());
-      Bank.export_ledger (Bank.ledger)
+      Bank.export_ledger (Bank.book)
     let find_node_by_ip (ip : string) =
       let rec find_node (lst : ocamlcoin_node list) : ocamlcoin_node =
         match lst with
@@ -71,13 +71,13 @@ module OcamlcoinRunner =
           match json_to_event json with
           | NewTransaction t ->
               print_endline "NEW TRANS";
-              if Bank.verify_transaction t Bank.ledger then
+              if Bank.verify_transaction t Bank.book then
                 let _ = print_endline "VERIFIED TRANS" in
                 Payments.add_unmined_transaction t
           | SolvedTransaction(t, nonce) ->
               print_endline "SOLVED BLOCK";
                 let _ = print_endline "VERIFIED TRANS" in
-              Bank.add_transaction t Bank.ledger
+              Bank.add_transaction t Bank.book
           | PingDiscovery ->
               Printf.printf "I GOT PINGED BY %s" node#ip;
               add_peer node;
@@ -85,14 +85,14 @@ module OcamlcoinRunner =
               | _h :: _t as nlist ->
                   broadcast_event (BroadcastNodes(nlist)) node
               | [] -> ());
-              (match Bank.get_transactions(Bank.ledger) with
+              (match Bank.get_transactions(Bank.book) with
               | _h :: _t as tlist ->
                   broadcast_event (BroadcastTransactions(tlist)) node
               | [] -> ());
           | BroadcastNodes(nlist) ->
               List.iter add_peer nlist
           | BroadcastTransactions(tlist) ->
-              List.iter (fun t -> Bank.add_transaction t Bank.ledger) tlist);
+              List.iter (fun t -> Bank.add_transaction t Bank.book) tlist);
       ping_peers ();
       let rec network_loop () =
         flush_all ();

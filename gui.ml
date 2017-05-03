@@ -6,7 +6,7 @@ open Payments.Transaction
 open Profile
 open Ocamlcoin
 open Events
-open Bank
+open Ledger
 
 let locale = GtkMain.Main.init () ;;
 let c_WINDOW_WIDTH = 320 ;;

@@ -1,7 +1,8 @@
 open Crypto
 open Crypto.Keychain
-module IO = IOHelpers ;;
-open Yojson ;;
+module IO = IOHelpers
+open Yojson
+open Ledger
 
 let c_IP_JSON_KEY = "ip"
 let c_PORT_JSON_KEY = "port"

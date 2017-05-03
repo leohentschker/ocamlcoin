@@ -1,4 +1,4 @@
-all: io_helpers networking crypto merkle ocamlcoin events tests mining payments gui mining_tests
+all: io_helpers networking crypto merkle ocamlcoin events tests mining payments gui mining_tests ledger
 
 tests: payments_tests events_tests networking_tests crypto_tests
 
@@ -50,11 +50,8 @@ gui: gui.ml
 wallet : wallet.ml
 	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix -pkg yojson wallet.byte
 
-bank : bank.ml
-	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix -pkg yojson bank.byte
-
-bank_tests : bank_tests.ml
-	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix -pkg yojson bank_tests.byte
+ledger : ledger.ml
+	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix -pkg yojson ledger.byte
 
 clean:
 	rm -rf _build && rm -rf *.byte
