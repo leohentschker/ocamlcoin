@@ -8,7 +8,7 @@ module IO = IOHelpers
 module Y = Yojson
 
 
-let c_MASTERKEY_FILE_NAME = "masterkeys.json"
+let c_MASTERKEY_FILE_NAME = "masterkey.json"
 let c_LEDGER_FILE_NAME = "ledger.json"
 exception MissingMasterkey
 
