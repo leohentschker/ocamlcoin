@@ -19,6 +19,7 @@ let c_INVALID_AMOUNT_TEXT = "Invalid payment amount" ;;
 let c_INVALID_IP_TEXT = "Cannot find IP. Try again?" ;;
 let c_NO_BLOCKS_MINING_TEXT = "No blocks to mine. Try again?" ;;
 let c_STOP_MINING_TEXT = "Stop Mining OCamlcoins" ;;
+let c_SUCCESSFUL_TRANSACTION_TEXT = "Successful transaction. Pay again?" ;;
 let c_BACKGROUND_COLOR = [(`NORMAL, (`RGB (65535, 65535, 65535)))] ;;
 let c_BUTTON_COLOR = [(`NORMAL, (`RGB (66000, 113000, 255000)))] ;;
 
@@ -32,6 +33,7 @@ class gui =
     val mutable payment_total_edit = GEdit.entry ()
     (* variabeles for mining *)
     val mutable mining_button = GButton.button ()
+    val mutable payment_button = GButton.button ()
     (* User toggled the mining button *)
     method toggle_mining () =
       if Miner.currently_mining () then
@@ -53,7 +55,9 @@ class gui =
           OcamlcoinRunner.broadcast_event_over_network
             (NewTransaction(create_transaction User.public_key
                               target#pub amount (Unix.time ())
-                              User.private_key))
+                              User.private_key));
+          payment_button#set_label c_SUCCESSFUL_TRANSACTION_TEXT
+          
         with NodeNotFound ->
           payment_target_edit#set_text c_INVALID_IP_TEXT
       with Failure float_of_string ->
@@ -85,8 +89,8 @@ class gui =
                                            ~packing:payment_vbox#pack ();
       payment_target_edit <- GEdit.entry ~text:"IP of person to pay"
                                          ~packing:payment_vbox#pack ();
-      let payment_button = GButton.button ~label:"Make Payment"
-                                          ~packing:payment_vbox#pack () in
+      payment_button <- GButton.button ~label:"Make Payment"
+                                          ~packing:payment_vbox#pack ();
       payment_button#misc#modify_bg c_BUTTON_COLOR;
       let _ = payment_button#connect#clicked ~callback: this#make_payment in
       (* mining UI elements *)

@@ -9,6 +9,7 @@ let c_PORT_JSON_KEY = "port"
 let c_DEFAULT_COIN_PORT = 8332
 let c_DEFAULT_IP = "10.252.197.92"
 
+let c_INCOMING_MESSAGE_SIZE = 16777216
 let c_USE_LOCAL_NETWORK = ref false
 
 let is_valid_ip ip_str =
@@ -48,7 +49,7 @@ class coinserver =
     (* handle an incoming message over the network *)
     method handle_message s =
       List.iter (fun a -> a s) !listeners
-    (* sends the message s over the internet address *)
+    (* sends the message over the internet address *)
     method send_message s inet_addr port =
       if !c_USE_LOCAL_NETWORK then
         let _ = this#handle_message s in
@@ -71,9 +72,10 @@ class coinserver =
       let rec server_loop () =
         (* pull new data over the socket *)
         let (client_fd, _) = Unix.accept fd in
-        let buf = Bytes.create 4096 in
+        let buf = Bytes.create c_INCOMING_MESSAGE_SIZE in
         let len = Unix.recv client_fd buf 0 (String.length buf) [] in
         let request = String.sub buf 0 len in
+        Printf.printf "SIZE OF REQ: %d" (String.length request);
         this#handle_message request;
         Unix.close client_fd;
         (* wait for the next connection *)
@@ -124,9 +126,10 @@ module OcamlcoinNetwork =
     let attach_network_listener = server#add_listener
     let broadcast_to_node (json_msg : Yojson.Basic.json)
                            (node : ocamlcoin_node)  =
-      (* attach the port and the ip and pub key to the json *)
-      let _ = node#send_message(Yojson.Basic.to_string json_msg) in
-      ()
+      try
+        let _ = node#send_message(Yojson.Basic.to_string json_msg) in
+        ()
+      with Yojson.Json_error _ -> failwith "Invalid JSON format"
     let run () =
       (* run the server on an asynchronous thread *)
       server#run_server_async ();

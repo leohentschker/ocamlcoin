@@ -7,11 +7,13 @@ open Ledger
 
 let c_DATA_JSON_KEY = "message_data"
 let c_NODE_JSON_KEY = "node"
+let c_MAX_TRANSACTION_BROADCAST_SIZE = 5
 
 let c_AVERAGE_PING_WAITTIME = 5
 let c_MAX_NODE_TIMEOUT = 1000.
 let random_chance a = a = Random.int (a + 1)
 
+exception InvalidBroadcast of string
 exception EmptyNetwork
 exception NodeNotFound
 
@@ -61,9 +63,11 @@ module OcamlcoinRunner =
       OcamlcoinNetwork.attach_network_listener
         (fun s ->
           let open Yojson.Basic.Util in
-          let json = Yojson.Basic.from_string s in
-          f (json |> member c_DATA_JSON_KEY)
-            (json |> member c_NODE_JSON_KEY |> json_to_ocamlcoin_node))
+          try
+            let json = Yojson.Basic.from_string s in
+            f (json |> member c_DATA_JSON_KEY)
+              (json |> member c_NODE_JSON_KEY |> json_to_ocamlcoin_node)
+          with Yojson.Json_error _ -> raise (InvalidBroadcast s))
     (* run everything! *)
     let run () =
       OcamlcoinNetwork.run ();
@@ -80,15 +84,17 @@ module OcamlcoinRunner =
                 let _ = print_endline "VERIFIED TRANS" in
               Bank.add_transaction t Bank.book
           | PingDiscovery ->
-              Printf.printf "I GOT PINGED BY %s" node#ip;
+              Printf.printf "I GOT PINGED BY %s\n" node#ip;
               add_peer node;
+              (match Bank.get_transactions(Bank.book) with
+              | _h :: _t as tlist ->
+                  List.iter (fun sublist ->
+                    broadcast_event (BroadcastTransactions(sublist)) node)
+                    (IO.chunk_list c_MAX_TRANSACTION_BROADCAST_SIZE tlist)
+              | [] -> ());
               (match get_peers () with
               | _h :: _t as nlist ->
                   broadcast_event (BroadcastNodes(nlist)) node
-              | [] -> ());
-              (match Bank.get_transactions(Bank.book) with
-              | _h :: _t as tlist ->
-                  broadcast_event (BroadcastTransactions(tlist)) node
               | [] -> ());
           | BroadcastNodes(nlist) ->
               List.iter add_peer nlist

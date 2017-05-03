@@ -110,7 +110,7 @@ let unmined_transactions =
     match Yojson.Basic.from_file c_UNVERIFIED_TRANSACTIONS_FILE with
     | `List json_list -> ref (List.map json_to_transaction json_list)
     | _ -> failwith "Unexpected transaction json format"
-  with Sys_error _ ->
+  with Yojson.Json_error _ | Sys_error _ ->
     ref []
 let add_unmined_transaction (t : transaction) =
   unmined_transactions := t :: !unmined_transactions
