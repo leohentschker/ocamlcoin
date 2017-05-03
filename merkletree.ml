@@ -190,8 +190,8 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       assert (root_hash t1 = root_hash t2)
 
     let test_combine_trees_and_children () =
-      let l1, l2 = TestHelpers.generate_list S.gen,
-                   TestHelpers.generate_list S.gen in 
+      let l1, l2 = TestHelpers.generate_list S.gen 4,
+                   TestHelpers.generate_list S.gen 3 in 
       let lcomb = l1 @ l2 in
       let t1 = build_tree l1 in
       let t2 = build_tree l2 in
