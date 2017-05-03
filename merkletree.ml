@@ -142,6 +142,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
           (Tree (tree_hash (s1 ^ s2), union l1 l2, S.min time1 time2, t1, t2))
       | Empty, _ -> t2
       | _, Empty -> t1
+      | Empty, Empty -> Empty
 
     let rec tree_helper (lst : element list) : mtree =
       let (l, r) = half_list lst in
@@ -219,8 +220,9 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
 
     let run_tests () =
       test1 () ;
-      test_combine_trees () 
-
+      test_combine_trees () ;
+      print_endline "All tests passed" ;
+      ()
   end
 
 module FakeMerkle = MakeMerkle (TransactionSerializable) (SHA256) ;;
