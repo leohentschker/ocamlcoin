@@ -14,6 +14,14 @@ let bad_amount_transaction () =
   let timestamp = Random.float 100000. in
   create_transaction originator target amount timestamp bad
 
+let generate_transaction_list () =
+  let transaction_mlist = ref [] in
+  let i = Random.int 30 in
+  for _ = 0 to i do
+    transaction_mlist = Payments_tests.generate_fake_transaction ()
+  done;
+  !transaction_mlist
+
 let test_verify_transaction () =
   let valid = Payments_tests.generate_fake_transaction () in
   let invalid = bad_amount_transaction () in
