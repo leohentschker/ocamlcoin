@@ -234,7 +234,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) :
       | Empty -> []
       | Leaf (_, _) | Tree (_, _, _, _, _) ->
           let lst = children t in
-          let rlst = List.filter (fun x -> let (_, _, _, _, s) = get x in s = id) lst
+          List.filter (fun x -> let (_, _, _, _, s) = get x in s = id) lst
 
     let test_add_element () =
       let l1, l2 = TestHelpers.generate_list S.gen (Random.int 20),

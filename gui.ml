@@ -5,6 +5,7 @@ open GMain
 open Payments.Transaction
 open Profile
 open Ocamlcoin
+open Crypto
 open Events
 open Ledger
 
@@ -71,7 +72,8 @@ class gui =
     method mining_solution_listener (t : transaction) (n : Miner.nonce) =
       mining_button#set_label "You solved a block! Mine again?";
       OcamlcoinRunner.broadcast_event_over_network
-      (SolvedTransaction(t, n, public_key, sign private_key t#tostring))
+      (SolvedTransaction(t, n, User.public_key,
+         Signature.sign User.private_key t#to_string))
     method initialize () =
       (* Kill the program when we close the window *)
       let _ = window#connect#destroy ~callback:Main.quit in
