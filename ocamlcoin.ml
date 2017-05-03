@@ -38,7 +38,8 @@ module OcamlcoinRunner =
     let add_peer new_node =
       if not(List.fold_left (fun a n -> a || new_node#equal n)
                             false (get_peers ())) then
-        peer_tuples := (new_node, Unix.time ()) :: !peer_tuples
+        let _ = peer_tuples := (new_node, Unix.time ()) :: !peer_tuples in
+        User.export_nodes (get_peers ())
     (* ping a list of nodes *)
     let ping_peers () =
       List.iter (broadcast_event PingDiscovery) (get_peers ())
