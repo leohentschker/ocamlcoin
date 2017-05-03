@@ -112,11 +112,10 @@ module OcamlcoinRunner =
               List.iter add_peer nlist
           | BroadcastTransactions(tlist) ->
               List.iter (fun t -> Bank.add_transaction t Bank.book) tlist);
-      (* ping_peers (); *)
+      ping_peers ();
       let rec network_loop () =
-        print_endline "NETWORK LOOP RUNNING";
         Unix.sleep 5;
-        (* if random_chance c_AVERAGE_PING_WAITTIME then ping_peers (); *)
+        if random_chance c_AVERAGE_PING_WAITTIME then ping_peers ();
         update_stored_nodes ();
         store_state ();
         network_loop () in
