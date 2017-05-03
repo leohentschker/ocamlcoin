@@ -100,7 +100,7 @@ module Bank =
     let test_verify_transaction () =
       let ledger = ref empty in
       let priv1, pub1 = generate_keypair () in
-      let priv2, pub2 generate_keypair () in
+      let priv2, pub2 = generate_keypair () in
       let transaction1 = create_transaction masterkey pub1 100. 100. priv in
       let transaction2 = create_transaction masterkey pub2 100. 150. priv in
       let good_transaction = create_transaction pub1 pub2 100. 200. priv1 in
