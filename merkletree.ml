@@ -5,11 +5,12 @@ open Crypto.Keychain
 open Payments.Transaction
 (* Need an ordering on your serializable elements,
    because we're putting the elements into a tree*)
-type ordering = L | G | E
+
 (* Abstraction that is largely modeled after transaction in payments.ml *)
 module type SERIALIZE =
   sig
     type amount
+    type ordering
     type time
     type t
     type id
@@ -30,9 +31,15 @@ module TransactionSerializable : (SERIALIZE with type amount = float
                                              and type id = pub_key) =
   struct
     type amount = float
+
+    type ordering = int
+
     type time = float
+
     type t = transaction
+
     type id = pub_key
+
     let serialize t = t#to_string
     (* Sample generation of randomt transaction data*)
     let fake_transaction_data () =
@@ -42,17 +49,18 @@ module TransactionSerializable : (SERIALIZE with type amount = float
       let timestamp = Random.float 10000. in
       originator, target, amount, timestamp
       (* Generates a random transaction *)
+
     let gen () =
       let originator, target, amount, timestamp = fake_transaction_data () in
       let priv, pub = generate_keypair () in
       create_transaction originator target amount timestamp priv
+
     let get (t : transaction) = (t#originator, t#target, t#amount, t#timestamp)
-    let compare (t1 : time) (t2 : time) : ordering =
-      if t1 < t2 then L
-      else if t1 > t2 then G
-      else E
-    let min (t1 : time) (t2 : time) : time =
-      if compare t1 t2 = L then t1 else t2
+
+    let compare (t1 : time) (t2 : time) : ordering = compare t1 t2
+
+    let min (t1 : time) (t2 : time) : time = if compare t1 t2 = -1 then t1
+                                             else t2
   end
 
 (* Type signature for the MERKLETREE module, which includes functions

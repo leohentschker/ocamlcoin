@@ -4,11 +4,10 @@ open Crypto
 open Crypto.Keychain
 open Payments.Transaction
 
-type ordering
-
 module type SERIALIZE =
   sig
     type amount
+    type ordering
     type time
     type t
     type id
@@ -46,7 +45,8 @@ module type MERKLETREE =
     val run_tests : unit -> unit
   end
 
-module  MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S.t
-                                                            and type id = S.id
-                                                            and type amount = S.amount
-                                                            and type time = S.time)
+module  MakeMerkle (S : SERIALIZE) (H : HASH) :
+  (MERKLETREE with type element = S.t
+               and type id = S.id
+               and type amount = S.amount
+               and type time = S.time)
