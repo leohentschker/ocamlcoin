@@ -39,12 +39,14 @@ module Bank =
 
     let verify_ledger (t : ledger) : bool =
       let rec verify (t : ledger) (n : int) : bool =
-        if n = 0 then true
+        if n <= 0 then true
         else
           let tlist = MT.children !t in
           let slist = sublist tlist 0 (n - 1) in
+          Printf.printf "%s" (string_of_int (n));
           let tn = List.nth tlist n in
-          verify_transaction tn (ref (MT.build_tree slist)) && (verify t (n - 1)) in
+          let subledger = ref (MT.build_tree slist) in 
+          verify_transaction tn subledger && (verify subledger (n - 1)) in
       verify t (List.length (MT.children !t) - 1)
 
     let merge_ledgers (tree1 : ledger)
