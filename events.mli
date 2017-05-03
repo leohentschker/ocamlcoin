@@ -1,6 +1,15 @@
 open Networking
-open Mining
-open Payments
+open Mining.Miner
+open Payments.Transaction
+open Crypto.Keychain
+open Crypto.Signature
 
-val event_to_string : network_event -> string
-val string_to_event : string -> network_event
+type network_event =
+  | PingDiscovery
+  | NewTransaction of transaction
+  | SolvedTransaction of (transaction * nonce * pub_key * signature)
+  | BroadcastNodes of (OcamlcoinNetwork.ocamlcoin_node list)
+  | BroadcastTransactions of (transaction list)
+
+val event_to_json : network_event -> Yojson.Basic.json
+val json_to_event : Yojson.Basic.json -> network_event

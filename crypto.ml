@@ -1,11 +1,13 @@
 open Sexplib
 open Nocrypto
+open TestHelpers
 
 let () = Nocrypto_entropy_unix.initialize ()
+let c_PRIV_JSON_KEY = "private_key"
+let c_PUB_JSON_KEY = "public_key"
 
-module Signature =
+module Keychain =
   struct
-    type signature = Cstruct.t * Cstruct.t
     type priv_key = Dsa.priv
     type pub_key = Dsa.pub
     let priv_to_string (p : priv_key) = Sexp.to_string (Dsa.sexp_of_priv p)
@@ -35,7 +37,42 @@ module Signature =
       TestHelpers.run_tests test_sign
   end
 
-module type HASH = sig val hash_text : string -> string end
+open Keychain
+
+module Signature =
+  struct
+    type signature = Cstruct.t * Cstruct.t
+    let signature_to_json ((c1, c2) : signature) =
+      `List[`String (Cstruct.to_string c1); `String (Cstruct.to_string c2)]
+    let json_to_signature (json : Yojson.Basic.json) : signature =
+      match json with
+      | `List [`String s1; `String s2] ->
+        (Cstruct.of_string s1, Cstruct.of_string s2)
+      | _ -> failwith "Unexpected format"
+    let sign (pk : priv_key) (s : string) =
+      Dsa.sign ~key:pk (Cstruct.of_string s)
+    let verify (plaintext : string) (pub : pub_key) (s : signature) =
+      Dsa.verify ~key:pub s (Cstruct.of_string plaintext)
+    (* TESTING *)
+    let test_signature_serialize () =
+      let (priv, pub) = generate_keypair () in
+      let signed = sign priv (TestHelpers.random_string ()) in
+      assert(signed = json_to_signature (signature_to_json signed))
+    let test_sign () =
+      let (priv_key, pub_key) = generate_keypair () in
+      let message = TestHelpers.random_string () in
+      let signed = sign priv_key message in
+      assert (verify message pub_key signed)
+    let run_tests () =
+      test_signature_serialize ();
+      test_sign ()
+end
+
+module type HASH =
+  sig
+    val hash_text : string -> string
+    val run_tests : unit -> unit
+  end
 
 module MakeHash(H : Hash.S) : HASH =
   struct
@@ -43,7 +80,11 @@ module MakeHash(H : Hash.S) : HASH =
       let init = H.init () in
       H.feed init (Cstruct.of_string s);
       let digest = H.digest (H.get init) in
-      Cstruct.to_string digest ;;
+      Cstruct.to_string digest
+    let test_hash_equivalence () =
+      let rand_str = random_string () in
+      assert(hash_text rand_str = rand_str)
+    let run_tests () = test_hash_equivalence ()
   end
 
 module MD5 = MakeHash(Hash.MD5)

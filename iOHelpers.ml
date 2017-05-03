@@ -1,3 +1,30 @@
+(* helper function to get a sublist *)
+let rec sublist (lst : 'a list) (a : int) (b : int) : 'a list =
+  if b < a then []
+  else match lst with
+       | [] -> []
+       | h :: t ->
+          (match (a, b) with
+           | (0, 0) -> [h]
+           | (0, _) -> [h] @ sublist t a (b - 1)
+           | (_, _) -> sublist t (a - 1) (b - 1))
+
+let chunk_list (chunk_sizes : int) (lst : 'a list) =
+  let rec split_chunk (i : int) (l : 'a list) =
+    if i = chunk_sizes then
+      [], l
+    else
+      match l with
+      | h :: t ->
+          let tchunk, ttail = split_chunk (i + 1) t in
+          h :: tchunk, ttail
+      | [] -> [], [] in
+  let rec aux (sublist : 'a list) =
+    match split_chunk 0 sublist with
+    | chunk, [] -> [chunk]
+    | chunk, t -> chunk :: aux t in
+  aux lst
+
 (* Drawn from ps5/http_services *)
 let page_lines (page : string) : string list =
 
@@ -16,6 +43,9 @@ let write_file (s : string) (fname : string) : unit =
   let oc = open_out fname in
   Printf.fprintf oc "%s" s;
   close_out oc
+
+let write_json (json : Yojson.Basic.json) (fname : string) : unit =
+  write_file (Yojson.Basic.to_string json) fname
 
 (* following http://www.rosettacode.org/wiki/Execute_a_system_command#OCaml *)
 let syscall (s : string) : string =

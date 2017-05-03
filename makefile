@@ -1,6 +1,13 @@
+<<<<<<< HEAD
 all: crypto_tests
+=======
+all: io_helpers networking crypto merkle ocamlcoin events tests mining payments gui mining_tests ledger
+>>>>>>> master
 
-tests: payments_tests events_tests
+tests: payments_tests events_tests networking_tests crypto_tests ledger_tests merkle_tests
+
+profile: profile.ml
+	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix -ocamlc 'ocamlc -thread str.cma threads.cma' profile.byte
 
 ocamlcoin: ocamlcoin.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix -ocamlc 'ocamlc -thread str.cma threads.cma' ocamlcoin.byte
@@ -18,25 +25,46 @@ networking_tests: networking_tests.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix -ocamlc 'ocamlc -thread str.cma threads.cma' networking_tests.byte
 
 io_helpers: iOHelpers.ml
-	ocamlbuild -pkg yojson -use-ocamlfind iOHelpers.byte
+	ocamlbuild -lib unix -pkg yojson -use-ocamlfind iOHelpers.byte
 
 networking: networking.ml
-	ocamlbuild -lib unix -pkg yojson -ocamlc 'ocamlc -thread str.cma threads.cma' -use-ocamlfind networking.byte
+	ocamlbuild -lib unix -pkg sexplib -pkgs nocrypto.unix -pkgs yojson -ocamlc 'ocamlc -thread str.cma threads.cma' -use-ocamlfind networking.byte
 
 crypto: crypto.ml
-	ocamlbuild -pkgs nocrypto.unix crypto.byte
+	ocamlbuild -pkgs sexplib -pkg yojson -pkgs nocrypto.unix crypto.byte
 
+<<<<<<< HEAD
+=======
+crypto_tests: crypto_tests.ml
+	ocamlbuild -pkgs sexplib -pkg yojson -pkgs nocrypto.unix crypto_tests.byte
+
+>>>>>>> master
 merkle: merkletree.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs sexplib -pkgs nocrypto.unix merkletree.byte
 
+merkle_tests: merkletree_tests.ml
+	ocamlbuild -use-ocamlfind -pkg yojson -pkgs sexplib -pkgs nocrypto.unix merkletree_tests.byte
+
 mining: mining.ml
-	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix mining.byte
+	ocamlbuild -use-ocamlfind -pkg yojson -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix mining.byte
+
+mining_tests: mining.ml
+	ocamlbuild -use-ocamlfind -pkg yojson -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix mining_tests.byte
 
 payments: payments.ml
-	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix payments.byte
+	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix -ocamlc 'ocamlc -thread str.cma threads.cma' payments.byte
 
 gui: gui.ml
-	ocamlbuild -use-ocamlfind -pkgs lablgtk2 -pkgs nocrypto.unix -ocamlc 'ocamlc -thread threads.cma' gui.byte
+	ocamlbuild -use-ocamlfind -pkg yojson -pkgs lablgtk2 -pkgs nocrypto.unix -ocamlc 'ocamlc -thread threads.cma str.cma' gui.byte
+
+wallet : wallet.ml
+	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix -pkg yojson wallet.byte
+
+ledger : ledger.ml
+	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix -pkg yojson ledger.byte
+
+ledger_tests : ledger_tests.ml
+	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix -pkg yojson ledger_tests.byte
 
 clean:
-	rm -rf _build
+	rm -rf _build && rm -rf *.byte

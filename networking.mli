@@ -1,30 +1,28 @@
+open Crypto.Keychain
+open Mining.Miner
 open Payments
-open Mining
-exception EmptyNetwork
 
 val c_DEFAULT_COIN_PORT : int
 val is_valid_ip : string -> bool
 val get_private_ip : unit -> string
+val c_DEFAULT_COIN_PORT : int
 
 module OcamlcoinNetwork :
   sig
+    exception EmptyNetwork
+    exception InvalidNodeJson of string
     val run : unit -> unit
-    val broadcast_over_network : string -> unit
-    val attach_broadcast_listener : (string -> unit) -> unit
-    type peer
-    class ocamlcoin_node : string -> int -> object
+    class ocamlcoin_node : string -> int -> pub_key -> object
       method ip : string
       method port : int
-      method send_message : string -> bool
+      method pub : pub_key
+      method send_message : string -> unit
       method to_json : Yojson.Basic.json
+      method serialize : string
+      method equal : ocamlcoin_node -> bool
     end
+    val default_node : ocamlcoin_node
+    val broadcast_to_node : Yojson.Basic.json -> ocamlcoin_node -> unit
+    val attach_network_listener : (string -> unit) -> unit
     val json_to_ocamlcoin_node : Yojson.Basic.json -> ocamlcoin_node
-    val peers : ocamlcoin_node list ref
   end
-
-type network_event =
-  | PingDiscovery
-  | NewTransaction of transaction
-  | SolvedBlock of (block * nonce)
-  | BroadcastNodes of (OcamlcoinNetwork.ocamlcoin_node list)
-
