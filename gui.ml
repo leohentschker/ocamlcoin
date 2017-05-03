@@ -105,6 +105,7 @@ class gui =
       payment_button <- GButton.button ~label:"Make Payment"
                                           ~packing:payment_vbox#pack ();
       balance_button <- GButton.button ~label:"Update balance"
+                                          ~border_width:20
                                           ~packing:payment_vbox#pack ();
       balance_button#misc#modify_bg c_BUTTON_COLOR;
       let _ = balance_button#connect#clicked ~callback: this#update_ui in
