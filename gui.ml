@@ -58,10 +58,12 @@ class gui =
         let amount = float_of_string payment_total_edit#text in
         try
           let target = OcamlcoinRunner.find_node_by_ip target_ip in
+          print_endline "GOING TO BROADCAST CREATE TRANSACTION";
           OcamlcoinRunner.broadcast_event_over_network
             (NewTransaction(create_transaction User.public_key
                               target#pub amount (Unix.time ())
                               User.private_key));
+          print_endline "CALLED BROADCAST CREATE TRANS";
           payment_button#set_label c_SUCCESSFUL_TRANSACTION_TEXT;
           payment_target_edit#set_text c_PAYMENT_TARGET_TEXT;
           payment_total_edit#set_text c_PAYMENT_TOTAL_TEXT

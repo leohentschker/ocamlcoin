@@ -30,11 +30,8 @@ module OcamlcoinRunner =
     let get_peers = fun () -> List.map fst !peer_tuples
     (* load the peers we are aware of *)
     let broadcast_event event node =
-      print_endline "\n\n\n\n";
       let msg_json = `Assoc[(c_DATA_JSON_KEY, (event_to_json event));
                             (c_NODE_JSON_KEY, User.personal_node#to_json)] in
-      print_endline (Yojson.Basic.to_string msg_json);
-      print_endline "\n\n";
       try
         OcamlcoinNetwork.broadcast_to_node msg_json node;
       with Failure(a) ->
@@ -84,11 +81,10 @@ module OcamlcoinRunner =
         (fun json node ->
           match json_to_event json with
           | NewTransaction t ->
-              print_endline "NEW TRANS";
+              print_endline "RECEIVE NEW TRANSAACTION";
               if authenticate_transaction t then
                  Payments.add_unmined_transaction t
           | SolvedTransaction(t, nonce, pub_key, s) ->
-              print_endline "SOLVED BLOCK";
               (match nonce with
               | Solution i -> 
                   if Crypto.Signature.verify t#to_string pub_key s then
@@ -101,7 +97,6 @@ module OcamlcoinRunner =
                   print_endline "Can't solve without solution")
           | PingDiscovery ->
               if not (node#equal User.personal_node) then
-                print_endline ("PINGED: " ^ node#ip);
                 add_peer node;
                 (match Bank.get_transactions(Bank.book) with
                 | _h :: _t as tlist ->
@@ -116,7 +111,6 @@ module OcamlcoinRunner =
                       (IO.chunk_list c_MAX_PEER_BROADCAST_SIZE nlist)
                 | [] -> ())
           | BroadcastNodes(nlist) ->
-              print_endline "Received new nodes";
               List.iter add_peer nlist
           | BroadcastTransactions(tlist) ->
               print_endline "Received new transactions";
