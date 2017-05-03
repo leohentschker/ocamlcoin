@@ -34,6 +34,10 @@ module OcamlcoinRunner =
       if !peer_tuples = [] then raise EmptyNetwork
     let broadcast_event_over_network (e : network_event) =
       List.iter (broadcast_event e) (get_peers ())
+    let store_state () =
+      User.export_nodes (get_peers ());
+      Bank.export_ledger (Bank.ledger)
+      
     (* run everything! *)
     let run () =
       OcamlcoinNetwork.run ();
@@ -56,13 +60,13 @@ module OcamlcoinRunner =
               List.iter add_peer nlist;
           | BroadcastTransactions(tlist) ->
               print_endline "BROADCAST TRANSACTIONS";
-              List.iter add_peer nlist);
+              List.iter (fun t -> Bank.add_transaction t Bank.ledger) tlist);
       peer_tuples := List.map (fun p -> (p, Unix.time ())) (User.stored_nodes);
       ping_peers ();
       let rec network_loop () =
         if random_chance c_AVERAGE_PING_WAITTIME then ping_peers ();
         update_stored_nodes ();
-        User.export_nodes (get_peers ());
+        store_state ();
         Unix.sleep 5;
         network_loop () in
       network_loop ()

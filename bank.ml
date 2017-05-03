@@ -6,8 +6,10 @@ open Merkletree
 module IO = IOHelpers
 open Mining
 open Mining.Miner
+module Y = Yojson
 
 let c_MASTERKEY_FILE_NAME = "masterkeys.json"
+let c_LEDGER_FILE_NAME = "ledger.json"
 
 let (masterpriv, masterpub) =
   try
@@ -24,7 +26,19 @@ let (masterpriv, masterpub) =
 
 module MT = MakeMerkle (TransactionSerializable) (SHA256)
 
-let ledger = ref MT.empty
+let export_ledger (l : MT.mtree ref) : unit =
+  IO.write_json (`List(List.map (fun t -> t#to_json) (MT.children !l)))
+    c_LEDGER_FILE_NAME
+
+let ledger =
+  let previous_transactions = try
+    match Y.Basic.from_file c_LEDGER_FILE_NAME with
+    | `List json_list -> List.map json_to_transaction json_list
+    | _ -> failwith "Unexpected json format"
+    with Sys_error _ ->
+      export_ledger (ref MT.empty);
+      [] in
+  ref (MT.build_tree previous_transactions)
 
 let verify_transaction (t : transaction) (l: MT.mtree ref) : bool =
   let id1, id2, amount, timestamp = t#originator, t#target, t#amount, t#timestamp in
