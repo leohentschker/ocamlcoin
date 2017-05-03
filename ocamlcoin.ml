@@ -69,10 +69,11 @@ module OcamlcoinRunner =
       peer_tuples := List.map (fun p -> (p, Unix.time ())) (User.stored_nodes);
       ping_peers ();
       let rec network_loop () =
+        Unix.sleep 10;
         if random_chance c_AVERAGE_PING_WAITTIME then ping_peers ();
         update_stored_nodes ();
         store_state ();
-        Unix.sleep 5 in
+        network_loop () in
       network_loop ()
   end
 
