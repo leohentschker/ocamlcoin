@@ -36,7 +36,10 @@ module User =
       | _ -> failwith "Unexpected json format for stored nodes" in
       match stored with
       | _h :: _t -> stored
-      | [] -> [personal_node; default_node]
+      | [] ->
+          if personal_node#equal default_node then
+            [default_node]
+          else [personal_node; default_node]
     let export_nodes (nlist : ocamlcoin_node list) =
       IO.write_json (make_profile_json private_key public_key nlist)
         c_PROFILE_FILE_NAME

@@ -100,6 +100,7 @@ module OcamlcoinRunner =
                   print_endline "Can't solve without solution")
           | PingDiscovery ->
               if not (node#equal User.personal_node) then
+                let _ = print_endline "RECEIVED PING" in
                 add_peer node;
                 (match Bank.get_transactions(Bank.book) with
                 | _h :: _t as tlist ->
