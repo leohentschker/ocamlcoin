@@ -7,10 +7,12 @@ open Payments.Transaction
 open Crypto.Signature
 open Crypto.Keychain
 open Ledger
+open Mining.Miner
 
 let c_DATA_JSON_KEY = "message_data"
 let c_NODE_JSON_KEY = "node"
 let c_MAX_TRANSACTION_BROADCAST_SIZE = 5
+let c_MAX_PEER_BROADCAST_SIZE = 1
 
 let c_AVERAGE_PING_WAITTIME = 5
 let c_MAX_NODE_TIMEOUT = 30.
@@ -29,7 +31,7 @@ module OcamlcoinRunner =
     (* load the peers we are aware of *)
     let broadcast_event event node =
       let msg_json = `Assoc[(c_DATA_JSON_KEY, (event_to_json event));
-                            (c_NODE_JSON_KEY, node#to_json)] in
+                            (c_NODE_JSON_KEY, User.personal_node#to_json)] in
       try
         OcamlcoinNetwork.broadcast_to_node msg_json node;
       with Failure(a) ->
@@ -37,7 +39,8 @@ module OcamlcoinRunner =
     let add_peer new_node =
       if not(List.fold_left (fun a n -> a || new_node#equal n)
                             false (get_peers ())) then
-        peer_tuples := (new_node, Unix.time ()) :: !peer_tuples
+        let _ = peer_tuples := (new_node, Unix.time ()) :: !peer_tuples in
+        User.export_nodes (get_peers ())
     (* ping a list of nodes *)
     let ping_peers () =
       List.iter (broadcast_event PingDiscovery) (get_peers ())
@@ -69,40 +72,46 @@ module OcamlcoinRunner =
             let json = Yojson.Basic.from_string s in
             f (json |> member c_DATA_JSON_KEY)
               (json |> member c_NODE_JSON_KEY |> json_to_ocamlcoin_node)
-          with Yojson.Json_error _ -> raise (InvalidBroadcast s))
+          with Yojson.Json_error _ ->
+            Printf.printf "Received invalid broadcast: %s\n" s)
     (* run everything! *)
     let run () =
       OcamlcoinNetwork.run ();
       attach_broadcast_listener
         (fun json node ->
-          print_endline "ASDASDS";
           match json_to_event json with
           | NewTransaction t ->
               print_endline "NEW TRANS";
-              if authenticate_transaction t Bank.book then
+              if authenticate_transaction t then
                  Payments.add_unmined_transaction t
           | SolvedTransaction(t, nonce, pub_key, s) ->
               print_endline "SOLVED BLOCK";
-              if verify t#tostring pub_key s then
-                Bank.add_transaction
-                (new Transaction t#originator t#target t#amount t#timestamp
-                                 t#signature nonce pub_key)
-                Bank.book;
-                Payments.remove_mined_transaction t;
+              (match nonce with
+              | Solution i -> 
+                  if Crypto.Signature.verify t#to_string pub_key s then
+                    let _ = Bank.add_transaction
+                      (new transaction t#originator t#target t#amount
+                                       t#timestamp t#signature i pub_key)
+                      Bank.book in
+                    Payments.remove_mined_transaction t
+              | Nosolution ->
+                  print_endline "Can't solve without solution")
           | PingDiscovery ->
-              Printf.printf "I GOT PINGED BY %s\n" node#ip;
-              print_string "PINGED";
-              add_peer node;
-              (match Bank.get_transactions(Bank.book) with
-              | _h :: _t as tlist ->
-                  List.iter (fun sublist ->
-                    broadcast_event (BroadcastTransactions(sublist)) node)
-                    (IO.chunk_list c_MAX_TRANSACTION_BROADCAST_SIZE tlist)
-              | [] -> ());
-              (match get_peers () with
-              | _h :: _t as nlist ->
-                  broadcast_event (BroadcastNodes(nlist)) node
-              | [] -> ());
+              if not (node#equal User.personal_node) then
+                print_endline ("PINGED: " ^ node#ip);
+                add_peer node;
+                (match Bank.get_transactions(Bank.book) with
+                | _h :: _t as tlist ->
+                    List.iter (fun sublist ->
+                      broadcast_event (BroadcastTransactions(sublist)) node)
+                      (IO.chunk_list c_MAX_TRANSACTION_BROADCAST_SIZE tlist)
+                | [] -> ());
+                (match get_peers () with
+                | _h :: _t as nlist ->
+                    List.iter
+                      (fun sublist -> broadcast_event (BroadcastNodes(sublist)) node)
+                      (IO.chunk_list c_MAX_PEER_BROADCAST_SIZE nlist)
+                | [] -> ())
           | BroadcastNodes(nlist) ->
               List.iter add_peer nlist
           | BroadcastTransactions(tlist) ->

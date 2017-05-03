@@ -25,7 +25,7 @@ module Bank =
         let json = Yojson.Basic.from_file c_MASTERKEY_FILE_NAME in
         let open Yojson.Basic.Util in
         string_to_pub (json |> member c_PUB_JSON_KEY |> to_string)
-      with Sys_error _ ->
+      with Sys_error _ | Yojson.Json_error(_) ->
         raise MissingMasterkey
 
     let get_transactions (l : MT.mtree ref) = MT.children !l
@@ -42,11 +42,12 @@ module Bank =
     type ledger = MT.mtree ref
 
     let book =
-      let previous_transactions = try
+      let previous_transactions =
+      try
         match Y.Basic.from_file c_LEDGER_FILE_NAME with
         | `List json_list -> List.map json_to_transaction json_list
         | _ -> failwith "Unexpected json format"
-        with Sys_error _ -> [] in
+      with Sys_error _ | Y.Json_error(_) -> [] in
       ref (MT.build_tree previous_transactions)
 
     let empty = MT.empty
@@ -61,7 +62,7 @@ module Bank =
       (fun acc x -> if x#originator = p then acc -. x#amount
                     else acc +. x#amount) 0. timedlst in
       let rlst = List.filter (fun x -> x#timestamp < t) (MT.querysolver p !l) in
-      net + c_REWARD *. List.length rlst
+      net +. c_REWARD *. (float_of_int (List.length rlst))
 
     let verify_transaction (t : transaction) (l: ledger) : bool =
       let id1, id2, amount, timestamp = t#originator, t#target, t#amount, t#timestamp in
