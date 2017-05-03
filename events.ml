@@ -40,25 +40,29 @@ let event_to_json (e : network_event) : Y.Basic.json =
       make_event_json c_BROADCAST_TRANSACTION_TYPE
         (`List (List.map (fun t -> t#to_json) tlist))
 
+exception InvalidEventJson of string
 let json_to_event (json : Y.Basic.json) : network_event =
   let open Y.Basic.Util in
-  let event_type = json |> member c_TRANSACTION_TYPE_KEY |> to_string in
-  let json_data = json |> member c_JSON_DATA_KEY in
-  if event_type = c_NEW_TRANSACTION_TYPE then
-    NewTransaction(json_to_transaction json_data)
-  else if event_type = c_SOLVED_TRANSACTION_TYPE then
-    let nonce = json_data |> member c_NONCE_KEY |> to_string in
-    let transaction = json_to_transaction (json_data |> member c_TRANSACTION_KEY) in
-    SolvedTransaction(transaction, string_to_nonce nonce)
-  else if event_type = c_BROADCAST_NODES_TYPE then
-    match json_data with
-    | `List json_list -> BroadcastNodes(List.map OcamlcoinNetwork.json_to_ocamlcoin_node json_list)
-    | _ -> failwith "Expected json list type"
-  else if event_type = c_PING_DISCOVERY_TYPE then
-    PingDiscovery
-  else if event_type = c_BROADCAST_TRANSACTION_TYPE then
-    match json_data with
-    | `List json_list ->
-        BroadcastTransactions(List.map json_to_transaction json_list)
-    | _ -> failwith "Expected json list type"
-  else failwith ("Unexpected event type: " ^ event_type)
+  try
+    let event_type = json |> member c_TRANSACTION_TYPE_KEY |> to_string in
+    let json_data = json |> member c_JSON_DATA_KEY in
+    if event_type = c_NEW_TRANSACTION_TYPE then
+      NewTransaction(json_to_transaction json_data)
+    else if event_type = c_SOLVED_TRANSACTION_TYPE then
+      let nonce = json_data |> member c_NONCE_KEY |> to_string in
+      let transaction = json_to_transaction (json_data |> member c_TRANSACTION_KEY) in
+      SolvedTransaction(transaction, string_to_nonce nonce)
+    else if event_type = c_BROADCAST_NODES_TYPE then
+      match json_data with
+      | `List json_list -> BroadcastNodes(List.map OcamlcoinNetwork.json_to_ocamlcoin_node json_list)
+      | _ -> failwith "Expected json list type"
+    else if event_type = c_PING_DISCOVERY_TYPE then
+      PingDiscovery
+    else if event_type = c_BROADCAST_TRANSACTION_TYPE then
+      match json_data with
+      | `List json_list ->
+          BroadcastTransactions(List.map json_to_transaction json_list)
+      | _ -> failwith "Expected json list type"
+    else failwith ("Unexpected event type: " ^ event_type)
+  with Yojson.Basic.Util.Type_error(_) ->
+     raise (InvalidEventJson (json |> Y.Basic.to_string))

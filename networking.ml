@@ -1,9 +1,10 @@
+open Crypto
+open Crypto.Keychain
 module IO = IOHelpers ;;
 open Yojson ;;
 
 let c_IP_JSON_KEY = "ip"
 let c_PORT_JSON_KEY = "port"
-let c_DATA_JSON_KEY = "message_data"
 let c_DEFAULT_COIN_PORT = 8332
 let c_DEFAULT_IP = "10.252.197.92"
 
@@ -82,49 +83,48 @@ class coinserver =
       ()
   end
 
-exception EmptyNetwork ;;
-
 (* represents the collection of nodes in the network *)
 module OcamlcoinNetwork =
   struct
+    exception EmptyNetwork
+    exception InvalidNodeJson of string
+
     (* run a coinserver *)
     let server : coinserver = new coinserver
     (* describe the nodes in our network *)
     type peer = string
-    class ocamlcoin_node ip_addr port_number =
+    class ocamlcoin_node ip_addr port_number pub_key =
       object(this)
         val ip = String.trim ip_addr
         val port = port_number
+        val pub_key = pub_key
         method ip = ip
         method port = port
+        method pub = pub_key
         method equal (n2 : ocamlcoin_node) = (ip = n2#ip) && (port = n2#port)
         method serialize = this#ip ^ "," ^ (string_of_int this#port)
         method send_message s =
           server#send_message s (Unix.inet_addr_of_string ip) port
         method to_json : Basic.json =
-          `Assoc [(c_IP_JSON_KEY, `String ip); (c_PORT_JSON_KEY, `Int port)]
+          `Assoc [(c_IP_JSON_KEY, `String ip);
+                  (c_PORT_JSON_KEY, `Int port);
+                  (c_PUB_JSON_KEY, `String (pub_to_string pub_key))]
       end
     let default_node = new ocamlcoin_node c_DEFAULT_IP c_DEFAULT_COIN_PORT
+                                          Bank.masterpub
     let json_to_ocamlcoin_node json =
       let open Basic.Util in
-      new ocamlcoin_node
+      try new ocamlcoin_node
         (json |> member c_IP_JSON_KEY |> to_string)
         (json |> member c_PORT_JSON_KEY |> to_int)
-    let attach_broadcast_listener f =
-      server#add_listener
-        (fun s ->
-          let open Yojson.Basic.Util in
-          let json = Yojson.Basic.from_string s in
-          f (json |> member c_DATA_JSON_KEY)
-            (new ocamlcoin_node (json |> member c_IP_JSON_KEY |> to_string)
-              (json |> member c_PORT_JSON_KEY |> to_int)))
+        (json |> member c_PUB_JSON_KEY |> to_string |> string_to_pub)
+      with Basic.Util.Type_error(_) ->
+        raise (InvalidNodeJson (json |> Basic.to_string))
+    let attach_network_listener = server#add_listener
     let broadcast_to_node (json_msg : Yojson.Basic.json)
                            (node : ocamlcoin_node)  =
-      (* attach the port and the ip to the json *)
-      let _ = node#send_message(Yojson.Basic.to_string
-        (`Assoc [(c_DATA_JSON_KEY, json_msg);
-                 (c_PORT_JSON_KEY, `Int c_DEFAULT_COIN_PORT);
-                 (c_IP_JSON_KEY, `String server#ip)])) in
+      (* attach the port and the ip and pub key to the json *)
+      let _ = node#send_message(Yojson.Basic.to_string json_msg) in
       ()
     let run () =
       (* run the server on an asynchronous thread *)

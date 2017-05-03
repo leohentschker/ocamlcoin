@@ -16,7 +16,9 @@ module User =
              (c_PRIV_JSON_KEY, `String (priv_to_string priv))]
     let profile_json = 
       try Y.Basic.from_file c_PROFILE_FILE_NAME
-      with Sys_error _ ->
+      with
+      | Sys_error _ | Yojson.Json_error(_) ->
+        print_endline "Unable to load profile";
         let priv, pub = generate_keypair () in
         let json = make_profile_json priv pub [] in
         IO.write_json json c_PROFILE_FILE_NAME;
@@ -30,8 +32,8 @@ module User =
       | `List jsonlist -> List.map json_to_ocamlcoin_node jsonlist
       | _ -> failwith "Unexpected json format for stored nodes" in
       match stored with
-      | _h :: _t -> stored
-      | [] -> [default_node]
+      | _h :: _t -> Printf.printf "len %d" (List.length stored); print_endline "MATCHING SOMETHING"; stored
+      | [] -> print_endline "NOT MATCHING ANYRHING"; [default_node]
     let export_nodes (nlist : ocamlcoin_node list) =
       IO.write_json (make_profile_json private_key public_key nlist)
         c_PROFILE_FILE_NAME

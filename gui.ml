@@ -2,7 +2,11 @@
 open GdkKeysyms
 open Mining
 open GMain
-open Payments
+open Payments.Transaction
+open Profile
+open Ocamlcoin
+open Events
+open Bank
 
 let locale = GtkMain.Main.init () ;;
 let c_WINDOW_WIDTH = 320 ;;
@@ -11,6 +15,8 @@ let c_YPAD = 20 ;;
 let c_TITLE_FONT = "Verdana 20" ;;
 let c_HEADER_FONT = "Verdana 15" ;;
 let c_MINING_TEXT = "Mine OCamlcoins" ;;
+let c_INVALID_AMOUNT_TEXT = "Invalid payment amount" ;;
+let c_INVALID_IP_TEXT = "Cannot find IP. Try again?" ;;
 let c_NO_BLOCKS_MINING_TEXT = "No blocks to mine. Try again?" ;;
 let c_STOP_MINING_TEXT = "Stop Mining OCamlcoins" ;;
 let c_BACKGROUND_COLOR = [(`NORMAL, (`RGB (65535, 65535, 65535)))] ;;
@@ -39,8 +45,18 @@ class gui =
           mining_button#set_label c_NO_BLOCKS_MINING_TEXT
     method make_payment () =
       let target_ip = payment_target_edit#text in
-      let amount = payment_total_edit#text in
-      print_endline (payment_target_edit#text ^ " " ^ payment_total_edit#text)
+      try
+        let amount = float_of_string payment_total_edit#text in
+        try
+          let target = OcamlcoinRunner.find_node_by_ip target_ip in
+          OcamlcoinRunner.broadcast_event_over_network
+            (NewTransaction(create_transaction User.public_key
+                              target#pub amount (Unix.time ())
+                              User.private_key))
+        with NodeNotFound ->
+          payment_target_edit#set_text c_INVALID_IP_TEXT
+      with Failure float_of_string ->
+        payment_total_edit#set_text c_INVALID_AMOUNT_TEXT
     method initialize () =
       (* Kill the program when we close the window *)
       let _ = window#connect#destroy ~callback:Main.quit in
@@ -61,8 +77,8 @@ class gui =
       let payment_label = GMisc.label ~text:"Make Payment" ~ypad:c_YPAD
                                       ~packing:payment_vbox#pack () in
       payment_label#misc#modify_font_by_name c_HEADER_FONT;
-      let payment_total_edit = GEdit.entry ~text:"Number of OCamlcoins"
-                                           ~packing:payment_vbox#pack () in
+      payment_total_edit <- GEdit.entry ~text:"Number of OCamlcoins"
+                                           ~packing:payment_vbox#pack ();
       payment_target_edit <- GEdit.entry ~text:"IP of person to pay"
                                          ~packing:payment_vbox#pack ();
       let payment_button = GButton.button ~label:"Make Payment"
@@ -78,6 +94,12 @@ class gui =
 
       (* Display the windows and enter Gtk+ main loop *)
       window#show ();
+      (* Run the ocamlcoin code *)
+      Thread.create OcamlcoinRunner.run ();
       Main.main ()
   end
-let _ = let g = new gui in g#initialize () ;;
+
+let _ =
+  let g = new gui in
+  g#initialize ();
+;;

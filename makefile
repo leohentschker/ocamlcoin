@@ -45,7 +45,7 @@ payments: payments.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix -ocamlc 'ocamlc -thread str.cma threads.cma' payments.byte
 
 gui: gui.ml
-	ocamlbuild -use-ocamlfind -pkg yojson -pkgs lablgtk2 -pkgs nocrypto.unix -ocamlc 'ocamlc -thread threads.cma' gui.byte
+	ocamlbuild -use-ocamlfind -pkg yojson -pkgs lablgtk2 -pkgs nocrypto.unix -ocamlc 'ocamlc -thread threads.cma str.cma' gui.byte
 
 wallet : wallet.ml
 	ocamlbuild -use-ocamlfind -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix -pkg yojson wallet.byte

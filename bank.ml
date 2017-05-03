@@ -8,21 +8,17 @@ open Mining
 open Mining.Miner
 module Y = Yojson
 
-let c_MASTERKEY_FILE_NAME = "masterkeys.json"
+let c_MASTERKEY_FILE_NAME = "masterkey.json"
 let c_LEDGER_FILE_NAME = "ledger.json"
 
-let (masterpriv, masterpub) =
+exception MissingMasterkey
+let masterpub =
   try
     let json = Yojson.Basic.from_file c_MASTERKEY_FILE_NAME in
     let open Yojson.Basic.Util in
-    string_to_priv (json |> member c_PRIV_JSON_KEY |> to_string),
     string_to_pub (json |> member c_PUB_JSON_KEY |> to_string)
   with Sys_error _ ->
-    let priv, pub = generate_keypair () in
-    let json = `Assoc[(c_PUB_JSON_KEY, `String(pub_to_string pub));
-                      (c_PRIV_JSON_KEY, `String(priv_to_string priv))] in
-    IO.write_json json c_MASTERKEY_FILE_NAME;
-    priv, pub
+    raise MissingMasterkey
 
 module MT = MakeMerkle (TransactionSerializable) (SHA256)
 
