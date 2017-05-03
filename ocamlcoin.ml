@@ -54,6 +54,7 @@ module OcamlcoinRunner =
           | PingDiscovery ->
               print_endline ("PING DISCOVERY from ip: " ^ node#ip);
               broadcast_event (BroadcastNodes(get_peers ())) node;
+              broadcast_event (BroadcastTransactions(Bank.get_transactions(Bank.ledger))) node;
               add_peer node;
           | BroadcastNodes(nlist) ->
               print_endline "BROADCAST NODES";

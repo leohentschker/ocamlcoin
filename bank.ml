@@ -26,8 +26,11 @@ let (masterpriv, masterpub) =
 
 module MT = MakeMerkle (TransactionSerializable) (SHA256)
 
+let get_transactions (l : MT.mtree ref) =
+  MT.children !l
+
 let export_ledger (l : MT.mtree ref) : unit =
-  IO.write_json (`List(List.map (fun t -> t#to_json) (MT.children !l)))
+  IO.write_json (`List(List.map (fun t -> t#to_json) (get_transactions (l))))
     c_LEDGER_FILE_NAME
 
 let ledger =
