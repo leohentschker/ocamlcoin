@@ -11,6 +11,7 @@ let c_SIGNATURE_KEY = "signature"
 let c_SOLUTION_KEY = "solution"
 let c_SOLVER_KEY = "solver"
 let c_BLOCK_SIZE = 10
+let c_UNVERIFIED_TRANSACTIONS_FILE = "files/unverified.json"
 
 module Transaction =
   struct
@@ -44,6 +45,13 @@ module Transaction =
         method signature = signature
         method solution = solution
         method solver = solver
+
+        method equal (t2 : transaction) =
+          (this#amount = t2#amount) &&
+          (this#originator = t2#originator) &&
+          (this#target = t2#target) &&
+          (this#timestamp = t2#timestamp)
+
         method to_string =
           string_of_transaction_data originator target amount timestamp
         method authenticated =
@@ -68,7 +76,6 @@ module Transaction =
                            (priv : priv_key) : transaction =
       let signature = Crypto.Signature.sign priv
         (string_of_transaction_data orig target amount timestamp) in
-      (* why do we have a 0 here? *)
       new transaction orig target amount timestamp
                       signature 0 (snd (generate_keypair ()))
 
@@ -113,12 +120,28 @@ module Block =
 open Block
 
 (* Store a global list of unverified transactions *)
-let unmined_transactions = ref []
-let add_unmined_transaction (t : transaction) =
-  unmined_transactions := t :: !unmined_transactions
+let unmined_transactions =
+  try
+    match Yojson.Basic.from_file c_UNVERIFIED_TRANSACTIONS_FILE with
+    | `List json_list -> ref (List.map json_to_transaction json_list)
+    | _ -> failwith "Unexpected transaction json format"
+  with Yojson.Json_error _ | Sys_error _ ->
+    ref []
 
 exception NoUnverified
 let get_unmined_transaction () =
   match !unmined_transactions with
   | [] -> raise NoUnverified
   | h :: _t -> h
+
+let export_unverified () =
+  IO.write_json (`List (List.map (fun t -> t#to_json) !unmined_transactions))
+                c_UNVERIFIED_TRANSACTIONS_FILE
+
+let add_unmined_transaction (t : transaction) =
+  unmined_transactions := t :: !unmined_transactions;
+  export_unverified ()
+
+let remove_mined_transaction (t : transaction) : unit =
+  unmined_transactions := List.filter (fun t2 -> not (t#equal t2)) !unmined_transactions;
+  export_unverified ()

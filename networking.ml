@@ -8,12 +8,14 @@ let c_IP_JSON_KEY = "ip"
 let c_PORT_JSON_KEY = "port"
 let c_DEFAULT_COIN_PORT = 8332
 let c_DEFAULT_IP = "10.252.197.92"
+let c_CONNECTIONS = 15
 
+let c_INCOMING_MESSAGE_SIZE = 16777216
 let c_USE_LOCAL_NETWORK = ref false
 
 let is_valid_ip ip_str =
-  Str.string_match (Str.regexp "\\([0-9]+\\)\\.\\([0-9]+\\)
-                    \\.\\([0-9]+\\)\\.\\([0-9]+\\)") ip_str 0 ;;
+  Str.string_match (Str.regexp ("\\([0-9]+\\)\\.\\([0-9]+\\)" ^
+                    "\\.\\([0-9]+\\)\\.\\([0-9]+\\)")) ip_str 0 ;;
 
 (* attempt to determine a private ip *)
 let rec get_private_ip () =
@@ -21,8 +23,8 @@ let rec get_private_ip () =
   let mac_output =
     IO.syscall "ifconfig en0 | grep 'inet ' | awk '{print $2}'" in
   let ubuntu_output =
-    IO.syscall "ifconfig -a | grep 'inet addr' | awk {'print $2'}
-                | sed -e 's/^addr://' | sed -n 2p" in
+    IO.syscall ("ifconfig -a | grep 'inet addr' | awk {'print $2'}" ^
+                "| sed -e 's/^addr://' | sed -n 2p") in
   if is_valid_ip mac_output then
     mac_output
   else if is_valid_ip ubuntu_output then
@@ -33,7 +35,7 @@ let rec get_private_ip () =
     if is_valid_ip manually_entered_ip then
       manually_entered_ip
     else
-      let _ = Printf.printf "Invalid IP: %s" manually_entered_ip in
+      let _ = Printf.printf "Invalid IP: %s \n" manually_entered_ip in
       get_private_ip ()
 
 (* exposes two-way port communication over the network *)
@@ -52,19 +54,20 @@ class coinserver =
     (* handle an incoming message over the network *)
     method handle_message s =
       List.iter (fun a -> a s) !listeners
-    (* sends the message s over the internet address *)
+    (* sends the message over the internet address *)
     method send_message s inet_addr port =
       if !c_USE_LOCAL_NETWORK then
         let _ = this#handle_message s in
-        true
+        ()
       else try
         let fd, sock_addr = this#initialize_sock inet_addr port in
         Unix.connect fd sock_addr;
         let buf = Bytes.of_string s in
         let _ = Unix.send fd buf 0 (String.length buf) [] in
-        true
+        ()
       with
-        | Unix.Unix_error (_, _, _) -> false
+        | Unix.Unix_error (_, _, _) ->
+            Printf.printf "Failed to send message over network"
     method add_listener f =
       listeners := f :: !listeners
     method run_server () : unit =
@@ -72,11 +75,11 @@ class coinserver =
       let fd, sock_addr =
         this#initialize_sock Unix.inet_addr_any c_DEFAULT_COIN_PORT in
       Unix.bind fd sock_addr;
-      Unix.listen fd 5;
+      Unix.listen fd c_CONNECTIONS;
       let rec server_loop () =
         (* pull new data over the socket *)
         let (client_fd, _) = Unix.accept fd in
-        let buf = Bytes.create 4096 in
+        let buf = Bytes.create c_INCOMING_MESSAGE_SIZE in
         let len = Unix.recv client_fd buf 0 (String.length buf) [] in
         let request = String.sub buf 0 len in
         this#handle_message request;
@@ -129,9 +132,9 @@ module OcamlcoinNetwork =
     let attach_network_listener = server#add_listener
     let broadcast_to_node (json_msg : Yojson.Basic.json)
                            (node : ocamlcoin_node)  =
-      (* attach the port and the ip and pub key to the json *)
-      let _ = node#send_message(Yojson.Basic.to_string json_msg) in
-      ()
+      try
+        node#send_message(Yojson.Basic.to_string json_msg)
+      with Yojson.Json_error _ -> failwith "Invalid JSON format"
     let run () =
       (* run the server on an asynchronous thread *)
       server#run_server_async ();

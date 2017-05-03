@@ -9,6 +9,22 @@ let rec sublist (lst : 'a list) (a : int) (b : int) : 'a list =
            | (0, _) -> [h] @ sublist t a (b - 1)
            | (_, _) -> sublist t (a - 1) (b - 1))
 
+let chunk_list (chunk_sizes : int) (lst : 'a list) =
+  let rec split_chunk (i : int) (l : 'a list) =
+    if i = chunk_sizes then
+      [], l
+    else
+      match l with
+      | h :: t ->
+          let tchunk, ttail = split_chunk (i + 1) t in
+          h :: tchunk, ttail
+      | [] -> [], [] in
+  let rec aux (sublist : 'a list) =
+    match split_chunk 0 sublist with
+    | chunk, [] -> [chunk]
+    | chunk, t -> chunk :: aux t in
+  aux lst
+
 (* Drawn from ps5/http_services *)
 let page_lines (page : string) : string list =
 

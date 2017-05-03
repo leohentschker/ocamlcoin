@@ -7,11 +7,12 @@ open Merkletree
 open Mining
 module IO = IOHelpers
 module Y = Yojson
+open Mining
 
 let c_REWARD = 10.
 
-let c_MASTERKEY_FILE_NAME = "masterkey.json"
-let c_LEDGER_FILE_NAME = "ledger.json"
+let c_MASTERKEY_FILE_NAME = "files/masterkey.json"
+let c_LEDGER_FILE_NAME = "files/ledger.json"
 exception MissingMasterkey
 
 let masterpriv_test, masterpub_test = generate_keypair ()
@@ -71,12 +72,13 @@ module Bank =
            && total_amount >= amount
            && amount > 0.
            && timestamp > 0.
-           && Mining.Miner.verify t#to_string t#solution)
+           && Mining.Miner.verify t#to_string (Miner.Solution t#solution))
           || (id1 = masterpub || id1 = masterpub_test))
 
     let add_transaction (t : transaction) (l : ledger) : unit =
       if verify_transaction t l then
-        l := (MT.add_element t !l)
+        let _ = l := (MT.add_element t !l) in
+        export_ledger book
       else ()
 
     let verify_ledger (t : ledger) : bool =

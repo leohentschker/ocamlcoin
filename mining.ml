@@ -4,11 +4,19 @@ exception Nosolution of string
 
 module Miner =
   struct
-    type nonce = int
-    let nonce_to_string = string_of_int
-    let string_to_nonce = int_of_string
+    type nonce = Solution of int | Nosolution
+    let nonce_to_string n =
+      match n with
+      | Solution i -> string_of_int i
+      | Nosolution -> "No solution"
+    let string_to_nonce s = Solution (int_of_string s)
 
     let is_mining = ref false
+
+    let solution_listeners = ref []
+
+    let add_solution_listener (f : transaction -> nonce -> unit) =
+      solution_listeners := f :: !solution_listeners
 
     (* Expose whether or not we are mining to external modules *)
     let stop_mining () = is_mining := false
@@ -23,10 +31,13 @@ module Miner =
     (* Checks whether or not the hash of str with nonce on the back
        has *size* or more zeroes on the front *)
     let verify (str : string) (n : nonce) : bool =
-      let combo = str ^ (string_of_int n) in
-      let hashed = hash_text combo in
-      let first_chars = String.sub hashed 0 !leading_zeros in
-      first_chars = String.make !leading_zeros '0'
+      match n with
+      | Solution i ->
+          let combo = str ^ (string_of_int i) in
+          let hashed = hash_text combo in
+          let first_chars = String.sub hashed 0 !leading_zeros in
+          first_chars = String.make !leading_zeros '0'
+      | Nosolution -> false
 
     (* Implementation of the mining algorithm for proof-of-work *)
     let mine (t : transaction) (iters: int) : nonce =
@@ -37,10 +48,11 @@ module Miner =
       let rec iterate_check n =
         if n = 0 then raise (Nosolution "Couldn't solve block")
         else if currently_mining () = false then
-          raise (Nosolution "Couldn't solve block")
-        else if verify str n then
+          Nosolution
+        else if verify str (Solution n) then
           let _ = is_mining := false in
-          n
+          List.iter (fun f -> f t (Solution n)) !solution_listeners;
+          Solution n
         else iterate_check (n - 1) in
       iterate_check iters
 
@@ -59,7 +71,9 @@ module Miner =
 
     let test_mining () =
       let t = generate_fake_transaction () in
-      let nonce = string_of_int (mine t 500000) in
-      assert (String.sub (hash_text(t#to_string ^ nonce)) 0 !leading_zeros =
-        String.make !leading_zeros '0')
+      match mine t 500000 with
+      | Solution i -> 
+          assert (String.sub (hash_text(t#to_string ^ (string_of_int i)))
+                    0 !leading_zeros = String.make !leading_zeros '0') 
+      | Nosolution -> failwith "Unable to find solution"
   end

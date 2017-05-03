@@ -21,7 +21,7 @@ let c_SIGNATURE_KEY = "signature"
 type network_event =
   | PingDiscovery
   | NewTransaction of transaction
-  | SolvedTransaction of (transaction * Mining.Miner.nonce * pub_key * signature)
+  | SolvedTransaction of (transaction * Mining.Miner.nonce * pub_key * auth_sig)
   | BroadcastNodes of (OcamlcoinNetwork.ocamlcoin_node list)
   | BroadcastTransactions of (transaction list)
 
