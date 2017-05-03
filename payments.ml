@@ -45,7 +45,7 @@ module Transaction =
                                    (target : pub_key)
                                    (amount : float)
                                    (timestamp : float) : string =
-      string_of_float amount
+      (pub_to_string orig) ^ (pub_to_string target) ^ (string_of_float amount) ^ (string_of_float timestamp)
 
     let create_transaction (orig : pub_key) (target : pub_key) (amount : float)
                            (timestamp : float) (priv : priv_key) : transaction =

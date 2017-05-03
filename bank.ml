@@ -19,21 +19,21 @@ let verify_transaction (t : transaction) (l: MT.mtree ref): bool =
   in
   not (eltlst = []) && (total_amount < amount) &&
   (if amount < 0. then not (MT.queryid id2 !l = []) else true) &&
-  authenticate_transaction t
+  authenticate_transaction t &&
 
 let add_transaction (t : transaction) (l : MT.mtree ref) : unit =
   if verify_transaction t l then
     ledger := (MT.add_element t !ledger)
 
-let rec verify (t : MT.mtree) (n : int) : bool =
+let rec verify_helper (t : MT.mtree) (n : int) : bool =
   if n = 0 then true
   else
     let tlist = MT.children t in
     let slist = sublist tlist 0 (n - 1) in
     let tn = List.nth tlist n in
-    verify_transaction tn (ref (MT.build_tree slist)) && (verify t (n - 1))
+    verify_transaction tn (ref (MT.build_tree slist)) && (verify_helper t (n - 1))
 
-let verify_tree (t : MT.mtree) = verify t (List.length (MT.children t) - 1)
+let verify_tree (t : MT.mtree) = verify_helper t (List.length (MT.children t) - 1)
 
 let merge_trees (tree1 : MT.mtree ref)
                 (tree2 : MT.mtree ref) : unit =
