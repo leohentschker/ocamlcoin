@@ -99,6 +99,14 @@ module Bank =
     (* More tests here *)
     let test_verify_transaction () =
       let ledger = ref empty in
+      let priv1, pub1, priv2, pub2 = generate_keypair (), generate_keypair () in
+      let transaction1 = create_transaction masterkey pub1 100. 100. priv in
+      let transaction2 = create_transaction masterkey pub2 100. 150. priv in
+      let good_transaction = create_transaction pub1 pub2 100. 200. priv1 in
+      let bad_transaction1 = create_transaction pub1 pub2 100. 250. priv1 in
+      let bad_transaction2 = create_transaction pub2 pub1 300. 300. priv2 in
+      let bad_transaction3 = create_transaction pub2 pub1 100. ~-.(250.) priv2 in
+      let bad_transaction4 = create_transaction pub2 pub1 ~-(100.) 250. pri21 in
       let valid_list = generate_transaction_list () in
       let invalid_transaction = bad_amount_transaction () in
       List.iter (fun t -> add_transaction t ledger) valid_list;
