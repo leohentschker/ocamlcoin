@@ -45,7 +45,7 @@ module Transaction =
         method authenticated =
           Crypto.Signature.verify this#to_string originator signature
         (* https://realworldocaml.org/v1/en/html/handling-json-data.html *)
-        method to_json =
+        method to_json : Y.Basic.json =
           `Assoc[(c_ORIGINATOR_KEY, `String (pub_to_string originator));
                  (c_TARGET_KEY, `String (pub_to_string target));
                  (c_AMOUNT_KEY, `Float amount);
