@@ -74,7 +74,6 @@ class gui =
         (SolvedTransaction(t, n, User.public_key,
            Signature.sign User.private_key t#to_string))
     method update_ui () =
-      print_endline "UPDATE UI CALLED";
       this#set_balance
     method initialize () =
       (* Kill the program when we close the window *)

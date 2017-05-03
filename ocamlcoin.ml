@@ -83,15 +83,12 @@ module OcamlcoinRunner =
         (fun json node ->
           match json_to_event json with
           | NewTransaction t ->
-              print_endline "RECEIVE NEW TRANSAACTION";
               if authenticate_transaction t then
                  Payments.add_unmined_transaction t
           | SolvedTransaction(t, nonce, pub_key, s) ->
-              print_endline "SOLVED TRANS";
               (match nonce with
               | Solution i -> 
                   if Crypto.Signature.verify t#to_string pub_key s then
-                    let _ = print_endline "THIS IS VALID" in
                     let _ = Bank.add_transaction
                       (new transaction t#originator t#target t#amount
                                        t#timestamp t#signature i pub_key)
@@ -102,7 +99,6 @@ module OcamlcoinRunner =
                   print_endline "Can't solve without solution")
           | PingDiscovery ->
               if not (node#equal User.personal_node) then
-                let _ = print_endline "RECEIVED PING" in
                 add_peer node;
                 (match Bank.get_transactions(Bank.book) with
                 | _h :: _t as tlist ->
@@ -119,7 +115,6 @@ module OcamlcoinRunner =
           | BroadcastNodes(nlist) ->
               List.iter add_peer nlist
           | BroadcastTransactions(tlist) ->
-              print_endline "Received new transactions";
               List.iter (fun t -> Bank.add_transaction t Bank.book) tlist);
       let rec network_loop () =
         Unix.sleep 60;
