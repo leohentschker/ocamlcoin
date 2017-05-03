@@ -6,7 +6,7 @@ let c_PORT_JSON_KEY = "port"
 let c_DATA_JSON_KEY = "message_data"
 let c_DEFAULT_COIN_PORT = 8332
 
-let c_USE_LOCAL_NETWORK = ref true
+let c_USE_LOCAL_NETWORK = ref false
 
 let is_valid_ip ip_str =
   Str.string_match (Str.regexp "\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)") ip_str 0 ;;

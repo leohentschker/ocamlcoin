@@ -27,7 +27,7 @@ let add_transaction (t : transaction) (l : MT.mtree ref) : unit =
   if verify_transaction t l then
     ledger := (MT.add_element t !ledger)
 
-let verify_tree (t : MT.mtree) = 
+let verify_tree (t : MT.mtree) =
   let rec verify (t : MT.mtree) (n : int) : bool =
     if n = 0 then true
     else
