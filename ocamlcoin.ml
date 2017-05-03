@@ -95,6 +95,7 @@ module OcamlcoinRunner =
               | Nosolution ->
                   print_endline "Can't solve without solution")
           | PingDiscovery ->
+              print_endline "PINGED";
               add_peer node;
               (match Bank.get_transactions(Bank.book) with
               | _h :: _t as tlist ->
@@ -119,5 +120,3 @@ module OcamlcoinRunner =
         network_loop () in
       network_loop ()
   end
-
-let _ = OcamlcoinRunner.run ()
