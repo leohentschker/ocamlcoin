@@ -217,7 +217,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) :
       match t with
       | Empty -> []
       | Leaf (_, e) ->
-          let (id1, id2, _, _) = get e in
+          let (id1, id2, _, _, _) = get e in
           if id = id1 || id = id2 then [e] else []
       | Tree (_, lst, _, l, r) ->
           if List.mem id lst then (queryid id l) @ (queryid id r)
@@ -233,7 +233,8 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) :
       match t with
       | Empty -> []
       | Leaf (_, _) | Tree (_, _, _, _, _) ->
-          let lst = children t in List.filter (fun t -> t#solver = id) lst
+          let lst = children t in
+          let rlst = List.filter (fun x -> let (_, _, _, _, s) = get x in s = id) lst
 
     let test_add_element () =
       let l1, l2 = TestHelpers.generate_list S.gen (Random.int 20),
