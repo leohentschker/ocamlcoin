@@ -37,6 +37,7 @@ class gui =
     (* variabeles for mining *)
     val mutable mining_button = GButton.button ()
     val mutable payment_button = GButton.button ()
+    val mutable balance_button = GButton.button ()
     method set_balance =
       let balance = Bank.get_balance (User.public_key) (Unix.time ()) (Bank.book) in
       balance_label#set_text ("Current balance: " ^ (string_of_float balance))
@@ -103,6 +104,10 @@ class gui =
                                          ~packing:payment_vbox#pack ();
       payment_button <- GButton.button ~label:"Make Payment"
                                           ~packing:payment_vbox#pack ();
+      balance_button <- GButton.button ~label:"Update balance"
+                                          ~packing:payment_vbox#pack ();
+      balance_button#misc#modify_bg c_BUTTON_COLOR;
+      let _ = balance_button#connect#clicked ~callback: this#update_ui in
       payment_button#misc#modify_bg c_BUTTON_COLOR;
       let _ = payment_button#connect#clicked ~callback: this#make_payment in
       (* mining UI elements *)
@@ -118,7 +123,7 @@ class gui =
       let _ = Thread.create OcamlcoinRunner.run () in
       Miner.add_solution_listener this#mining_solution_listener;
       OcamlcoinRunner.attach_broadcast_listener (fun _ _ -> this#update_ui());
-      Main.main ()
+      Main.main()
   end
 
 let _ =
