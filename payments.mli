@@ -39,3 +39,4 @@ module Block : sig
 exception NoUnverified
 val add_unmined_transaction : transaction -> unit
 val get_unmined_transaction : unit -> transaction
+val export_unverified : unit -> unit

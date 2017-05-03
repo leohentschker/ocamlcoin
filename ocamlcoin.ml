@@ -47,7 +47,8 @@ module OcamlcoinRunner =
       List.iter (broadcast_event e) (get_peers ())
     let store_state () =
       User.export_nodes (get_peers ());
-      Bank.export_ledger (Bank.book)
+      Bank.export_ledger (Bank.book);
+      Payments.export_unverified ()
     let find_node_by_ip (ip : string) =
       let rec find_node (lst : ocamlcoin_node list) : ocamlcoin_node =
         match lst with

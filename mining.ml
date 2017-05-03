@@ -10,6 +10,11 @@ module Miner =
 
     let is_mining = ref false
 
+    let solution_listeners = ref []
+
+    let add_solution_listener (f : transaction -> nonce -> unit) =
+      solution_listeners := f :: !solution_listeners
+
     (* Expose whether or not we are mining to external modules *)
     let stop_mining () = is_mining := false
     let currently_mining () = !is_mining
@@ -40,6 +45,7 @@ module Miner =
           raise (Nosolution "Couldn't solve block")
         else if verify str n then
           let _ = is_mining := false in
+          List.iter (fun f -> f t n) !solution_listeners;
           n
         else iterate_check (n - 1) in
       iterate_check iters

@@ -3,6 +3,7 @@ open Payments.Transaction
 module Miner :
   sig
     type nonce
+    val add_solution_listener : (transaction -> nonce -> unit) -> unit
     val currently_mining : unit -> bool
     val stop_mining : unit -> unit
     val nonce_to_string : nonce -> string

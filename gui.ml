@@ -36,11 +36,12 @@ class gui =
     method toggle_mining () =
       if Miner.currently_mining () then
         let _ = Miner.stop_mining () in
-        mining_button#set_label c_STOP_MINING_TEXT
+        mining_button#set_label c_MINING_TEXT
       else
         try
-          Miner.mine_async ();
-          mining_button#set_label c_MINING_TEXT
+          print_endline "START MINING";
+          mining_button#set_label c_STOP_MINING_TEXT;
+          Miner.mine_async ()
         with Payments.NoUnverified ->
           mining_button#set_label c_NO_BLOCKS_MINING_TEXT
     method make_payment () =
@@ -57,6 +58,9 @@ class gui =
           payment_target_edit#set_text c_INVALID_IP_TEXT
       with Failure float_of_string ->
         payment_total_edit#set_text c_INVALID_AMOUNT_TEXT
+    method mining_solution_listener (t : transaction) (n : Miner.nonce) =
+      OcamlcoinRunner.broadcast_event_over_network (SolvedTransaction(t, n));
+      mining_button#set_label "You solved a block! Mine again?"
     method initialize () =
       (* Kill the program when we close the window *)
       let _ = window#connect#destroy ~callback:Main.quit in
@@ -95,7 +99,8 @@ class gui =
       (* Display the windows and enter Gtk+ main loop *)
       window#show ();
       (* Run the ocamlcoin code *)
-      Thread.create OcamlcoinRunner.run ();
+      let _ = Thread.create OcamlcoinRunner.run () in
+      Miner.add_solution_listener this#mining_solution_listener;
       Main.main ()
   end
 

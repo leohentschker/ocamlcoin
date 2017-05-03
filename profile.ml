@@ -4,7 +4,7 @@ open Crypto.Keychain
 open Networking.OcamlcoinNetwork
 module Y = Yojson
 
-let c_PROFILE_FILE_NAME = "profile.json"
+let c_PROFILE_FILE_NAME = "files/profile.json"
 let c_STORED_NODES_KEY = "nodes"
 
 module User =

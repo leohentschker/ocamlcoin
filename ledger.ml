@@ -8,8 +8,8 @@ module IO = IOHelpers
 module Y = Yojson
 
 
-let c_MASTERKEY_FILE_NAME = "masterkey.json"
-let c_LEDGER_FILE_NAME = "ledger.json"
+let c_MASTERKEY_FILE_NAME = "files/masterkey.json"
+let c_LEDGER_FILE_NAME = "files/ledger.json"
 exception MissingMasterkey
 
 let masterpriv_test, masterpub_test = generate_keypair ()
@@ -43,7 +43,6 @@ module Bank =
     let empty = MT.empty
     let query (p : pub_key) (m : ledger) : transaction list =
       (MT.queryid p !m) @ (MT.queryhash (pub_to_string p) !m)
-
     let verify_transaction (t : transaction) (l: ledger) : bool =
       let id1, id2, amount, timestamp = t#originator, t#target, t#amount, t#timestamp in
       let eltlst = MT.queryid id1 !l in
@@ -154,5 +153,3 @@ module Bank =
       TestHelpers.run_tests test_query;
       print_endline "All tests passed!"
   end
-
-let _ = Bank.run_tests ()
