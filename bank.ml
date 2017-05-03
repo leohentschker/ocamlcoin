@@ -4,13 +4,18 @@ open Crypto.Keychain
 open Payments.Transaction
 open Merkletree
 open IOHelpers
-open Mining
-open Mining.Miner
 
 let masterkey = snd (generate_keypair ())
 module MT = MakeMerkle (TransactionSerializable) (SHA256)
 
 let ledger = ref MT.empty
+
+let add_transaction (t : transaction) (l : MT.mtree ref) : unit =
+  if verify_transaction t l then
+    ledger := (MT.add_element t !ledger)
+
+let query (s : string) (m : MT.mtree ref) : transaction list =
+  (MT.queryid (string_to_pub s) !m) @ (MT.queryhash s !m)
 
 let verify_transaction (t : transaction) (l: MT.mtree ref) : bool =
   let id1, id2, amount, timestamp = t#originator, t#target, t#amount, t#timestamp in
@@ -23,11 +28,7 @@ let verify_transaction (t : transaction) (l: MT.mtree ref) : bool =
        amount > 0. && authenticate_transaction t &&
        Mining.Miner.verify t#to_string t#solution
 
-let add_transaction (t : transaction) (l : MT.mtree ref) : unit =
-  if verify_transaction t l then
-    ledger := (MT.add_element t !ledger)
-
-let verify_tree (t : MT.mtree) =
+let verify_ledger (t : MT.mtree) : bool =
   let rec verify (t : MT.mtree) (n : int) : bool =
     if n = 0 then true
     else
@@ -46,6 +47,3 @@ let merge_ledgers (tree1 : MT.mtree ref)
   else List.iter (fun e -> (add_transaction e tree1))
                  (List.filter (fun e -> not (List.memq e (MT.children !tree1)))
                               (MT.children !tree2));;
-
-let query (s : string) (m : MT.mtree ref) : transaction list =
-  (MT.queryid (string_to_pub s) !m) @ (MT.queryhash s !m)
