@@ -7,6 +7,7 @@ open Events
 open Networking
 
 let test_ping_discovery () =
+  let json = event_to_json PingDiscovery in
   match json_to_event (event_to_json PingDiscovery) with
   | PingDiscovery -> ()
   | _ -> failwith "Expected ping discovery"
@@ -39,4 +40,5 @@ let run_tests () =
   TestHelpers.run_tests test_new_transaction_serialization;
   TestHelpers.run_tests test_broadcast_nodes_serialization
 
+let _ = test_ping_discovery () ;;
 let _ = run_tests ()

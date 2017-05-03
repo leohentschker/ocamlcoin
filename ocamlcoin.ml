@@ -18,7 +18,11 @@ module OcamlcoinRunner =
     (* load the peers we are aware of *)
     let broadcast_event event node =
       try OcamlcoinNetwork.broadcast_to_node (event_to_json event) node with
-      Failure(a) -> Printf.printf "Error broadcasting to node: %s" a
+      Failure(a) ->
+        (match event with
+        | PingDiscovery -> print_endline "FAILED ON PING DISCOVERY"
+        | _ -> print_endline "FAILED ON OTHER");
+        Printf.printf "Error broadcasting to node: %s\n" a
     let add_peer new_node =
       if not(List.fold_left (fun a n -> a || new_node#equal n)
                             false (get_peers ())) then
@@ -43,6 +47,7 @@ module OcamlcoinRunner =
       OcamlcoinNetwork.run ();
       OcamlcoinNetwork.attach_broadcast_listener
         (fun json node ->
+          print_endline "LISTENER CALLED";
           match json_to_event json with
           | NewTransaction t ->
               print_endline "NEW TRANS";
@@ -52,13 +57,24 @@ module OcamlcoinRunner =
               print_endline "SOLVED BLOCK";
               Bank.add_transaction t Bank.ledger
           | PingDiscovery ->
-              print_endline ("PING DISCOVERY from ip: " ^ node#ip);
-              broadcast_event (BroadcastNodes(get_peers ())) node;
-              broadcast_event (BroadcastTransactions(Bank.get_transactions(Bank.ledger))) node;
+              print_endline "I got a ping discovery";
+              print_endline "GONNA ADD PEER";
               add_peer node;
+              print_endline "ADDED PEER";
+              (match get_peers () with
+              | _h :: _t as nlist ->
+                  print_endline "GONNA BROADCAST NODES";
+                  broadcast_event (BroadcastNodes(nlist)) node;
+                  print_endline "CALLED BROADCAST NODES SUCCES";
+              | [] -> ());
+              (match Bank.get_transactions(Bank.ledger) with
+              | _h :: _t as tlist ->
+                print_endline "GONNA START BROADCASTING TRANSACTIONS";
+                broadcast_event (BroadcastTransactions(tlist)) node
+              | [] -> ());
           | BroadcastNodes(nlist) ->
               print_endline "BROADCAST NODES";
-              List.iter add_peer nlist;
+              List.iter add_peer nlist
           | BroadcastTransactions(tlist) ->
               print_endline "BROADCAST TRANSACTIONS";
               List.iter (fun t -> Bank.add_transaction t Bank.ledger) tlist);
@@ -68,8 +84,7 @@ module OcamlcoinRunner =
         if random_chance c_AVERAGE_PING_WAITTIME then ping_peers ();
         update_stored_nodes ();
         store_state ();
-        Unix.sleep 5;
-        network_loop () in
+        Unix.sleep 5 in
       network_loop ()
   end
 

@@ -220,10 +220,10 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
     let run_tests () =
       test1 () ;
       test_combine_trees () ;
-      print_endline "All tests passed" ;
+      print_endline "Merkletree tests passed" ;
       ()
   end
 
 module FakeMerkle = MakeMerkle (TransactionSerializable) (SHA256) ;;
 
-let _ = FakeMerkle.run_tests ();;
+(* let _ = FakeMerkle.run_tests () *)

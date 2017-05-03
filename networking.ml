@@ -45,9 +45,11 @@ class coinserver =
       fd, sock_addr
     (* handle an incoming message over the network *)
     method handle_message s =
+      print_endline "HANDLE MESS";
       List.iter (fun a -> a s) !listeners
     (* sends the message s over the internet address *)
     method send_message s inet_addr port =
+      print_endline "GOING TO SEND MESSAGE";
       if !c_USE_LOCAL_NETWORK then
         let _ = this#handle_message s in
         true
@@ -106,14 +108,20 @@ module OcamlcoinNetwork =
       end
     let json_to_ocamlcoin_node json =
       let open Basic.Util in
-      new ocamlcoin_node
+      print_endline "TURNING OCAMLCOIN NODE FROM JSON";
+      let res = new ocamlcoin_node
         (json |> member c_IP_JSON_KEY |> to_string)
-        (json |> member c_PORT_JSON_KEY |> to_int)
+        (json |> member c_PORT_JSON_KEY |> to_int) in
+      print_endline "CONVERTED";
+      res
     let attach_broadcast_listener f =
       server#add_listener
         (fun s ->
+          print_endline "OPENING FROM SERVER LISTENER";
           let open Yojson.Basic.Util in
+          print_endline "CONVERTING JSON FROM s";
           let json = Yojson.Basic.from_string s in
+          print_endline "CONVERTED";
           f (json |> member c_DATA_JSON_KEY)
             (new ocamlcoin_node (json |> member c_IP_JSON_KEY |> to_string)
               (json |> member c_PORT_JSON_KEY |> to_int)))
