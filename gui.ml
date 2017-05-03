@@ -36,6 +36,9 @@ class gui =
     (* variabeles for mining *)
     val mutable mining_button = GButton.button ()
     val mutable payment_button = GButton.button ()
+    method set_balance () =
+      let balance = Bank.get_balance (User.public_key) (Unix.time ()) (Bank.book) in
+      balance_label#set_text ("Current balance: " ^ (string_of_float balance))
     (* User toggled the mining button *)
     method toggle_mining () =
       if Miner.currently_mining () then
@@ -80,8 +83,9 @@ class gui =
       title#misc#modify_font_by_name c_TITLE_FONT;
 
       (* set the balance *)
-      balance_label <- GMisc.label ~text:"Current balance: 13.23 OCamlcoins"
+      balance_label <- GMisc.label ~text:""
                                    ~ypad:c_YPAD ~packing:vbox#pack ();
+      this#set_balance ();
       balance_label#misc#modify_font_by_name c_HEADER_FONT;
       (* payment UI elements *)
       let payment_vbox = GPack.vbox ~packing:vbox#pack ~border_width:20 () in

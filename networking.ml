@@ -11,7 +11,7 @@ let c_DEFAULT_IP = "10.252.197.92"
 let c_CONNECTIONS = 10
 
 let c_INCOMING_MESSAGE_SIZE = 16777216
-let c_USE_LOCAL_NETWORK = ref true
+let c_USE_LOCAL_NETWORK = ref false
 
 let is_valid_ip ip_str =
   Str.string_match (Str.regexp ("\\([0-9]+\\)\\.\\([0-9]+\\)" ^

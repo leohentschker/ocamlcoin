@@ -62,7 +62,6 @@ module Bank =
     let verify_transaction (t : transaction) (l: ledger) : bool =
       let id1, id2, amount, timestamp = t#originator, t#target, t#amount, t#timestamp in
       let eltlst = MT.queryid id1 !l in
-      let timedlst = List.filter (fun x -> x#timestamp < timestamp) eltlst in
       let total_amount = get_balance id1 timestamp l in
       authenticate_transaction t
       && ((not (eltlst = [])
