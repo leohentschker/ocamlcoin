@@ -45,7 +45,7 @@ module Bank =
           let slist = sublist tlist 0 (n - 1) in
           Printf.printf "%s" (string_of_int (n));
           let tn = List.nth tlist n in
-          let subledger = ref (MT.build_tree slist) in 
+          let subledger = ref (MT.build_tree slist) in
           verify_transaction tn subledger && (verify subledger (n - 1)) in
       verify t (List.length (MT.children !t) - 1)
 
@@ -70,6 +70,12 @@ module Bank =
     let generate_transaction_list () =
       TestHelpers.generate_list Payments_tests.generate_fake_transaction
                                 (Random.int 30)
+
+    let test_add_transaction () =
+      let ledger = empty in
+      let transaction_list = generate_transaction_list () in
+      List.iter (fun t -> add_transaction t ledger) transaction_list;
+      assert (transaction_list = (children !ledger))
 
     let test_query () =
       let ledger = empty in
@@ -102,9 +108,7 @@ module Bank =
       add_transaction invalid bad_ledger1;
       add_transaction invalid bad_ledger2;
       assert (verify_ledger good_ledger);
-      List.map (fun s -> print_endline s) (MT.serializelist (MT.children !good_ledger));
-      List.map (fun s -> print_endline s) (MT.serializelist (MT.children !bad_ledger1));
-      assert (verify_ledger bad_ledger1);
+      assert (not (verify_ledger bad_ledger1));
       assert (not (verify_ledger bad_ledger2))
 
     let test_merge_ledgers () =
@@ -117,6 +121,8 @@ module Bank =
                 (transaction_list1 @ transaction_list2)
 
     let run_tests () =
+      TestHelpers.run_tests test_add_transaction;
+      TestHelpers.run_tests test_query;
       TestHelpers.run_tests test_verify_transaction;
       TestHelpers.run_tests test_verify_ledger;
       TestHelpers.run_tests test_query;
