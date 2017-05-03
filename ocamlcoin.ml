@@ -118,9 +118,8 @@ module OcamlcoinRunner =
           | BroadcastTransactions(tlist) ->
               print_endline "Received new transactions";
               List.iter (fun t -> Bank.add_transaction t Bank.book) tlist);
-      ping_peers ();
       let rec network_loop () =
-        Unix.sleep 5;
+        Unix.sleep 60;
         if random_chance c_AVERAGE_PING_WAITTIME then ping_peers ();
         update_stored_nodes ();
         store_state ();
