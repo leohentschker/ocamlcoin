@@ -74,9 +74,13 @@ class gui =
     method mining_solution_listener (t : transaction) (n : Miner.nonce) =
       print_endline "MINING SOLUTION CALLED";
       mining_button#set_label "You solved a block! Mine again?";
+      let open Crypto.Keychain in
+      print_endline ("KEY OF USER" ^ (pub_to_string User.public_key));
+      print_endline ("KEY OF originator" ^ (pub_to_string t#originator));
+      print_endline ("KEY OF target" ^ (pub_to_string t#target));
       OcamlcoinRunner.broadcast_event_over_network
-      (SolvedTransaction(t, n, User.public_key,
-         Signature.sign User.private_key t#to_string))
+        (SolvedTransaction(t, n, User.public_key,
+           Signature.sign User.private_key t#to_string))
     method initialize () =
       (* Kill the program when we close the window *)
       let _ = window#connect#destroy ~callback:Main.quit in
