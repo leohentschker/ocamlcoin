@@ -53,6 +53,9 @@ module OcamlcoinRunner =
               add_peer node;
           | BroadcastNodes(nlist) ->
               print_endline "BROADCAST NODES";
+              List.iter add_peer nlist;
+          | BroadcastTransactions(tlist) ->
+              print_endline "BROADCAST TRANSACTIONS";
               List.iter add_peer nlist);
       peer_tuples := List.map (fun p -> (p, Unix.time ())) (User.stored_nodes);
       ping_peers ();
