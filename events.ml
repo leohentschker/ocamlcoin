@@ -1,6 +1,8 @@
 open Networking
 open Payments.Transaction
 open Mining.Miner
+open Crypto.Keychain
+open Crypto.Signature
 module Y = Yojson
 
 let c_TRANSACTION_TYPE_KEY = "transaction_type"
@@ -13,11 +15,13 @@ let c_BROADCAST_TRANSACTION_TYPE = "broadcast_transaction"
 
 let c_NONCE_KEY = "nonce"
 let c_TRANSACTION_KEY = "transaction"
+let c_PUB_KEY = "pubkey"
+let c_SIGNATURE_KEY = "signature"
 
 type network_event =
   | PingDiscovery
   | NewTransaction of transaction
-  | SolvedTransaction of (transaction * Mining.Miner.nonce)
+  | SolvedTransaction of (transaction * Mining.Miner.nonce * pub_key * auth_sig)
   | BroadcastNodes of (OcamlcoinNetwork.ocamlcoin_node list)
   | BroadcastTransactions of (transaction list)
 
@@ -30,10 +34,12 @@ let event_to_json (e : network_event) : Y.Basic.json =
   match e with
   | PingDiscovery -> make_event_json c_PING_DISCOVERY_TYPE (`Bool true)
   | NewTransaction t -> make_event_json c_NEW_TRANSACTION_TYPE t#to_json
-  | SolvedTransaction (t, n) ->
+  | SolvedTransaction (t, n, id, s) ->
       make_event_json c_SOLVED_TRANSACTION_TYPE
         (`Assoc [(c_NONCE_KEY, `String (nonce_to_string n));
-                 (c_TRANSACTION_KEY, t#to_json)])
+                 (c_TRANSACTION_KEY, t#to_json);
+                 (c_PUB_KEY, `String (pub_to_string id));
+                 (c_SIGNATURE_KEY, signature_to_json s)])
   | BroadcastNodes nlist ->
       make_event_json c_BROADCAST_NODES_TYPE
         (`List (List.map (fun n -> n#to_json) nlist))
@@ -53,7 +59,9 @@ let json_to_event (json : Y.Basic.json) : network_event =
       let nonce = json_data |> member c_NONCE_KEY |> to_string in
       let transaction =
         json_to_transaction (json_data |> member c_TRANSACTION_KEY) in
-      SolvedTransaction(transaction, string_to_nonce nonce)
+      let id = json_data |> member c_PUB_KEY |> to_string in
+      let s = json_to_signature (json_data |> member c_SIGNATURE_KEY) in
+      SolvedTransaction(transaction, string_to_nonce nonce, string_to_pub id, s)
     else if event_type = c_BROADCAST_NODES_TYPE then
       match json_data with
       | `List json_list ->

@@ -1,11 +1,13 @@
 open Networking
 open Mining.Miner
 open Payments.Transaction
+open Crypto.Keychain
+open Crypto.Signature
 
 type network_event =
   | PingDiscovery
   | NewTransaction of transaction
-  | SolvedTransaction of (transaction * nonce)
+  | SolvedTransaction of (transaction * nonce * pub_key * auth_sig)
   | BroadcastNodes of (OcamlcoinNetwork.ocamlcoin_node list)
   | BroadcastTransactions of (transaction list)
 

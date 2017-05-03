@@ -3,7 +3,7 @@ open Crypto.Keychain
 
 module Transaction : sig
     class transaction : pub_key -> pub_key -> float -> float ->
-                        signature -> int -> object
+                        signature -> int -> pub_key -> object
         method to_json : Yojson.Basic.json
         method to_string : string
         method originator : pub_key
@@ -13,6 +13,7 @@ module Transaction : sig
         method authenticated : bool
         method signature : signature
         method solution : int
+        method solver : pub_key
         method equal : transaction -> bool
       end
 

@@ -16,7 +16,7 @@ module type SERIALIZE =
     type id
     val serialize : t -> string
     val gen : unit -> t
-    val get : t -> (id * id * amount * time)
+    val get : t -> (id * id * amount * time * id)
     val compare : time -> time -> ordering
     val min : time -> time -> time
   end
@@ -55,7 +55,7 @@ module TransactionSerializable : (SERIALIZE with type amount = float
       let priv, pub = generate_keypair () in
       create_transaction originator target amount timestamp priv
 
-    let get (t : transaction) = (t#originator, t#target, t#amount, t#timestamp)
+    let get (t : transaction) = (t#originator, t#target, t#amount, t#timestamp, t#solver)
 
     let compare (t1 : time) (t2 : time) : ordering = compare t1 t2
 
@@ -71,7 +71,7 @@ module type MERKLETREE =
     type amount
     type id
     type time
-    val get : element -> id * id * amount * time
+    val get : element -> id * id * amount * time * id
     val serializelist : element list -> string list
     val base_hash : element -> string
     val tree_hash : string -> string
@@ -84,6 +84,7 @@ module type MERKLETREE =
     val add_element : element -> mtree -> mtree
     val queryid : id -> mtree -> element list
     val queryhash : string -> mtree -> element list
+    val querysolver : id -> mtree -> element list
     val run_tests : unit -> unit
   end
 
@@ -137,15 +138,15 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) :
                                     else xs) l1 l2 in
       match t1, t2 with
       | Leaf (s1, e1), Leaf (s2, e2) ->
-          let (id11, id12, _, time1), (id21, id22, _, time2) = get e1, get e2 in
+          let (id11, id12, _, time1, _), (id21, id22, _, time2, _) = get e1, get e2 in
           (Tree (tree_hash (s1 ^ s2), union [id11; id12] [id21; id22],
                  S.min time1 time2, t1, t2))
       | Leaf (s1, e), Tree (s2, lst, time2, _, _) ->
-          let (id1, id2, _, time1) = get e in
+          let (id1, id2, _, time1, _) = get e in
           (Tree (tree_hash (s1 ^ s2), union [id1; id2] lst,
                  S.min time1 time2, t1, t2))
       | Tree (s1, lst, time1, _, _), Leaf (s2, e) ->
-          let (id1, id2, _, time2) = get e in
+          let (id1, id2, _, time2, _) = get e in
           (Tree (tree_hash (s1 ^ s2), union lst [id1; id2],
                  S.min time1 time2, t1, t2))
       | Tree (s1, l1, time1, _, _), Tree (s2, l2, time2, _, _) ->
@@ -227,6 +228,12 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) :
       | Empty -> []
       | Leaf (s, _) | Tree (s, _, _, _, _) -> if hash = s then (children t)
                                               else []
+
+    let querysolver (id : id) (t : mtree) : element list =
+      match t with
+      | Empty -> []
+      | Leaf (_, _) | Tree (_, _, _, _, _) ->
+          let lst = children t in List.filter (fun t -> t#solver = id) lst
 
     let test_add_element () =
       let l1, l2 = TestHelpers.generate_list S.gen (Random.int 20),

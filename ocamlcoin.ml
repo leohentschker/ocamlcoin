@@ -3,6 +3,7 @@ open Networking
 open Networking.OcamlcoinNetwork
 open Events
 open Profile
+open Payments.Transaction
 open Ledger
 
 let c_DATA_JSON_KEY = "message_data"
@@ -75,10 +76,15 @@ module OcamlcoinRunner =
         (fun json node ->
           match json_to_event json with
           | NewTransaction t ->
-              if Bank.verify_transaction t Bank.book then
-                Payments.add_unmined_transaction t
-          | SolvedTransaction(t, nonce) ->
-              Bank.add_transaction t Bank.book;
+              print_endline "NEW TRANS";
+              if authenticate_transaction t Bank.book then
+                 Payments.add_unmined_transaction t
+          | SolvedTransaction(t, nonce, pub_key, s) ->
+              print_endline "SOLVED BLOCK";
+              Bank.add_transaction
+              (new transaction t#originator t#target t#amount t#timestamp
+                               t#signature nonce pub_key)
+              Bank.book;
               Payments.remove_mined_transaction t;
           | PingDiscovery ->
               add_peer node;
