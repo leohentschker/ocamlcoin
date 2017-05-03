@@ -5,7 +5,7 @@ open Payments.Transaction
 open Merkletree
 open IOHelpers
 
-(* let MasterId = generate_keypair () *)
+let masterkey = snd (generate_keypair ())
 module MT = MakeMerkle (TransactionSerializable) (SHA256)
 
 let ledger = ref MT.empty
