@@ -123,4 +123,4 @@ module Bank =
       TestHelpers.run_tests test_merge_ledgers;
       print_endline "All tests passed!"
   end
-let _ = run_tests ()
+let _ = Bank.run_tests ()
