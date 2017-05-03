@@ -15,7 +15,7 @@ module Miner =
     let currently_mining () = !is_mining
 
     (* control how long it takes to mine by increasing leading_zeros *)
-    let leading_zeros = 2
+    let leading_zeros = ref 2
 
     (* Takes a string and extracts the SHA256 hash of that string*)
     let hash_text = Crypto.SHA256.hash_text
@@ -25,8 +25,8 @@ module Miner =
     let verify (str : string) (n : nonce) : bool =
       let combo = str ^ (string_of_int n) in
       let hashed = hash_text combo in
-      let first_chars = String.sub hashed 0 leading_zeros in
-      first_chars = String.make leading_zeros '0'
+      let first_chars = String.sub hashed 0 !leading_zeros in
+      first_chars = String.make !leading_zeros '0'
 
     (* Implementation of the mining algorithm for proof-of-work *)
     let mine (t : transaction) (iters: int) : nonce =
@@ -53,9 +53,9 @@ module Miner =
       let word = "hello" in
       let bad = generate_fake_nonce () in
       assert (not (verify word bad))
-    let test_mining () = 
+    let test_mining () =
       let t = generate_fake_transaction () in
       let nonce = string_of_int (mine t 500000) in
-      assert (String.sub (hash_text(t#to_string ^ nonce)) 0 leading_zeros =
-        String.make leading_zeros '0') 
+      assert (String.sub (hash_text(t#to_string ^ nonce)) 0 !leading_zeros =
+        String.make !leading_zeros '0')
   end

@@ -4,6 +4,7 @@ open Crypto.Keychain
 open Payments
 open Payments.Transaction
 open Merkletree
+open Mining
 module IO = IOHelpers
 module Y = Yojson
 
@@ -33,7 +34,7 @@ module Bank =
         IO.write_json
           (`List(List.map (fun t -> t#to_json) tlist)) c_LEDGER_FILE_NAME
       | [] -> ()
-      
+
     type mtree = MT.mtree
 
     type ledger = MT.mtree ref
@@ -59,8 +60,9 @@ module Bank =
                       else acc +. x#amount) 0. timedlst in
       authenticate_transaction t
       && ((not (eltlst = [])
-           && total_amount < amount
+           && total_amount >= amount
            && amount > 0.
+           && timestamp > 0.
            && Mining.Miner.verify t#to_string t#solution)
           ||
          (id1 = masterpub || id1 = masterpub_test))
@@ -80,12 +82,6 @@ module Bank =
           let subledger = ref (MT.build_tree slist) in
           verify_transaction tn subledger && (verify subledger (n - 1)) in
       verify t (List.length (MT.children !t) - 1)
-
-    let bad_amount_transaction () =
-      let _, target = generate_keypair () in
-      let amount = ~-.(Random.float 1000.) in
-      let timestamp = Random.float 100000. in
-      create_transaction masterpub_test target amount timestamp masterpriv_test
 
     let generate_transaction () =
       let _, target = generate_keypair () in
@@ -117,44 +113,37 @@ module Bank =
     (* More tests here *)
     let test_verify_transaction () =
       let ledger = ref empty in
-      let ledger = ref empty in
       let priv1, pub1 = generate_keypair () in
       let priv2, pub2 = generate_keypair () in
       let transaction1 = create_transaction masterpub_test pub1 100. 100.
                                             masterpriv_test in
       let transaction2 = create_transaction masterpub_test pub2 100. 150.
                                             masterpriv_test in
-      let good_transaction = create_transaction pub1 pub2 100. 200. priv1 in
-      let bad_transaction1 = create_transaction pub1 pub2 100. 250. priv1 in
+      let good_transaction1 = create_transaction pub1 pub2 75. 200. priv1 in
+      let good_transaction2 = create_transaction pub1 pub2 100. 200. priv1 in
+      let bad_transaction1 = create_transaction pub1 pub2 150. 250. priv1 in
       let bad_transaction2 = create_transaction pub2 pub1 300. 300. priv2 in
       let bad_transaction3 = create_transaction pub2 pub1 100. ~-.(250.) priv2 in
       let bad_transaction4 = create_transaction pub2 pub1 ~-.(100.) 250. priv1 in
       let valid_list = generate_transaction_list () in
-      let invalid_transaction = bad_amount_transaction () in
+      Miner.leading_zeros := 0;
       List.iter (fun t -> add_transaction t ledger) valid_list;
-      add_transaction invalid_transaction ledger;
       List.iter (fun t -> assert (verify_transaction t ledger)) valid_list;
       add_transaction transaction1 ledger;
       add_transaction transaction2 ledger;
+      assert (verify_transaction good_transaction1 ledger);
+      assert (verify_transaction good_transaction2 ledger);
       assert (not (verify_transaction bad_transaction1 ledger));
       assert (not (verify_transaction bad_transaction2 ledger));
       assert (not (verify_transaction bad_transaction3 ledger));
-      assert (not (verify_transaction bad_transaction4 ledger))
+      assert (not (verify_transaction bad_transaction4 ledger));
+      Miner.leading_zeros := 2
 
     let test_verify_ledger () =
       let good_ledger = ref empty in
       let transaction_list = generate_transaction_list () in
       List.iter (fun t -> add_transaction t good_ledger) transaction_list;
       assert (verify_ledger good_ledger)
-
-    (* let test_merge_ledgers () =
-      let ledger1, ledger2 = ref empty, ref empty in
-      let transaction_list1 = generate_transaction_list () in
-      let transaction_list2 = generate_transaction_list () in
-      List.iter (fun t -> add_transaction t ledger1) transaction_list1;
-      List.iter (fun t -> add_transaction t ledger2) transaction_list2;
-      List.iter (fun t -> assert (List.memq t (query t#originator ledger1)))
-                (transaction_list1 @ transaction_list2) *)
 
     let run_tests () =
       TestHelpers.run_tests test_add_transaction;
@@ -164,5 +153,3 @@ module Bank =
       TestHelpers.run_tests test_query;
       print_endline "All tests passed!"
   end
-
-let _ = Bank.run_tests ()
