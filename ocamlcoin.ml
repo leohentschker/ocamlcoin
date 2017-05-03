@@ -38,7 +38,6 @@ module OcamlcoinRunner =
     let store_state () =
       User.export_nodes (get_peers ());
       Bank.export_ledger (Bank.ledger)
-      
     (* run everything! *)
     let run () =
       OcamlcoinNetwork.run ();
@@ -53,7 +52,7 @@ module OcamlcoinRunner =
               print_endline "SOLVED BLOCK";
               Bank.add_transaction t Bank.ledger
           | PingDiscovery ->
-              print_endline "I GOT PINGED!";
+              Printf.printf "I GOT PINGED BY %s" node#ip;
               add_peer node;
               (match get_peers () with
               | _h :: _t as nlist ->
