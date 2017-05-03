@@ -92,7 +92,8 @@ module OcamlcoinRunner =
                       (new transaction t#originator t#target t#amount
                                        t#timestamp t#signature i pub_key)
                       Bank.book in
-                    Payments.remove_mined_transaction t
+                    Payments.remove_mined_transaction t;
+                    Bank.export_ledger Bank.book
               | Nosolution ->
                   print_endline "Can't solve without solution")
           | PingDiscovery ->
