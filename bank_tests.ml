@@ -36,7 +36,7 @@ let test_verify_transaction () =
   let invalid_transaction = bad_amount_transaction () in
   List.iter (fun t -> add_transaction t ledger) valid_list;
   add_transaction invalid_transaction ledger;
-  List.iter (fun t -> assert (verify_transaction t ledger)) valid_list;
+  List.iter (fun t -> assert (not (verify_transaction t ledger))) valid_list;
   List.iter (fun t -> assert (not (verify_transaction t ledger))) invalid_list;
   assert (not (verify_transaction invalid_transaction ledger))
 
@@ -65,4 +65,7 @@ let run_tests () =
   TestHelpers.run_tests test_verify_transaction;
   TestHelpers.run_tests test_verify_ledger;
   TestHelpers.run_tests test_query;
-  TestHelpers.run_tests test_merge_ledgers
+  TestHelpers.run_tests test_merge_ledgers;
+  print_endline "All tests passed!"
+
+let _ = run_tests ()

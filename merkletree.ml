@@ -222,4 +222,4 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
 
 module FakeMerkle = MakeMerkle (TransactionSerializable) (SHA256) ;;
 
-let _ = FakeMerkle.run_tests ();;
+(* let _ = FakeMerkle.run_tests ();; *)
