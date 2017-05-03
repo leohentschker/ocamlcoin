@@ -87,15 +87,17 @@ module OcamlcoinRunner =
               if authenticate_transaction t then
                  Payments.add_unmined_transaction t
           | SolvedTransaction(t, nonce, pub_key, s) ->
+              print_endline "SOLVED TRANS";
               (match nonce with
               | Solution i -> 
                   if Crypto.Signature.verify t#to_string pub_key s then
+                    let _ = print_endline "THIS IS VALID" in
                     let _ = Bank.add_transaction
                       (new transaction t#originator t#target t#amount
                                        t#timestamp t#signature i pub_key)
                       Bank.book in
                     Payments.remove_mined_transaction t;
-                    Bank.export_ledger Bank.book
+                    Bank.export_ledger Bank.book;
               | Nosolution ->
                   print_endline "Can't solve without solution")
           | PingDiscovery ->
