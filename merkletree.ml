@@ -207,8 +207,8 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       let lcomb = l1 @ l2 in
       let t1 = build_tree l1 in
       let t2 = build_tree l2 in
-      let tbig = build_tree lcomb
-      let tcomb = combine_trees t1 t2
+      let tbig = build_tree lcomb in
+      let tcomb = combine_trees t1 t2 in
       assert (root_hash tbig = root_hash tcomb);
       assert (children tbig = children tcomb)
 
