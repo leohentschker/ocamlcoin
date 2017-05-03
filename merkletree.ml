@@ -3,9 +3,10 @@ open IOHelpers
 open Crypto
 open Crypto.Keychain
 open Payments.Transaction
-
+(* Need an ordering on your serializable elements,
+   because we're putting the elements into a tree*)
 type ordering = L | G | E
-
+(* Abstraction that is largely modeled after transaction in payments.ml *)
 module type SERIALIZE =
   sig
     type amount
@@ -19,6 +20,9 @@ module type SERIALIZE =
     val min : time -> time -> time
   end
 
+(* Instantation of Serializable in terms of Transactions. This is the
+    basis of our Merkle tree for our global ledger for rhe OCamlcoin
+    network *)
 
 module TransactionSerializable : (SERIALIZE with type amount = float
                                              and type time = float
@@ -30,12 +34,14 @@ module TransactionSerializable : (SERIALIZE with type amount = float
     type t = transaction
     type id = pub_key
     let serialize t = t#to_string
+    (* Sample generation of randomt transaction data*)
     let fake_transaction_data () =
       let _, originator = generate_keypair () in
       let _, target = generate_keypair () in
       let amount = Random.float 1000. in
       let timestamp = Random.float 10000. in
       originator, target, amount, timestamp
+      (* Generates a random transaction *)
     let gen () =
       let originator, target, amount, timestamp = fake_transaction_data () in
       let priv, pub = Keychain.generate_keypair () in
@@ -63,10 +69,7 @@ module type MERKLETREE =
     type mtree
     val empty : mtree
     val root_hash: mtree -> string
-    val half_list : 'a list -> 'a list * 'a list
-    val split_list : 'a list -> 'a list * 'a list
     val combine_trees : mtree -> mtree -> mtree
-    val tree_helper : element list -> mtree
     val build_tree : element list -> mtree
     val children : mtree -> element list
     val add_element : element -> mtree -> mtree
@@ -90,44 +93,30 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
     let get = S.get
 
     let serializelist = List.map S.serialize
-
+    (* *)
     let base_hash (data : element) : string =
       H.hash_text (S.serialize data)
 
     let tree_hash (s : string) : string =
       H.hash_text s
-
+      (* Our merkle tree will, in generate, store at each node a hash of the transactions,
+         A list of the users who were involved in the transactions, and a timestamp*)
     type mtree =
       Empty | Leaf of string * element | Tree of string * id list * time * mtree * mtree
 
     let empty = Empty
-
+    (* root_hash function returns the top root of the tree, which is the result
+       of hashing all of the other transactions together *)
     let root_hash (t : mtree) : string =
       match t with
       | Empty -> ""
       | Leaf (s, _) -> s
       | Tree (s, _, _, _, _) -> s
-
-    let log2 (n : int) : int =
-      truncate (log (float n) /. (log 2.))
-
-    let rec exp2 (n : int) : int =
-      match n with
-      | 0 -> 1
-      | _ -> 2 * exp2 (n - 1)
-
-    let half_list (lst : 'a list) : 'a list * 'a list =
-      let len = List.length lst in
-      (sublist lst 0 (len / 2 - 1), sublist lst (len / 2) (len - 1))
-
-    let rec split_list (lst : 'a list) : 'a list * 'a list =
-      let len = List.length lst in
-      (sublist lst 0 (exp2 (log2 len) - 1), sublist lst (exp2 (log2 len)) (len - 1))
-
-    let union (l1 : 'a list) (l2 : 'a list) : 'a list =
-      List.fold_left (fun xs x -> if not (List.mem x l1) then xs @ [x] else xs) l1 l2;;
-
+    (* Combines merkle trees under the assumption that the left tree has 2^n children, 
+       and right tree has fewer children. DANIEL CONTINUE THISSS *)
     let combine_trees (t1 : mtree) (t2 : mtree) : mtree =
+      let union (l1 : 'a list) (l2 : 'a list) : 'a list =
+        List.fold_left (fun xs x -> if not (List.mem x l1) then xs @ [x] else xs) l1 l2 in
       match t1, t2 with
       | Leaf (s1, e1), Leaf (s2, e2) ->
           let (id11, id12, _, time1), (id21, id22, _, time2) = get e1, get e2 in
@@ -143,15 +132,26 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       | Empty, _ -> t2
       | _, Empty -> t1
 
-    let rec tree_helper (lst : element list) : mtree =
-      let (l, r) = half_list lst in
-      match List.length lst with
-      | 0 -> Empty
-      | 1 -> let e = List.hd lst in (Leaf (base_hash e, e))
-      | _ -> let ltree, rtree = tree_helper l, tree_helper r in
-             combine_trees ltree rtree
-
-    let rec build_tree (datalist : element list) : mtree=
+    let rec build_tree (datalist : element list) : mtree =
+      let log2 (n : int) : int =
+        truncate (log (float n) /. (log 2.)) in
+      let rec exp2 (n : int) : int =
+        match n with
+        | 0 -> 1
+        | _ -> 2 * exp2 (n - 1) in
+      let half_list (lst : 'a list) : 'a list * 'a list =
+        let len = List.length lst in
+        (sublist lst 0 (len / 2 - 1), sublist lst (len / 2) (len - 1)) in
+      let rec split_list (lst : 'a list) : 'a list * 'a list =
+        let len = List.length lst in
+        (sublist lst 0 (exp2 (log2 len) - 1), sublist lst (exp2 (log2 len)) (len - 1)) in
+      let rec tree_helper (lst : element list) : mtree =
+        let (l, r) = half_list lst in
+        match List.length lst with
+        | 0 -> Empty
+        | 1 -> let e = List.hd lst in (Leaf (base_hash e, e))
+        | _ -> let ltree, rtree = tree_helper l, tree_helper r in
+               combine_trees ltree rtree in
       let (l, r) = split_list datalist in
       if r = [] then tree_helper datalist
       else match List.length datalist with
@@ -188,42 +188,49 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
     let queryhash (hash : string) (t : mtree) : element list =
       match t with
       | Empty -> []
-      | Leaf (s, _) | Tree (s, _, _, _, _) -> if hash = s then (children t) else []
+      | Leaf (s, _) | Tree (s, _, _, _, _) -> if hash = s then (children t)
+                                              else []
 
-    let test1 () =
-      let e1 = S.gen () in
-      let e2 = S.gen () in
-      let e3 = S.gen () in
-      let e4 = S.gen () in
-      let e5 = S.gen () in
-      let l1 = [e1; e2; e3; e4] in
-      let l2 = l1 @ [e5] in
-      let t1 = add_element e5 (build_tree l1) in
-      let t2 = build_tree l2 in
+    let test_add_element () =
+      let l1, l2 = TestHelpers.generate_list S.gen (Random.int 20),
+                   TestHelpers.generate_list S.gen (Random.int 20) in
+      let t1 = List.fold_left (fun t e -> add_element e t) (build_tree l1) l2 in
+      let t2 = build_tree (l1 @ l2) in
       assert (root_hash t1 = root_hash t2)
 
-    let test_combine_trees () =
-      let e1 = S.gen () in
-      let e2 = S.gen () in
-      let e3 = S.gen () in
-      let e4 = S.gen () in
-      let e5 = S.gen () in
-      let e6 = S.gen () in
-      let e7 = S.gen () in
-      let l1 = [e1; e2; e3; e4] in
-      let l2 = [e5; e6; e7] in
+    let test_combine_trees_and_children () =
+      let l1, l2 = TestHelpers.generate_list S.gen 4,
+                   TestHelpers.generate_list S.gen 3 in
       let lcomb = l1 @ l2 in
       let t1 = build_tree l1 in
       let t2 = build_tree l2 in
-      assert (root_hash (combine_trees t1 t2) = root_hash (build_tree lcomb))
+      let tbig = build_tree lcomb in
+      let tcomb = combine_trees t1 t2 in
+      assert (children t1 = l1);
+      assert (children t2 = l2);
+      Printf.printf "%s\n" (root_hash tbig);
+      Printf.printf "%s\n" (root_hash tcomb);
+      assert (root_hash tbig = root_hash tcomb);
+      assert (children tbig = children tcomb)
+
+    let test_queryid () =
+      let lst = TestHelpers.generate_list S.gen (Random.int 20) in
+      let tree = build_tree lst in
+        match tree with
+        | Tree (str, id_list, t, l, r) ->
+            List.iter
+              (fun id -> (List.iter (fun e -> assert (List.memq e lst)))
+                         (queryid id tree))
+              id_list
+        | Leaf (s, e) -> assert ([e] = lst)
+        | _ -> ()
 
     let run_tests () =
-      test1 () ;
-      test_combine_trees () ;
-      print_endline "Merkletree tests passed" ;
-      ()
+      TestHelpers.run_tests test_add_element;
+      TestHelpers.run_tests test_combine_trees_and_children;
+      TestHelpers.run_tests test_queryid
   end
 
 module FakeMerkle = MakeMerkle (TransactionSerializable) (SHA256) ;;
-
-(* let _ = FakeMerkle.run_tests () *)
+(* 
+let _ = FakeMerkle.run_tests ();; *)

@@ -3,6 +3,7 @@ open Networking
 open Networking.OcamlcoinNetwork
 open Events
 open Profile
+open Bank
 
 let c_DATA_JSON_KEY = "message_data"
 let c_NODE_JSON_KEY = "node"
