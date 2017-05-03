@@ -122,7 +122,6 @@ class gui =
       (* Run the ocamlcoin code *)
       let _ = Thread.create OcamlcoinRunner.run () in
       Miner.add_solution_listener this#mining_solution_listener;
-      OcamlcoinRunner.attach_broadcast_listener (fun _ _ -> this#update_ui());
       Main.main()
   end
 
