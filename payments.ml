@@ -42,9 +42,9 @@ module Transaction =
           `Assoc[(c_ORIGINATOR_KEY, `String (pub_to_string originator));
                  (c_TARGET_KEY, `String (pub_to_string target));
                  (c_AMOUNT_KEY, `Float amount);
-                 (c_TIMESTAMP_KEY, 'Float timestamp);
-                 (c_SIGNATURE_KEY, Crypto.Signature.signature_to_json this#signature);
-                 (c_SOLUTION_KEY 'Int solution)]
+                 (c_TIMESTAMP_KEY, `Float timestamp);
+                 (c_SIGNATURE_KEY, signature_to_json this#signature);
+                 (c_SOLUTION_KEY, `Int solution)]
       end
       (* DO WE WANNA MAKE THIS CONSISTENT???? *)
     let string_of_transaction_data (orig : pub_key)
@@ -54,10 +54,10 @@ module Transaction =
       string_of_float amount
 
     let create_transaction (orig : pub_key) (target : pub_key) (amount : float)
-                           (timestamp : float) (priv : priv_key) (solution : int): transaction =
+                           (timestamp : float) (priv : priv_key) : transaction =
       let signature = Crypto.Signature.sign priv
         (string_of_transaction_data orig target amount timestamp) in
-      new transaction orig target amount timestamp signature solution
+      new transaction orig target amount timestamp signature 0
 
     let authenticate_transaction (t : transaction) : bool =
         Crypto.Signature.verify (string_of_transaction_data
@@ -71,7 +71,7 @@ module Transaction =
       let amount = json |> member c_AMOUNT_KEY |> to_float in
       let timestamp = json |> member c_TIMESTAMP_KEY |> to_float in
       let auth_sig = json |> member c_SIGNATURE_KEY |> json_to_signature in
-      let solution = json |> member c_SOLUTION_KEY |> json_to_signature in
+      let solution = json |> member c_SOLUTION_KEY |> to_int in
       new transaction originator target amount timestamp auth_sig solution
   end
 
@@ -103,7 +103,7 @@ let add_unmined_transaction (t : transaction) =
   unmined_transactions := t :: !unmined_transactions
 
 exception NoUnverified
-let get_unmined_block () =
-  match IO.sublist !unmined_transactions 0 c_BLOCK_SIZE with
+let get_unmined_transaction () =
+  match !unmined_transactions with
   | [] -> raise NoUnverified
-  | lst -> new block lst
+  | h :: _t -> h

@@ -1,6 +1,7 @@
 open TestHelpers
 open Networking_tests
 open Payments_tests
+open Mining.Miner
 open Mining_tests
 open Events
 open Networking

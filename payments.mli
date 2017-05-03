@@ -3,7 +3,7 @@ open Crypto.Keychain
 
 module Transaction : sig
     class transaction : pub_key -> pub_key -> float -> float ->
-                        signature -> object
+                        signature -> int -> object
         method to_json : Yojson.Basic.json
         method to_string : string
         method originator : pub_key
@@ -12,9 +12,11 @@ module Transaction : sig
         method timestamp : float
         method authenticated : bool
         method signature : signature
+        method solution : int
       end
 
-    val create_transaction : pub_key -> pub_key -> float -> float -> priv_key -> transaction
+    val create_transaction : pub_key -> pub_key -> float -> float ->
+                             priv_key -> transaction
 
     val authenticate_transaction : transaction -> bool
 
@@ -36,4 +38,4 @@ module Block : sig
 
 exception NoUnverified
 val add_unmined_transaction : transaction -> unit
-val get_unmined_block : unit -> Block.block
+val get_unmined_transaction : unit -> transaction
