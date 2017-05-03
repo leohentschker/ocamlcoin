@@ -3,6 +3,7 @@ open Networking
 open Networking.OcamlcoinNetwork
 open Events
 open Profile
+open Payments.Transaction
 open Ledger
 
 let c_DATA_JSON_KEY = "message_data"
@@ -74,10 +75,10 @@ module OcamlcoinRunner =
               if Bank.verify_transaction t Bank.book then
                 let _ = print_endline "VERIFIED TRANS" in
                 Payments.add_unmined_transaction t
-          | SolvedTransaction(t, nonce) ->
+          | SolvedTransaction(t, nonce, pub_key, s) ->
               print_endline "SOLVED BLOCK";
                 let _ = print_endline "VERIFIED TRANS" in
-              Bank.add_transaction t Bank.book
+              Bank.add_transaction t Bank.book;
           | PingDiscovery ->
               Printf.printf "I GOT PINGED BY %s" node#ip;
               add_peer node;

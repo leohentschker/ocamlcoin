@@ -13,7 +13,7 @@ module type SERIALIZE =
     type id
     val serialize : t -> string
     val gen : unit -> t
-    val get : t -> (id * id * amount * time)
+    val get : t -> (id * id * amount * time * id)
     val compare : time -> time -> ordering
     val min : time -> time -> time
   end
@@ -29,7 +29,7 @@ module type MERKLETREE =
     type amount
     type id
     type time
-    val get : element -> id * id * amount * time
+    val get : element -> id * id * amount * time * id
     val serializelist : element list -> string list
     val base_hash : element -> string
     val tree_hash : string -> string
@@ -42,6 +42,7 @@ module type MERKLETREE =
     val add_element : element -> mtree -> mtree
     val queryid : id -> mtree -> element list
     val queryhash : string -> mtree -> element list
+    val querysolver : id -> mtree -> element list
     val run_tests : unit -> unit
   end
 

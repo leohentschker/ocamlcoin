@@ -8,6 +8,7 @@ open Mining
 module IO = IOHelpers
 module Y = Yojson
 
+let c_REWARD = 10.
 
 let c_MASTERKEY_FILE_NAME = "masterkey.json"
 let c_LEDGER_FILE_NAME = "ledger.json"
@@ -55,13 +56,15 @@ module Bank =
     let get_balance (p : pub_key) (t : float) (l : ledger) : float =
       let eltlst = MT.queryid p !l in
       let timedlst = List.filter (fun x -> x#timestamp < t) eltlst in
-      List.fold_left (fun acc x -> if x#originator = p then acc -. x#amount
-                                   else acc +. x#amount) 0. timedlst
+      let net = List.fold_left
+      (fun acc x -> if x#originator = p then acc -. x#amount
+                    else acc +. x#amount) 0. timedlst in
+      let rlst = List.filter (fun x -> x#timestamp < t) (MT.querysolver p !l) in
+      net + c_REWARD *. List.length rlst
 
     let verify_transaction (t : transaction) (l: ledger) : bool =
       let id1, id2, amount, timestamp = t#originator, t#target, t#amount, t#timestamp in
       let eltlst = MT.queryid id1 !l in
-      let timedlst = List.filter (fun x -> x#timestamp < timestamp) eltlst in
       let total_amount = get_balance id1 timestamp l in
       authenticate_transaction t
       && ((not (eltlst = [])
