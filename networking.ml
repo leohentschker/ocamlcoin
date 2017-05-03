@@ -10,7 +10,7 @@ let c_DEFAULT_COIN_PORT = 8332
 let c_DEFAULT_IP = "10.252.197.92"
 let c_CONNECTIONS = 5
 
-let c_INCOMING_MESSAGE_SIZE = 16777216
+let c_INCOMING_MESSAGE_SIZE = 4294967296
 let c_USE_LOCAL_NETWORK = ref false
 
 let is_valid_ip ip_str =
@@ -43,8 +43,6 @@ class coinserver =
   object(this)
     (* listeners that get called on receiving data over the network *)
     val listeners : (string -> unit) list ref = ref []
-    val ip = get_private_ip ()
-    method ip = ip
     (* helper method to initialize the connection over a socket *)
     method initialize_sock inet_addr port =
       let fd = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
