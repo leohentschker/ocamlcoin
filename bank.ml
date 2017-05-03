@@ -4,16 +4,20 @@ open Crypto.Keychain
 open Payments.Transaction
 open Merkletree
 open IOHelpers
+open Mining
+open Mining.Miner
 
 let masterkey = snd (generate_keypair ())
 module MT = MakeMerkle (TransactionSerializable) (SHA256)
 
+type ledger = MT.mtree ref
+
 let ledger = ref MT.empty
 
-let query (s : string) (m : MT.mtree ref) : transaction list =
+let query (s : string) (m : ledger) : transaction list =
   (MT.queryid (string_to_pub s) !m) @ (MT.queryhash s !m)
 
-let verify_transaction (t : transaction) (l: MT.mtree ref) : bool =
+let verify_transaction (t : transaction) (l: ledger) : bool =
   let id1, id2, amount, timestamp = t#originator, t#target, t#amount, t#timestamp in
   let eltlst = MT.queryid id1 !l in
   let timedlst = List.filter (fun x -> x#timestamp < timestamp) eltlst in
@@ -24,7 +28,7 @@ let verify_transaction (t : transaction) (l: MT.mtree ref) : bool =
        amount > 0. && authenticate_transaction t &&
        Mining.Miner.verify t#to_string t#solution
 
-let add_transaction (t : transaction) (l : MT.mtree ref) : unit =
+let add_transaction (t : transaction) (l : ledger) : unit =
   if verify_transaction t l then
     ledger := (MT.add_element t !ledger)
 
@@ -38,8 +42,8 @@ let verify_ledger (t : MT.mtree) : bool =
       verify_transaction tn (ref (MT.build_tree slist)) && (verify t (n - 1)) in
   verify t (List.length (MT.children t) - 1)
 
-let merge_ledgers (tree1 : MT.mtree ref)
-                  (tree2 : MT.mtree ref) : unit =
+let merge_ledgers (tree1 : ledger)
+                  (tree2 : ledger) : unit =
   if not ((verify_tree !tree1) || (verify_tree !tree2))
     then raise (Invalid_argument "Stop trying to cheat")
   else if ((MT.root_hash !tree1 = MT.root_hash !tree2)

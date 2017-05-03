@@ -7,7 +7,7 @@ open IOHelpers
 open Bank
 
 let bad_amount_transaction () =
-  let _, originator generate_keypair () in
+  let _, originator = generate_keypair () in
   let bad, _ = generate_keypair () in
   let _, target = generate_keypair () in
   let amount = ~-.(Random.float 1000.) in
@@ -19,7 +19,7 @@ let generate_transaction_list () =
   let i = Random.int 30 in
   for _ = 0 to i do
     let new_transaction = Payments_tests.generate_fake_transaction () in
-    transaction_mlist := (!transaction) @ [new_transaction]
+    transaction_mlist := (!transaction_mlist) @ [new_transaction]
   done;
   !transaction_mlist
 

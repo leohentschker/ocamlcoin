@@ -16,7 +16,7 @@ module type SERIALIZE =
 
 module TransactionSerializable : SERIALIZE
 
-module type MERKLETREE = 
+module type MERKLETREE =
   sig
     type element
     type amount
@@ -39,5 +39,3 @@ module type MERKLETREE =
   end
 
 module  MakeMerkle (S : SERIALIZE) (H : HASH) : MERKLETREE
-    
-
