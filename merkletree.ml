@@ -182,7 +182,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       | Empty -> []
       | Leaf (s, _) | Tree (s, _, _, _, _) -> if hash = s then (children t) else []
 
-    let test1 () =
+    let test_add_element () =
       let e1 = S.gen () in
       let e2 = S.gen () in
       let e3 = S.gen () in
@@ -194,7 +194,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       let t2 = build_tree l2 in
       assert (root_hash t1 = root_hash t2)
 
-    let test_combine_trees () =
+    let test_combine_trees_and_children () =
       let e1 = S.gen () in
       let e2 = S.gen () in
       let e3 = S.gen () in
@@ -211,6 +211,13 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       let tcomb = combine_trees t1 t2 in
       assert (root_hash tbig = root_hash tcomb);
       assert (children tbig = children tcomb)
+
+    let test_queryid () = 
+      let e1 = S.gen () in 
+      let e2 = S.gen () in
+      let e3 = S.gen () in
+      let e4 = S.gen () in
+      assert (1 = 1)
 
     let run_tests () =
       test1 () ;
