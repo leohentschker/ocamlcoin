@@ -1,3 +1,6 @@
+val c_PUB_JSON_KEY : string
+val c_PRIV_JSON_KEY : string
+
 module Keychain :
   sig
     type priv_key

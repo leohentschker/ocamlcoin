@@ -4,18 +4,46 @@ open Crypto.Keychain
 open Payments
 open Payments.Transaction
 open Merkletree
-open IOHelpers
+module IO = IOHelpers
+module Y = Yojson
+
+
+let c_MASTERKEY_FILE_NAME = "masterkeys.json"
+let c_LEDGER_FILE_NAME = "ledger.json"
+exception MissingMasterkey
+
+let masterpriv_test, masterpub_test = generate_keypair ()
 
 module Bank =
   struct
-
-    let priv, masterkey = generate_keypair ()
     module MT = MakeMerkle (TransactionSerializable) (SHA256)
+    let masterpub =
+      try
+        let json = Yojson.Basic.from_file c_MASTERKEY_FILE_NAME in
+        let open Yojson.Basic.Util in
+        string_to_pub (json |> member c_PUB_JSON_KEY |> to_string)
+      with Sys_error _ ->
+        raise MissingMasterkey
 
+    let get_transactions (l : MT.mtree ref) = MT.children !l
+
+    let export_ledger (l : MT.mtree ref) : unit =
+      match get_transactions l with
+      | _h :: _t as tlist ->
+        IO.write_json
+          (`List(List.map (fun t -> t#to_json) tlist)) c_LEDGER_FILE_NAME
+      | [] -> ()
+      
     type mtree = MT.mtree
-    type ledger = MT.mtree ref
 
-    let book = ref MT.empty
+    type ledger = MT.mtree ref
+    let book =
+      let previous_transactions = try
+        match Y.Basic.from_file c_LEDGER_FILE_NAME with
+        | `List json_list -> List.map json_to_transaction json_list
+        | _ -> failwith "Unexpected json format"
+        with Sys_error _ -> [] in
+      ref (MT.build_tree previous_transactions)
 
     let empty = MT.empty
 
@@ -35,7 +63,7 @@ module Bank =
            && amount > 0.
            && Mining.Miner.verify t#to_string t#solution)
           ||
-         id1 = masterkey)
+         (id1 = masterpub || id1 = masterpub_test))
 
     let add_transaction (t : transaction) (l : ledger) : unit =
       if verify_transaction t l then
@@ -47,33 +75,23 @@ module Bank =
         if n <= 0 then true
         else
           let tlist = MT.children !t in
-          let slist = sublist tlist 0 (n - 1) in
+          let slist = IO.sublist tlist 0 (n - 1) in
           let tn = List.nth tlist n in
           let subledger = ref (MT.build_tree slist) in
           verify_transaction tn subledger && (verify subledger (n - 1)) in
       verify t (List.length (MT.children !t) - 1)
 
-    (* let merge_ledgers (tree1 : ledger)
-                      (tree2 : ledger) : unit =
-      if not ((verify_ledger tree1) && (verify_ledger tree2))
-        then raise (Invalid_argument "Stop trying to cheat")
-      else if ((MT.root_hash !tree1 = MT.root_hash !tree2)
-              || (!tree2 = MT.empty)) then ()
-      else List.iter (fun e -> (add_transaction e tree1))
-                     (List.filter (fun e -> not (List.memq e (MT.children !tree1)))
-                                  (MT.children !tree2));; *)
-
     let bad_amount_transaction () =
       let _, target = generate_keypair () in
       let amount = ~-.(Random.float 1000.) in
       let timestamp = Random.float 100000. in
-      create_transaction masterkey target amount timestamp priv
+      create_transaction masterpub_test target amount timestamp masterpriv_test
 
     let generate_transaction () =
       let _, target = generate_keypair () in
       let amount = Random.float 1000. in
       let timestamp = Random.float 100000. in
-      create_transaction masterkey target amount timestamp priv
+      create_transaction masterpub_test target amount timestamp masterpriv_test
 
     let generate_transaction_list () =
       TestHelpers.generate_list generate_transaction (Random.int 30)
@@ -99,20 +117,25 @@ module Bank =
     (* More tests here *)
     let test_verify_transaction () =
       let ledger = ref empty in
+      let ledger = ref empty in
       let priv1, pub1 = generate_keypair () in
       let priv2, pub2 = generate_keypair () in
-      let transaction1 = create_transaction masterkey pub1 100. 100. priv in
-      let transaction2 = create_transaction masterkey pub2 100. 150. priv in
+      let transaction1 = create_transaction masterpub_test pub1 100. 100.
+                                            masterpriv_test in
+      let transaction2 = create_transaction masterpub_test pub2 100. 150.
+                                            masterpriv_test in
       let good_transaction = create_transaction pub1 pub2 100. 200. priv1 in
       let bad_transaction1 = create_transaction pub1 pub2 100. 250. priv1 in
       let bad_transaction2 = create_transaction pub2 pub1 300. 300. priv2 in
       let bad_transaction3 = create_transaction pub2 pub1 100. ~-.(250.) priv2 in
-      let bad_transaction4 = create_transaction pub2 pub1 ~-(100.) 250. priv1 in
+      let bad_transaction4 = create_transaction pub2 pub1 ~-.(100.) 250. priv1 in
       let valid_list = generate_transaction_list () in
       let invalid_transaction = bad_amount_transaction () in
       List.iter (fun t -> add_transaction t ledger) valid_list;
       add_transaction invalid_transaction ledger;
       List.iter (fun t -> assert (verify_transaction t ledger)) valid_list;
+      add_transaction transaction1 ledger;
+      add_transaction transaction2 ledger;
       assert (not (verify_transaction bad_transaction1 ledger));
       assert (not (verify_transaction bad_transaction2 ledger));
       assert (not (verify_transaction bad_transaction3 ledger));

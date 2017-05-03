@@ -90,7 +90,8 @@ module Block =
         method transactions = transactions
         method contains_transaction t = List.memq t transactions
         method to_string = List.fold_left (fun a t -> a ^ t#to_string) "" tlist
-        method to_json : Y.Basic.json = `List (List.map (fun t -> t#to_json) tlist)
+        method to_json : Y.Basic.json =
+          `List (List.map (fun t -> t#to_json) tlist)
       end
 
     let json_to_block (json : Y.Basic.json) : block =

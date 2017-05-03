@@ -3,29 +3,39 @@ open Networking
 open Networking.OcamlcoinNetwork
 open Events
 open Profile
-open Bank
+open Ledger
+
+let c_DATA_JSON_KEY = "message_data"
+let c_NODE_JSON_KEY = "node"
 
 let c_AVERAGE_PING_WAITTIME = 5
 let c_MAX_NODE_TIMEOUT = 1000.
 let random_chance a = a = Random.int (a + 1)
 
 exception EmptyNetwork
+exception NodeNotFound
 
 module OcamlcoinRunner =
   struct
     (* store the other people in our network *)
-    let peer_tuples : (ocamlcoin_node * float) list ref = ref []
+    let peer_tuples : (ocamlcoin_node * float) list ref =
+      ref (List.map (fun p -> p, Unix.time ()) User.stored_nodes)
     let get_peers = fun () -> List.map fst !peer_tuples
     (* load the peers we are aware of *)
     let broadcast_event event node =
-      try OcamlcoinNetwork.broadcast_to_node (event_to_json event) node with
-      Failure(a) -> Printf.printf "Error broadcasting to node: %s" a
-    let add_peer n =
-      if not(List.memq n (get_peers ())) then
-        peer_tuples := (n, Unix.time ()) :: !peer_tuples
+      let msg_json = `Assoc[(c_DATA_JSON_KEY, (event_to_json event));
+                            (c_NODE_JSON_KEY, node#to_json)] in
+      try
+        OcamlcoinNetwork.broadcast_to_node msg_json node with
+      Failure(a) ->
+        Printf.printf "Error broadcasting to node: %s\n" a
+    let add_peer new_node =
+      if not(List.fold_left (fun a n -> a || new_node#equal n)
+                            false (get_peers ())) then
+        peer_tuples := (new_node, Unix.time ()) :: !peer_tuples
     (* ping a list of nodes *)
     let ping_peers () =
-      Printf.printf "Length of peers in ping: %d\n" (List.length (get_peers ()));
+      print_endline "PING THE PEERS";
       List.iter (broadcast_event PingDiscovery) (get_peers ())
     (* update our list of stored nodes and store it in a file *)
     let update_stored_nodes () =
@@ -35,35 +45,61 @@ module OcamlcoinRunner =
       if !peer_tuples = [] then raise EmptyNetwork
     let broadcast_event_over_network (e : network_event) =
       List.iter (broadcast_event e) (get_peers ())
+    let store_state () =
+      User.export_nodes (get_peers ());
+      Bank.export_ledger (Bank.book)
+    let find_node_by_ip (ip : string) =
+      let rec find_node (lst : ocamlcoin_node list) : ocamlcoin_node =
+        match lst with
+        | h :: t ->
+            if h#ip = ip then h
+            else find_node t
+        | [] -> raise NodeNotFound in
+      find_node (get_peers ())
+    let attach_broadcast_listener f =
+      OcamlcoinNetwork.attach_network_listener
+        (fun s ->
+          let open Yojson.Basic.Util in
+          let json = Yojson.Basic.from_string s in
+          f (json |> member c_DATA_JSON_KEY)
+            (json |> member c_NODE_JSON_KEY |> json_to_ocamlcoin_node))
     (* run everything! *)
     let run () =
       OcamlcoinNetwork.run ();
-      OcamlcoinNetwork.attach_broadcast_listener
+      attach_broadcast_listener
         (fun json node ->
           match json_to_event json with
           | NewTransaction t ->
               print_endline "NEW TRANS";
               if Bank.verify_transaction t Bank.book then
+                let _ = print_endline "VERIFIED TRANS" in
                 Payments.add_unmined_transaction t
-          | SolvedBlock(block, nonce) ->
+          | SolvedTransaction(t, nonce) ->
               print_endline "SOLVED BLOCK";
-              List.iter (fun t -> Bank.add_transaction t Bank.book) block#transactions
+                let _ = print_endline "VERIFIED TRANS" in
+              Bank.add_transaction t Bank.book
           | PingDiscovery ->
-              print_endline ("PING DISCOVERY from ip: " ^ node#ip ^ "asd");
-              broadcast_event (BroadcastNodes(get_peers ())) node;
+              Printf.printf "I GOT PINGED BY %s" node#ip;
               add_peer node;
+              (match get_peers () with
+              | _h :: _t as nlist ->
+                  broadcast_event (BroadcastNodes(nlist)) node
+              | [] -> ());
+              (match Bank.get_transactions(Bank.book) with
+              | _h :: _t as tlist ->
+                  broadcast_event (BroadcastTransactions(tlist)) node
+              | [] -> ());
           | BroadcastNodes(nlist) ->
-              print_endline "BROADCAST NODES";
-              List.iter add_peer nlist);
-      peer_tuples := List.map (fun p -> (p, Unix.time ())) (User.stored_nodes);
+              List.iter add_peer nlist
+          | BroadcastTransactions(tlist) ->
+              List.iter (fun t -> Bank.add_transaction t Bank.book) tlist);
       ping_peers ();
       let rec network_loop () =
+        flush_all ();
+        Unix.sleep 10;
         if random_chance c_AVERAGE_PING_WAITTIME then ping_peers ();
         update_stored_nodes ();
-        User.export_nodes (get_peers ());
-        Unix.sleep 5;
+        store_state ();
         network_loop () in
       network_loop ()
   end
-
-let _ = OcamlcoinRunner.run () ;;
