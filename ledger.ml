@@ -83,6 +83,7 @@ module Bank =
           verify_transaction tn subledger && (verify subledger (n - 1)) in
       verify t (List.length (MT.children !t) - 1)
 
+    (* Helper functions for tests *)
     let generate_transaction () =
       let _, target = generate_keypair () in
       let amount = Random.float 1000. in
@@ -92,6 +93,7 @@ module Bank =
     let generate_transaction_list () =
       TestHelpers.generate_list generate_transaction (Random.int 30)
 
+    (* Tests. Included in the module for the sake of abstraction. *)
     let test_add_transaction () =
       let ledger = ref empty in
       let new_transaction = generate_transaction () in
@@ -110,7 +112,6 @@ module Bank =
       assert (not (List.memq other_transaction
                              (query other_transaction#originator ledger)))
 
-    (* More tests here *)
     let test_verify_transaction () =
       let ledger = ref empty in
       let priv1, pub1 = generate_keypair () in
