@@ -1,4 +1,4 @@
-open Payments.Block
+open Payments.Transaction
 open Payments_tests
 exception Nosolution of string
 
@@ -30,34 +30,36 @@ module Miner =
       first_chars = String.make leading_zeros '0'
 
     (* Implementation of the mining algorithm for proof-of-work *)
-    let mine (b : block) (iters: int) : nonce =
+    let mine (t : transaction) (iters: int) : nonce =
       (* This inner function takes an integer and checks
          the has verify of s^nonce for nonce = 1,..., n *)
       is_mining := true;
-      let blockstring = b#to_string in
+      let str = t#to_string in
       let rec iterate_check n =
         if n = 0 then raise (Nosolution "Couldn't solve block")
         else if currently_mining () = false then
           raise (Nosolution "Couldn't solve block")
-        else if verify blockstring n then
+        else if verify str n then
           let _ = is_mining := false in
           n
         else iterate_check (n - 1) in
       iterate_check iters
 
     let mine_async () =
-      let b = Payments.get_unmined_block () in
-      let _ = Thread.create (fun () -> mine b max_int) () in
+      let t = Payments.get_unmined_transaction () in
+      let _ = Thread.create (fun () -> mine t max_int) () in
       ()
+
     let generate_fake_nonce () =
-      string_to_nonce (string_of_int (Random.int 1000))
+      string_to_nonce (TestHelpers.random_string ())
 
     let test_mining () = 
       let word = "hello" in
       let bad = generate_fake_nonce () in
       assert (not (verify word bad));
-      let blockk = new block ([generate_fake_transaction ()]) in
-      let t = string_of_int (mine blockk 100000) in 
-      assert (String.sub (hash_text(blockk#to_string ^ t)) 0 2 = "00") 
-     end
-  let _ = Miner.test_mining ()
+      let t = generate_fake_transaction () in
+      let nonce = string_of_int (mine (generate_fake_transaction ()) 100000) in 
+      assert (String.sub (hash_text(t#to_string ^ nonce)) 0 leading_zeros =
+        String.make leading_zeros '0') 
+  end
+let _ = Miner.test_mining ()

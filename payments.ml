@@ -8,29 +8,40 @@ let c_TARGET_KEY = "target"
 let c_AMOUNT_KEY = "amount"
 let c_TIMESTAMP_KEY = "timestamp"
 let c_SIGNATURE_KEY = "signature"
+let c_SOLUTION_KEY = "solution"
 let c_BLOCK_SIZE = 10
 
 module Transaction =
   struct
+    let string_of_transaction_data (originator : pub_key)
+                                   (target : pub_key)
+                                   (amount : float)
+                                   (timestamp : float) : string =
+      (pub_to_string originator) ^ (pub_to_string target) ^
+      (string_of_float amount) ^ (string_of_float timestamp)
+
     class transaction
         (originator : pub_key)
         (target : pub_key)
         (amount : float)
         (timestamp : float)
-        (auth_sig : signature) =
+        (auth_sig : signature)
+        (solution : int) =
       object(this)
         val originator = originator
         val target = target
         val amount = amount
         val timestamp = timestamp
         val signature = auth_sig
+        val solution = solution
         method originator = originator
         method target = target
         method amount = amount
         method timestamp = timestamp
         method signature = signature
+        method solution = solution
         method to_string =
-          this#to_json |> Y.Basic.to_string
+          string_of_transaction_data originator target amount timestamp
         method authenticated =
           Crypto.Signature.verify this#to_string originator signature
         (* https://realworldocaml.org/v1/en/html/handling-json-data.html *)
@@ -38,20 +49,20 @@ module Transaction =
           `Assoc[(c_ORIGINATOR_KEY, `String (pub_to_string originator));
                  (c_TARGET_KEY, `String (pub_to_string target));
                  (c_AMOUNT_KEY, `Float amount);
-                 (c_SIGNATURE_KEY, Crypto.Signature.signature_to_json this#signature)]
+                 (c_TIMESTAMP_KEY, `Float timestamp);
+                 (c_SIGNATURE_KEY, signature_to_json this#signature);
+                 (c_SOLUTION_KEY, `Int solution)]
       end
+      (* DO WE WANNA MAKE THIS CONSISTENT???? *)
 
-    let string_of_transaction_data (orig : pub_key)
-                                   (target : pub_key)
-                                   (amount : float)
-                                   (timestamp : float) : string =
-      string_of_float amount
+    let string_of_transaction (t : transaction) : string =
+      t#to_string
 
     let create_transaction (orig : pub_key) (target : pub_key) (amount : float)
                            (timestamp : float) (priv : priv_key) : transaction =
       let signature = Crypto.Signature.sign priv
         (string_of_transaction_data orig target amount timestamp) in
-      new transaction orig target amount timestamp signature
+      new transaction orig target amount timestamp signature 0
 
     let authenticate_transaction (t : transaction) : bool =
         Crypto.Signature.verify (string_of_transaction_data
@@ -65,7 +76,8 @@ module Transaction =
       let amount = json |> member c_AMOUNT_KEY |> to_float in
       let timestamp = json |> member c_TIMESTAMP_KEY |> to_float in
       let auth_sig = json |> member c_SIGNATURE_KEY |> json_to_signature in
-      new transaction originator target amount timestamp auth_sig
+      let solution = json |> member c_SOLUTION_KEY |> to_int in
+      new transaction originator target amount timestamp auth_sig solution
   end
 
 open Transaction
@@ -96,7 +108,7 @@ let add_unmined_transaction (t : transaction) =
   unmined_transactions := t :: !unmined_transactions
 
 exception NoUnverified
-let get_unmined_block () =
-  match IO.sublist !unmined_transactions 0 c_BLOCK_SIZE with
+let get_unmined_transaction () =
+  match !unmined_transactions with
   | [] -> raise NoUnverified
-  | lst -> new block lst
+  | h :: _t -> h

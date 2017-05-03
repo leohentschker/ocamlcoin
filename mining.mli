@@ -1,4 +1,4 @@
-open Payments.Block
+open Payments.Transaction
 
 module Miner :
   sig
@@ -9,7 +9,9 @@ module Miner :
     val string_to_nonce : string -> nonce
     val hash_text : string -> string
     val verify : string -> int -> bool
-    val mine : block -> int -> nonce
+    val mine : transaction -> int -> nonce
     val mine_async : unit -> unit
     val stop_mining : unit -> unit
+    val generate_fake_nonce : unit -> nonce
+    val test_mining : unit -> unit
   end
