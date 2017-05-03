@@ -30,15 +30,14 @@ let get_transactions (l : MT.mtree ref) =
   MT.children !l
 
 let export_ledger (l : MT.mtree ref) : unit =
-  let _ = match get_transactions l with
-  | _h :: _t as tlist -> let _ = print_endline "GNNA EXP" in IO.write_json
-    (`List(List.map (fun t -> t#to_json) tlist)) c_LEDGER_FILE_NAME
-  | [] -> () in
-  print_endline "EXPORTED"
+  match get_transactions l with
+  | _h :: _t as tlist ->
+    IO.write_json
+      (`List(List.map (fun t -> t#to_json) tlist)) c_LEDGER_FILE_NAME
+  | [] -> ()
 
 let ledger =
   let previous_transactions = try
-    print_endline "LOADING RPEV TRANS";
     match Y.Basic.from_file c_LEDGER_FILE_NAME with
     | `List json_list -> List.map json_to_transaction json_list
     | _ -> failwith "Unexpected json format"

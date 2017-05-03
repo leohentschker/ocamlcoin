@@ -19,9 +19,6 @@ module OcamlcoinRunner =
     let broadcast_event event node =
       try OcamlcoinNetwork.broadcast_to_node (event_to_json event) node with
       Failure(a) ->
-        (match event with
-        | PingDiscovery -> print_endline "FAILED ON PING DISCOVERY"
-        | _ -> print_endline "FAILED ON OTHER");
         Printf.printf "Error broadcasting to node: %s\n" a
     let add_peer new_node =
       if not(List.fold_left (fun a n -> a || new_node#equal n)
@@ -47,7 +44,6 @@ module OcamlcoinRunner =
       OcamlcoinNetwork.run ();
       OcamlcoinNetwork.attach_broadcast_listener
         (fun json node ->
-          print_endline "LISTENER CALLED";
           match json_to_event json with
           | NewTransaction t ->
               print_endline "NEW TRANS";
@@ -57,26 +53,18 @@ module OcamlcoinRunner =
               print_endline "SOLVED BLOCK";
               Bank.add_transaction t Bank.ledger
           | PingDiscovery ->
-              print_endline "I got a ping discovery";
-              print_endline "GONNA ADD PEER";
               add_peer node;
-              print_endline "ADDED PEER";
               (match get_peers () with
               | _h :: _t as nlist ->
-                  print_endline "GONNA BROADCAST NODES";
-                  broadcast_event (BroadcastNodes(nlist)) node;
-                  print_endline "CALLED BROADCAST NODES SUCCES";
+                  broadcast_event (BroadcastNodes(nlist)) node
               | [] -> ());
               (match Bank.get_transactions(Bank.ledger) with
               | _h :: _t as tlist ->
-                print_endline "GONNA START BROADCASTING TRANSACTIONS";
-                broadcast_event (BroadcastTransactions(tlist)) node
+                  broadcast_event (BroadcastTransactions(tlist)) node
               | [] -> ());
           | BroadcastNodes(nlist) ->
-              print_endline "BROADCAST NODES";
               List.iter add_peer nlist
           | BroadcastTransactions(tlist) ->
-              print_endline "BROADCAST TRANSACTIONS";
               List.iter (fun t -> Bank.add_transaction t Bank.ledger) tlist);
       peer_tuples := List.map (fun p -> (p, Unix.time ())) (User.stored_nodes);
       ping_peers ();

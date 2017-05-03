@@ -38,7 +38,6 @@ module Signature =
   struct
     type signature = Cstruct.t * Cstruct.t
     let signature_to_json ((c1, c2) : signature) =
-      print_endline "SIG TO JSON";
       `List[`String (Cstruct.to_string c1); `String (Cstruct.to_string c2)]
     let json_to_signature (json : Yojson.Basic.json) : signature =
       match json with

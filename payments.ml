@@ -90,13 +90,13 @@ module Block =
         method transactions = transactions
         method contains_transaction t = List.memq t transactions
         method to_string = List.fold_left (fun a t -> a ^ t#to_string) "" tlist
-        method to_json : Y.Basic.json = print_endline "BTJ"; `List (List.map (fun t -> t#to_json) tlist)
+        method to_json : Y.Basic.json =
+          `List (List.map (fun t -> t#to_json) tlist)
       end
 
     let json_to_block (json : Y.Basic.json) : block =
       match json with
       | `List jsonlist ->
-          print_endline "BTJ2";
           new block (List.map (fun tjson -> json_to_transaction tjson) jsonlist)
       | _ -> failwith "Blocks can only serialize json lists"
   end
