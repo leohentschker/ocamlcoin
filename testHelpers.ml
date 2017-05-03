@@ -8,9 +8,8 @@ let run_tests (test_func : unit -> unit) : unit =
     test_func ()
   done
 
-let generate_list (generator : unit -> 'a) : 'a list =
+let generate_list (generator : unit -> 'a) (i : int) : 'a list =
   let mlist = ref [] in
-  let i = Random.int 30 in
   for _ = 0 to i do
     let anotha_one = generator () in
     mlist := (!mlist) @ [anotha_one]

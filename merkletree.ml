@@ -191,9 +191,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
 
     let test_combine_trees_and_children () =
       let l1, l2 = TestHelpers.generate_list S.gen,
-                   TestHelpers.generate_list S.gen in
-      let t1 = List.fold_left (fun t e -> add_element e t) (build_tree l1) l2 in
-      let t2 = build_tree (l1 @ l2) in
+                   TestHelpers.generate_list S.gen in 
       let lcomb = l1 @ l2 in
       let t1 = build_tree l1 in
       let t2 = build_tree l2 in

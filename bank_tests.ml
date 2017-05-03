@@ -16,6 +16,7 @@ let bad_amount_transaction () =
 
 let generate_transaction_list () =
   TestHelpers.generate_list Payments_tests.generate_fake_transaction
+                            (Random.int 30)
 
 let test_query () =
   let ledger = empty in
