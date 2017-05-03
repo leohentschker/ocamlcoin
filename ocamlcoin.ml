@@ -96,18 +96,19 @@ module OcamlcoinRunner =
               | Nosolution ->
                   print_endline "Can't solve without solution")
           | PingDiscovery ->
-              print_endline ("PINGED" ^ node#ip);
-              add_peer node;
-              (match Bank.get_transactions(Bank.book) with
-              | _h :: _t as tlist ->
-                  List.iter (fun sublist ->
-                    broadcast_event (BroadcastTransactions(sublist)) node)
-                    (IO.chunk_list c_MAX_TRANSACTION_BROADCAST_SIZE tlist)
-              | [] -> ());
-              (match get_peers () with
-              | _h :: _t as nlist ->
-                  broadcast_event (BroadcastNodes(nlist)) node
-              | [] -> ());
+              if not (node#equal User.personal_node) then
+                print_endline ("PINGED: " ^ node#ip);
+                add_peer node;
+                (match Bank.get_transactions(Bank.book) with
+                | _h :: _t as tlist ->
+                    List.iter (fun sublist ->
+                      broadcast_event (BroadcastTransactions(sublist)) node)
+                      (IO.chunk_list c_MAX_TRANSACTION_BROADCAST_SIZE tlist)
+                | [] -> ());
+                (match get_peers () with
+                | _h :: _t as nlist ->
+                    broadcast_event (BroadcastNodes(nlist)) node
+                | [] -> ())
           | BroadcastNodes(nlist) ->
               List.iter add_peer nlist
           | BroadcastTransactions(tlist) ->
