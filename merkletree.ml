@@ -44,7 +44,7 @@ module TransactionSerializable : (SERIALIZE with type amount = float
       (* Generates a random transaction *)
     let gen () =
       let originator, target, amount, timestamp = fake_transaction_data () in
-      let priv, pub = Keychain.generate_keypair () in
+      let priv, pub = generate_keypair () in
       create_transaction originator target amount timestamp priv
     let get (t : transaction) = (t#originator, t#target, t#amount, t#timestamp)
     let compare (t1 : time) (t2 : time) : ordering =
@@ -224,10 +224,11 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) :
       let l1, l2 = TestHelpers.generate_list S.gen (Random.int 20),
                    TestHelpers.generate_list S.gen (Random.int 20) in
       let t1 = List.fold_left (fun t e -> add_element e t) (build_tree l1) l2 in
+      (* Also tests build_tree *)
       let t2 = build_tree (l1 @ l2) in
       assert (root_hash t1 = root_hash t2)
 
-    let test_combine_trees_and_children () =
+    let test_combine () =
       let l1, l2 = TestHelpers.generate_list S.gen 4,
                    TestHelpers.generate_list S.gen 3 in
       let lcomb = l1 @ l2 in
@@ -237,8 +238,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) :
       let tcomb = combine_trees t1 t2 in
       assert (children t1 = l1);
       assert (children t2 = l2);
-      Printf.printf "%s\n" (root_hash tbig);
-      Printf.printf "%s\n" (root_hash tcomb);
+      (* Also tests root_Hash and children *)
       assert (root_hash tbig = root_hash tcomb);
       assert (children tbig = children tcomb)
 
@@ -256,10 +256,6 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) :
 
     let run_tests () =
       TestHelpers.run_tests test_add_element;
-      TestHelpers.run_tests test_combine_trees_and_children;
+      TestHelpers.run_tests test_combine;
       TestHelpers.run_tests test_queryid
   end
-
-module FakeMerkle = MakeMerkle (TransactionSerializable) (SHA256) ;;
-(*
-let _ = FakeMerkle.run_tests ();; *)

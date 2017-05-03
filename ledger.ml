@@ -51,22 +51,27 @@ module Bank =
     let query (p : pub_key) (m : ledger) : transaction list =
       (MT.queryid p !m) @ (MT.queryhash (pub_to_string p) !m)
 
+    let get_balance_from_transaction_list (id : pub_key) =
+      List.fold_left
+        (fun acc x -> if x#originator = id then acc -. x#amount
+                      else acc +. x#amount) 0.
+
+    let get_balance (id : pub_key) (l : ledger) : float =
+      get_balance_from_transaction_list id (MT.children !l)
+
     let verify_transaction (t : transaction) (l: ledger) : bool =
-      let id1, id2, amount, timestamp =
+      let id1, _, amount, timestamp =
         t#originator, t#target, t#amount, t#timestamp in
-      let eltlst = MT.queryid id1 !l in
-      let timedlst = List.filter (fun x -> x#timestamp < timestamp) eltlst in
-      let total_amount = List.fold_left
-        (fun acc x -> if x#originator = id1 then acc -. x#amount
-                      else acc +. x#amount) 0. timedlst in
+      let eltlst =
+        List.filter (fun x -> x#timestamp < timestamp) (query id1 l) in
+      let total_amount = get_balance_from_transaction_list id1 eltlst in
       authenticate_transaction t
       && ((not (eltlst = [])
            && total_amount >= amount
            && amount > 0.
            && timestamp > 0.
            && Mining.Miner.verify t#to_string t#solution)
-          ||
-         (id1 = masterpub || id1 = masterpub_test))
+          || (id1 = masterpub || id1 = masterpub_test))
 
     let add_transaction (t : transaction) (l : ledger) : unit =
       if verify_transaction t l then
@@ -156,5 +161,5 @@ module Bank =
       TestHelpers.run_tests test_verify_transaction;
       TestHelpers.run_tests test_verify_ledger;
       TestHelpers.run_tests test_query;
-      print_endline "All tests passed!"
+      print_endline "Ledger tests passed!"
   end
