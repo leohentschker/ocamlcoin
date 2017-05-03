@@ -35,9 +35,11 @@ let test_verify_ledger () =
   let invalid = bad_amount_transaction () in
   List.iter (fun t -> add_transaction t good_ledger) transaction_list;
   List.iter (fun t -> add_transaction t bad_ledger1) transaction_list;
-  add_transaction invalid bad_ledger;
+  add_transaction invalid bad_ledger1;
+  add_transaction invalid bad_ledger2;
   assert (verify_tree good_ledger);
-  assert (not verify_transaction bad_ledger)
+  assert (not (verify_transaction bad_ledger1));
+  assert (not (verify_transaction bad_ledger2))
 
 let test_query () =
   let ledger = MT.empty in
