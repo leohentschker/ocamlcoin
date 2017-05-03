@@ -75,7 +75,7 @@ module Bank =
       let ledger = empty in
       let transaction_list = generate_transaction_list () in
       List.iter (fun t -> add_transaction t ledger) transaction_list;
-      assert (transaction_list = (children !ledger))
+      assert (transaction_list = (MT.children !ledger))
 
     let test_query () =
       let ledger = empty in
