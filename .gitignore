@@ -22,3 +22,6 @@ setup.log
 # remove swapfiles
 *.swp
 profile.json
+
+# don't store personal files
+files/*
