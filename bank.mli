@@ -14,4 +14,5 @@ module Bank :
     val verify_transaction : transaction -> ledger -> bool
     val verify_ledger : ledger -> bool
     val merge_ledgers : ledger -> ledger -> unit
+    val run_tests : unit -> unit
   end

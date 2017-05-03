@@ -10,7 +10,7 @@ let run_tests (test_func : unit -> unit) : unit =
 
 let generate_list (generator : unit -> 'a) (i : int) : 'a list =
   let mlist = ref [] in
-  for _ = 0 to i do
+  for _ = 1 to i do
     let anotha_one = generator () in
     mlist := (!mlist) @ [anotha_one]
   done;

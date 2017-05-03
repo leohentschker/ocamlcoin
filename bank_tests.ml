@@ -6,6 +6,9 @@ open Merkletree
 open IOHelpers
 open Bank.Bank
 
+
+module MT = MakeMerkle (TransactionSerializable) (SHA256)
+
 let bad_amount_transaction () =
   let _, originator = generate_keypair () in
   let bad, _ = generate_keypair () in
@@ -49,7 +52,9 @@ let test_verify_ledger () =
   add_transaction invalid bad_ledger1;
   add_transaction invalid bad_ledger2;
   assert (verify_ledger good_ledger);
-  assert (not (verify_ledger bad_ledger1));
+  List.map (fun s -> print_endline s) (MT.serializelist (MT.children !good_ledger));
+  List.map (fun s -> print_endline s) (MT.serializelist (MT.children !bad_ledger1));
+  assert (verify_ledger bad_ledger1);
   assert (not (verify_ledger bad_ledger2))
 
 let test_merge_ledgers () =

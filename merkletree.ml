@@ -105,10 +105,9 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       | Leaf (s, _) -> s
       | Tree (s, _, _, _, _) -> s
 
-    let union (l1 : 'a list) (l2 : 'a list) : 'a list =
-      List.fold_left (fun xs x -> if not (List.mem x l1) then xs @ [x] else xs) l1 l2;;
-
     let combine_trees (t1 : mtree) (t2 : mtree) : mtree =
+      let union (l1 : 'a list) (l2 : 'a list) : 'a list =
+        List.fold_left (fun xs x -> if not (List.mem x l1) then xs @ [x] else xs) l1 l2 in
       match t1, t2 with
       | Leaf (s1, e1), Leaf (s2, e2) ->
           let (id11, id12, _, time1), (id21, id22, _, time2) = get e1, get e2 in
@@ -180,7 +179,8 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
     let queryhash (hash : string) (t : mtree) : element list =
       match t with
       | Empty -> []
-      | Leaf (s, _) | Tree (s, _, _, _, _) -> if hash = s then (children t) else []
+      | Leaf (s, _) | Tree (s, _, _, _, _) -> if hash = s then (children t)
+                                              else []
 
     let test_add_element () =
       let l1, l2 = TestHelpers.generate_list S.gen (Random.int 20),
@@ -197,18 +197,31 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       let t2 = build_tree l2 in
       let tbig = build_tree lcomb in
       let tcomb = combine_trees t1 t2 in
+      assert (children t1 = l1);
+      assert (children t2 = l2);
+      Printf.printf "%s\n" (root_hash tbig);
+      Printf.printf "%s\n" (root_hash tcomb);
       assert (root_hash tbig = root_hash tcomb);
       assert (children tbig = children tcomb)
 
     let test_queryid () =
-      assert (1 = 1)
+      let lst = TestHelpers.generate_list S.gen (Random.int 20) in
+      let tree = build_tree lst in
+        match tree with
+        | Tree (str, id_list, t, l, r) ->
+            List.iter
+              (fun id -> (List.iter (fun e -> assert (List.memq e lst)))
+                         (queryid id tree))
+              id_list
+        | Leaf (s, e) -> assert ([e] = lst)
+        | _ -> ()
 
     let run_tests () =
-      test_add_element ();
-      test_combine_trees_and_children ();
-      test_queryid ()
+      TestHelpers.run_tests test_add_element;
+      TestHelpers.run_tests test_combine_trees_and_children;
+      TestHelpers.run_tests test_queryid
   end
 
 module FakeMerkle = MakeMerkle (TransactionSerializable) (SHA256) ;;
 
-(* let _ = FakeMerkle.run_tests ();; *)
+let _ = FakeMerkle.run_tests ();;
