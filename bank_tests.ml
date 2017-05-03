@@ -18,7 +18,8 @@ let generate_transaction_list () =
   let transaction_mlist = ref [] in
   let i = Random.int 30 in
   for _ = 0 to i do
-    transaction_mlist = Payments_tests.generate_fake_transaction ()
+    let new_transaction = Payments_tests.generate_fake_transaction () in
+    transaction_mlist := (!transaction) @ [new_transaction]
   done;
   !transaction_mlist
 
@@ -29,11 +30,11 @@ let test_verify_transaction () =
   assert (not verify_transaction invalid MT.empty)
 
 let test_verify_ledger () =
-  let good_ledger, bad_ledger = MT.empty, MT.empty in
-  let valid = Payments_tests.generate_fake_transaction () in
+  let good_ledger, bad_ledger1, bad_ledger2 = MT.empty, MT.empty, MT.empty in
+  let transaction_list = generate_transaction_list () in
   let invalid = bad_amount_transaction () in
-  add_transaction valid good_ledger;
-  add_transaction valid bad_ledger;
+  List.iter (fun t -> add_transaction t good_ledger) transaction_list;
+  List.iter (fun t -> add_transaction t bad_ledger1) transaction_list;
   add_transaction invalid bad_ledger;
   assert (verify_tree good_ledger);
   assert (not verify_transaction bad_ledger)

@@ -10,10 +10,6 @@ module MT = MakeMerkle (TransactionSerializable) (SHA256)
 
 let ledger = ref MT.empty
 
-let add_transaction (t : transaction) (l : MT.mtree ref) : unit =
-  if verify_transaction t l then
-    ledger := (MT.add_element t !ledger)
-
 let query (s : string) (m : MT.mtree ref) : transaction list =
   (MT.queryid (string_to_pub s) !m) @ (MT.queryhash s !m)
 
@@ -27,6 +23,10 @@ let verify_transaction (t : transaction) (l: MT.mtree ref) : bool =
   not (eltlst = [] || id1 = masterkey) && (total_amount < amount) &&
        amount > 0. && authenticate_transaction t &&
        Mining.Miner.verify t#to_string t#solution
+
+let add_transaction (t : transaction) (l : MT.mtree ref) : unit =
+  if verify_transaction t l then
+    ledger := (MT.add_element t !ledger)
 
 let verify_ledger (t : MT.mtree) : bool =
   let rec verify (t : MT.mtree) (n : int) : bool =
