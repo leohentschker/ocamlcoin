@@ -43,7 +43,9 @@ module OcamlcoinRunner =
         User.export_nodes (get_peers ())
     (* ping a list of nodes *)
     let ping_peers () =
-      Thread.create (fun () -> List.iter (broadcast_event PingDiscovery) (get_peers ())) ()
+      let _ = Thread.create (fun () -> List.iter (broadcast_event PingDiscovery)
+                (get_peers ())) () in
+      ()
     (* update our list of stored nodes and store it in a file *)
     let update_stored_nodes () =
       (* filter out old peers *)
