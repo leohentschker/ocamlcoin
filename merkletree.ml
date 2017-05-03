@@ -22,7 +22,7 @@ module type SERIALIZE =
 
 (* Instantation of Serializable in terms of Transactions. This is the
     basis of our Merkle tree for our global ledger for rhe OCamlcoin
-    network *)
+    network. Various types are exposed for use in future functions. *)
 
 module TransactionSerializable : (SERIALIZE with type amount = float
                                              and type time = float
@@ -55,7 +55,8 @@ module TransactionSerializable : (SERIALIZE with type amount = float
       if compare t1 t2 = L then t1 else t2
   end
 
-
+(* Type signature for the MERKLETREE module, which includes functions
+   on trees. *)
 module type MERKLETREE =
   sig
     type element
@@ -78,6 +79,9 @@ module type MERKLETREE =
     val run_tests : unit -> unit
   end
 
+(* Functor that takes in a serializable and a hash module, which is just a
+   module that contains a cryptographic function, and returns a merkle tree
+   with appropriate types *)
 module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S.t
                                                             and type id = S.id
                                                             and type amount = S.amount
@@ -112,8 +116,8 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       | Empty -> ""
       | Leaf (s, _) -> s
       | Tree (s, _, _, _, _) -> s
-    (* Combines merkle trees under the assumption that the left tree has 2^n children, 
-       and right tree has fewer children. DANIEL CONTINUE THISSS *)
+    (* Combines merkle trees, creating a new tree with a correct top hash and
+       the initial trees as subtrees. Combines left to right. *)
     let combine_trees (t1 : mtree) (t2 : mtree) : mtree =
       let union (l1 : 'a list) (l2 : 'a list) : 'a list =
         List.fold_left (fun xs x -> if not (List.mem x l1) then xs @ [x] else xs) l1 l2 in
@@ -132,6 +136,8 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       | Empty, _ -> t2
       | _, Empty -> t1
 
+    (* Given an element list, creates the corresponding merkle tree left to
+       right. Contains helper functions. *)
     let rec build_tree (datalist : element list) : mtree =
       let log2 (n : int) : int =
         truncate (log (float n) /. (log 2.)) in
@@ -159,12 +165,15 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
            | _ -> let ltree, rtree = tree_helper l, build_tree r in
                   combine_trees ltree rtree
 
+    (* Given a tree, returns the elements stored at the leaves, left to right.*)
     let rec children (t : mtree) : element list =
       match t with
       | Empty -> []
       | Leaf (_, e) -> [e]
       | Tree (_, _, _, t1, t2) -> (children t1) @ (children t2)
 
+    (* Adds an element to a tree, returning a new tree with a new calculated
+       root hash *)
     let rec add_element (e : element) (t : mtree) : mtree =
       let newleaf = build_tree [e] in
       match t with
@@ -175,6 +184,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
             then combine_trees t newleaf
           else combine_trees t1 (add_element e t2)
 
+    (* Some querying functions. *)
     let rec queryid (id : id) (t : mtree) : element list =
       match t with
       | Empty -> []
@@ -232,5 +242,5 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
   end
 
 module FakeMerkle = MakeMerkle (TransactionSerializable) (SHA256) ;;
-(* 
+(*
 let _ = FakeMerkle.run_tests ();; *)
