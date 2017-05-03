@@ -3,6 +3,7 @@ open Networking
 open Networking.OcamlcoinNetwork
 open Events
 open Profile
+open Bank
 
 let c_AVERAGE_PING_WAITTIME = 5
 let c_MAX_NODE_TIMEOUT = 1000.
@@ -42,11 +43,11 @@ module OcamlcoinRunner =
           match json_to_event json with
           | NewTransaction t ->
               print_endline "NEW TRANS";
-              if Bank.verify_transaction t Bank.ledger then
+              if Bank.verify_transaction t Bank.book then
                 Payments.add_unmined_transaction t
           | SolvedBlock(block, nonce) ->
               print_endline "SOLVED BLOCK";
-              List.iter (fun t -> Bank.add_transaction t Bank.ledger) block#transactions
+              List.iter (fun t -> Bank.add_transaction t Bank.book) block#transactions
           | PingDiscovery ->
               print_endline ("PING DISCOVERY from ip: " ^ node#ip ^ "asd");
               broadcast_event (BroadcastNodes(get_peers ())) node;

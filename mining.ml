@@ -53,13 +53,13 @@ module Miner =
     let generate_fake_nonce () =
       string_to_nonce (TestHelpers.random_string ())
 
-    let test_mining () = 
+    let test_mining () =
       let word = "hello" in
       let bad = generate_fake_nonce () in
       assert (not (verify word bad));
       let t = generate_fake_transaction () in
-      let nonce = string_of_int (mine (generate_fake_transaction ()) 100000) in 
+      let nonce = string_of_int (mine (generate_fake_transaction ()) 100000) in
       assert (String.sub (hash_text(t#to_string ^ nonce)) 0 leading_zeros =
-        String.make leading_zeros '0') 
+        String.make leading_zeros '0')
   end
 let _ = Miner.test_mining ()

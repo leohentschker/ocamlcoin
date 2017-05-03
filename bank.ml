@@ -5,8 +5,6 @@ open Payments
 open Payments.Transaction
 open Merkletree
 open IOHelpers
-open Mining
-open Mining.Miner
 
 module Bank =
   struct
@@ -17,7 +15,7 @@ module Bank =
     type mtree = MT.mtree
     type ledger = MT.mtree ref
 
-    let account = ref MT.empty
+    let book = ref MT.empty
 
     let empty = ref MT.empty
 
@@ -37,7 +35,7 @@ module Bank =
 
     let add_transaction (t : transaction) (l : ledger) : unit =
       if verify_transaction t l then
-        account := (MT.add_element t !account)
+        book := (MT.add_element t !book)
 
     let verify_ledger (t : ledger) : bool =
       let rec verify (t : ledger) (n : int) : bool =

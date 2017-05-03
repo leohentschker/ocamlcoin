@@ -183,27 +183,17 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       | Leaf (s, _) | Tree (s, _, _, _, _) -> if hash = s then (children t) else []
 
     let test_add_element () =
-      let e1 = S.gen () in
-      let e2 = S.gen () in
-      let e3 = S.gen () in
-      let e4 = S.gen () in
-      let e5 = S.gen () in
-      let l1 = [e1; e2; e3; e4] in
-      let l2 = l1 @ [e5] in
-      let t1 = add_element e5 (build_tree l1) in
-      let t2 = build_tree l2 in
+      let l1, l2 = TestHelpers.generate_list S.gen,
+                   TestHelpers.generate_list S.gen in
+      let t1 = List.fold_left (fun t e -> add_element e t) (build_tree l1) l2 in
+      let t2 = build_tree (l1 @ l2) in
       assert (root_hash t1 = root_hash t2)
 
     let test_combine_trees_and_children () =
-      let e1 = S.gen () in
-      let e2 = S.gen () in
-      let e3 = S.gen () in
-      let e4 = S.gen () in
-      let e5 = S.gen () in
-      let e6 = S.gen () in
-      let e7 = S.gen () in
-      let l1 = [e1; e2; e3; e4] in
-      let l2 = [e5; e6; e7] in
+      let l1, l2 = TestHelpers.generate_list S.gen,
+                   TestHelpers.generate_list S.gen in
+      let t1 = List.fold_left (fun t e -> add_element e t) (build_tree l1) l2 in
+      let t2 = build_tree (l1 @ l2) in
       let lcomb = l1 @ l2 in
       let t1 = build_tree l1 in
       let t2 = build_tree l2 in

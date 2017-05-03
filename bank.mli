@@ -8,7 +8,7 @@ module Bank :
     type ledger = mtree ref
     val masterkey : pub_key
     val empty : ledger
-    val account : ledger
+    val book : ledger
     val query : pub_key -> ledger -> transaction list
     val add_transaction : transaction -> ledger -> unit
     val verify_transaction : transaction -> ledger -> bool
