@@ -10,7 +10,7 @@ let c_DEFAULT_COIN_PORT = 8332
 let c_DEFAULT_IP = "10.252.197.92"
 let c_CONNECTIONS = 5
 
-let c_INCOMING_MESSAGE_SIZE = 4294967296
+let c_INCOMING_MESSAGE_SIZE = 14294967296
 let c_USE_LOCAL_NETWORK = ref false
 
 let is_valid_ip ip_str =
