@@ -136,4 +136,5 @@ module Bank =
       TestHelpers.run_tests test_query;
       print_endline "All tests passed!"
   end
+  
 let _ = Bank.run_tests ()

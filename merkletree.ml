@@ -3,9 +3,10 @@ open IOHelpers
 open Crypto
 open Crypto.Keychain
 open Payments.Transaction
-
+(* Need an ordering on your serializable elements,
+   because we're putting the elements into a tree*)
 type ordering = L | G | E
-
+(* Abstraction that is largely modeled after transaction in payments.ml *)
 module type SERIALIZE =
   sig
     type amount
@@ -19,6 +20,9 @@ module type SERIALIZE =
     val min : time -> time -> time
   end
 
+(* Instantation of Serializable in terms of Transactions. This is the
+    basis of our Merkle tree for our global ledger for rhe OCamlcoin
+    network *)
 
 module TransactionSerializable : (SERIALIZE with type amount = float
                                              and type time = float
@@ -30,12 +34,14 @@ module TransactionSerializable : (SERIALIZE with type amount = float
     type t = transaction
     type id = pub_key
     let serialize t = t#to_string
+    (* Sample generation of randomt transaction data*)
     let fake_transaction_data () =
       let _, originator = generate_keypair () in
       let _, target = generate_keypair () in
       let amount = Random.float 1000. in
       let timestamp = Random.float 10000. in
       originator, target, amount, timestamp
+      (* Generates a random transaction *)
     let gen () =
       let originator, target, amount, timestamp = fake_transaction_data () in
       let priv, pub = Keychain.generate_keypair () in
@@ -87,24 +93,27 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
     let get = S.get
 
     let serializelist = List.map S.serialize
-
+    (* *)
     let base_hash (data : element) : string =
       H.hash_text (S.serialize data)
 
     let tree_hash (s : string) : string =
       H.hash_text s
-
+      (* Our merkle tree will, in generate, store at each node a hash of the transactions,
+         A list of the users who were involved in the transactions, and a timestamp*)
     type mtree =
       Empty | Leaf of string * element | Tree of string * id list * time * mtree * mtree
 
     let empty = Empty
-
+    (* root_hash function returns the top root of the tree, which is the result
+       of hashing all of the other transactions together *)
     let root_hash (t : mtree) : string =
       match t with
       | Empty -> ""
       | Leaf (s, _) -> s
       | Tree (s, _, _, _, _) -> s
-
+    (* Combines merkle trees under the assumption that the left tree has 2^n children, 
+       and right tree has fewer children. DANIEL CONTINUE THISSS *)
     let combine_trees (t1 : mtree) (t2 : mtree) : mtree =
       let union (l1 : 'a list) (l2 : 'a list) : 'a list =
         List.fold_left (fun xs x -> if not (List.mem x l1) then xs @ [x] else xs) l1 l2 in
