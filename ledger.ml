@@ -38,6 +38,7 @@ module Bank =
     type mtree = MT.mtree
 
     type ledger = MT.mtree ref
+
     let book =
       let previous_transactions = try
         match Y.Basic.from_file c_LEDGER_FILE_NAME with
@@ -57,7 +58,6 @@ module Bank =
       List.fold_left (fun acc x -> if x#originator = id then acc -. x#amount
                                    else acc +. x#amount) 0. timedlst
 
-
     let verify_transaction (t : transaction) (l: ledger) : bool =
       let id1, id2, amount, timestamp = t#originator, t#target, t#amount, t#timestamp in
       let eltlst = MT.queryid id1 !l in
@@ -69,8 +69,7 @@ module Bank =
            && amount > 0.
            && timestamp > 0.
            && Mining.Miner.verify t#to_string t#solution)
-          ||
-         (id1 = masterpub || id1 = masterpub_test))
+          || (id1 = masterpub || id1 = masterpub_test))
 
     let add_transaction (t : transaction) (l : ledger) : unit =
       if verify_transaction t l then
@@ -88,6 +87,7 @@ module Bank =
           verify_transaction tn subledger && (verify subledger (n - 1)) in
       verify t (List.length (MT.children !t) - 1)
 
+    (* Helper functions for tests *)
     let generate_transaction () =
       let _, target = generate_keypair () in
       let amount = Random.float 1000. in
@@ -97,13 +97,15 @@ module Bank =
     let generate_transaction_list () =
       TestHelpers.generate_list generate_transaction (Random.int 30)
 
+    (* Tests. Included in the module for the sake of abstraction. *)
     let test_add_transaction () =
       let ledger = ref empty in
       let new_transaction = generate_transaction () in
       let transaction_list = generate_transaction_list () in
       add_transaction new_transaction ledger;
       List.iter (fun t -> add_transaction t ledger) transaction_list;
-      List.iter (fun t -> assert (List.mem t (MT.children !ledger))) transaction_list
+      List.iter (fun t -> assert (List.mem t (MT.children !ledger)))
+                transaction_list
 
     let test_query () =
       let ledger = ref empty in
@@ -115,7 +117,6 @@ module Bank =
       assert (not (List.memq other_transaction
                              (query other_transaction#originator ledger)))
 
-    (* More tests here *)
     let test_verify_transaction () =
       let ledger = ref empty in
       let priv1, pub1 = generate_keypair () in
@@ -128,8 +129,10 @@ module Bank =
       let good_transaction2 = create_transaction pub1 pub2 100. 200. priv1 in
       let bad_transaction1 = create_transaction pub1 pub2 150. 250. priv1 in
       let bad_transaction2 = create_transaction pub2 pub1 300. 300. priv2 in
-      let bad_transaction3 = create_transaction pub2 pub1 100. ~-.(250.) priv2 in
-      let bad_transaction4 = create_transaction pub2 pub1 ~-.(100.) 250. priv1 in
+      let bad_transaction3 =
+        create_transaction pub2 pub1 100. ~-.(250.) priv2 in
+      let bad_transaction4 =
+        create_transaction pub2 pub1 ~-.(100.) 250. priv1 in
       let valid_list = generate_transaction_list () in
       Miner.leading_zeros := 0;
       List.iter (fun t -> add_transaction t ledger) valid_list;
@@ -156,5 +159,5 @@ module Bank =
       TestHelpers.run_tests test_verify_transaction;
       TestHelpers.run_tests test_verify_ledger;
       TestHelpers.run_tests test_query;
-      print_endline "All tests passed!"
+      print_endline "Ledger tests passed!"
   end

@@ -10,6 +10,7 @@ module Bank :
     val book : ledger
     val query : pub_key -> ledger -> transaction list
     val add_transaction : transaction -> ledger -> unit
+    val get_balance : pub_key -> ledger -> float
     val verify_transaction : transaction -> ledger -> bool
     val verify_ledger : ledger -> bool
     val run_tests : unit -> unit

@@ -43,16 +43,20 @@ module Miner =
           n
         else iterate_check (n - 1) in
       iterate_check iters
+
     let mine_async () =
       let t = Payments.get_unmined_transaction () in
       let _ = Thread.create (fun () -> mine t max_int) () in
       ()
+
     let generate_fake_nonce () =
       string_to_nonce (TestHelpers.random_string ())
+
     let basic_test () =
       let word = "hello" in
       let bad = generate_fake_nonce () in
       assert (not (verify word bad))
+
     let test_mining () =
       let t = generate_fake_transaction () in
       let nonce = string_of_int (mine t 500000) in

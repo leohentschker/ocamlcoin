@@ -1,6 +1,6 @@
 all: io_helpers networking crypto merkle ocamlcoin events tests mining payments gui mining_tests ledger
 
-tests: payments_tests events_tests networking_tests crypto_tests ledger_tests
+tests: payments_tests events_tests networking_tests crypto_tests ledger_tests merkle_tests
 
 profile: profile.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs nocrypto.unix -ocamlc 'ocamlc -thread str.cma threads.cma' profile.byte
@@ -34,6 +34,9 @@ crypto_tests: crypto_tests.ml
 
 merkle: merkletree.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -pkgs sexplib -pkgs nocrypto.unix merkletree.byte
+
+merkle_tests: merkletree_tests.ml
+	ocamlbuild -use-ocamlfind -pkg yojson -pkgs sexplib -pkgs nocrypto.unix merkletree_tests.byte
 
 mining: mining.ml
 	ocamlbuild -use-ocamlfind -pkg yojson -ocamlc 'ocamlc -thread str.cma threads.cma' -pkgs nocrypto.unix mining.byte
