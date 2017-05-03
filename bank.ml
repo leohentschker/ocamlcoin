@@ -14,12 +14,15 @@ module Bank =
     let masterkey = snd (generate_keypair ())
     module MT = MakeMerkle (TransactionSerializable) (SHA256)
 
+    type mtree = MT.mtree
     type ledger = MT.mtree ref
 
-    let ledger = ref MT.empty
+    let account = ref MT.empty
 
-    let query (s : string) (m : ledger) : transaction list =
-      (MT.queryid (string_to_pub s) !m) @ (MT.queryhash s !m)
+    let empty = ref MT.empty
+
+    let query (p : pub_key) (m : ledger) : transaction list =
+      (MT.queryid p !m) @ (MT.queryhash (pub_to_string p) !m)
 
     let verify_transaction (t : transaction) (l: ledger) : bool =
       let id1, id2, amount, timestamp = t#originator, t#target, t#amount, t#timestamp in
@@ -34,7 +37,7 @@ module Bank =
 
     let add_transaction (t : transaction) (l : ledger) : unit =
       if verify_transaction t l then
-        ledger := (MT.add_element t !ledger)
+        account := (MT.add_element t !account)
 
     let verify_ledger (t : ledger) : bool =
       let rec verify (t : ledger) (n : int) : bool =

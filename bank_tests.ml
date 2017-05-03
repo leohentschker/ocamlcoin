@@ -4,7 +4,7 @@ open Crypto.Keychain
 open Payments.Transaction
 open Merkletree
 open IOHelpers
-open Bank
+open Bank.Bank
 
 let bad_amount_transaction () =
   let _, originator = generate_keypair () in
@@ -26,38 +26,39 @@ let generate_transaction_list () =
 let test_verify_transaction () =
   let valid = Payments_tests.generate_fake_transaction () in
   let invalid = bad_amount_transaction () in
-  assert (verify_transaction valid MT.empty);
-  assert (not verify_transaction invalid MT.empty)
+  assert (verify_transaction valid empty);
+  assert (not (verify_transaction invalid empty))
 
 let test_verify_ledger () =
-  let good_ledger, bad_ledger1, bad_ledger2 = MT.empty, MT.empty, MT.empty in
+  let good_ledger, bad_ledger1, bad_ledger2 = empty, empty, empty in
   let transaction_list = generate_transaction_list () in
   let invalid = bad_amount_transaction () in
   List.iter (fun t -> add_transaction t good_ledger) transaction_list;
   List.iter (fun t -> add_transaction t bad_ledger1) transaction_list;
   add_transaction invalid bad_ledger1;
   add_transaction invalid bad_ledger2;
-  assert (verify_tree good_ledger);
-  assert (not (verify_transaction bad_ledger1));
-  assert (not (verify_transaction bad_ledger2))
+  assert (verify_ledger good_ledger);
+  assert (not (verify_ledger bad_ledger1));
+  assert (not (verify_ledger bad_ledger2))
 
 let test_query () =
-  let ledger = MT.empty in
+  let ledger = empty in
   let transaction_list = generate_transaction_list () in
   let other_transaction = Payments_tests.generate_fake_transaction () in
   List.iter (fun t -> add_transaction t ledger) transaction_list;
   add_transaction other_transaction ledger;
-  List.iter (fun t -> assert (query t#originator ledger));
-  assert (not (query other_transaction#originator ledger))
+  List.iter (fun t -> assert (List.memq t (query t#originator ledger)))
+            transaction_list;
+  assert (not (List.memq other_transaction
+                         (query other_transaction#originator ledger)))
 
 let test_merge_ledgers () =
-  let ledger1 = MT.empty in
-  let ledger2 = MT.empty in
+  let ledger1, ledger2 = empty, empty in
   let transaction_list1 = generate_transaction_list () in
   let transaction_list2 = generate_transaction_list () in
   List.iter (fun t -> add_transaction t ledger1) transaction_list1;
   List.iter (fun t -> add_transaction t ledger2) transaction_list2;
-  List.iter (fun t -> assert (query t#originator ledger))
+  List.iter (fun t -> assert (List.memq t (query t#originator ledger1)))
             (transaction_list1 @ transaction_list2)
 
 let run_tests () =

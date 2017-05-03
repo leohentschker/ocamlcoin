@@ -4,10 +4,12 @@ open Payments.Transaction
 
 module Bank :
   sig
-    type ledger
+    type mtree
+    type ledger = mtree ref
     val masterkey : pub_key
-    val ledger : ledger
-    val query : string -> ledger -> transaction list
+    val empty : ledger
+    val account : ledger
+    val query : pub_key -> ledger -> transaction list
     val add_transaction : transaction -> ledger -> unit
     val verify_transaction : transaction -> ledger -> bool
     val verify_ledger : ledger -> bool
