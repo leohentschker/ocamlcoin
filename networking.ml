@@ -8,7 +8,7 @@ let c_IP_JSON_KEY = "ip"
 let c_PORT_JSON_KEY = "port"
 let c_DEFAULT_COIN_PORT = 8332
 let c_DEFAULT_IP = "10.252.197.92"
-let c_CONNECTIONS = 10
+let c_CONNECTIONS = 15
 
 let c_INCOMING_MESSAGE_SIZE = 16777216
 let c_USE_LOCAL_NETWORK = ref false

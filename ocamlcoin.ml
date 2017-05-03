@@ -72,6 +72,7 @@ module OcamlcoinRunner =
       OcamlcoinNetwork.run ();
       attach_broadcast_listener
         (fun json node ->
+          print_endline "ASDASDS";
           match json_to_event json with
           | NewTransaction t ->
               print_endline "NEW TRANS";
