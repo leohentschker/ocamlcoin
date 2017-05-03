@@ -43,36 +43,25 @@ let test_verify_ledger () =
 
 let test_query () =
   let ledger = MT.empty in
-  let transaction1 = Payments_tests.generate_fake_transaction () in
-  let transaction2 = Payments_tests.generate_fake_transaction () in
-  let transaction3 = Payments_tests.generate_fake_transaction () in
-  let transaction4 = Payments_tests.generate_fake_transaction () in
-  add_transaction transaction1 ledger;
-  add_transaction transaction2 ledger;
-  add_transaction transaction3 ledger;
-  assert (query transaction1#originator ledger);
-  assert (query transaction2#originator ledger);
-  assert (query transaction3#originator ledger);
-  assert (not (query transaction4#originator ledger))
+  let transaction_list = generate_transaction_list () in
+  let other_transaction = Payments_tests.generate_fake_transaction () in
+  List.iter (fun t -> add_transaction t ledger) transaction_list;
+  add_transaction other_transaction ledger;
+  List.iter (fun t -> assert (query t#originator ledger));
+  assert (not (query other_transaction#originator ledger))
 
 let test_merge_ledgers () =
   let ledger1 = MT.empty in
   let ledger2 = MT.empty in
-  let transaction1 = Payments_tests.generate_fake_transaction () in
-  let transaction2 = Payments_tests.generate_fake_transaction () in
-  let transaction3 = Payments_tests.generate_fake_transaction () in
-  let transaction4 = Payments_tests.generate_fake_transaction () in
-  add_transaction transaction1 ledger1;
-  add_transaction transaction2 ledger1;
-  add_transaction transaction3 ledger2;
-  add_transaction transaction4 ledger2;
-  assert (query transaction1#originator ledger1);
-  assert (query transaction2#originator ledger1);
-  assert (query transaction3#originator ledger1);
-  assert (query transaction4#originator ledger1)
+  let transaction_list1 = generate_transaction_list () in
+  let transaction_list2 = generate_transaction_list () in
+  List.iter (fun t -> add_transaction t ledger1) transaction_list1;
+  List.iter (fun t -> add_transaction t ledger2) transaction_list2;
+  List.iter (fun t -> assert (query t#originator ledger))
+            (transaction_list1 @ transaction_list2)
 
 let run_tests () =
-  TestHelpers.run_tests test_verify_transaction ()
-  TestHelpers.run_tests test_verify_ledger ()
-  TestHelpers.run_tests test_query ()
-  TestHelpers.run_tests test_merge_ledre ()
+  TestHelpers.run_tests test_verify_transaction;
+  TestHelpers.run_tests test_verify_ledger;
+  TestHelpers.run_tests test_query;
+  TestHelpers.run_tests test_merge_ledgers
