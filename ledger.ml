@@ -78,9 +78,10 @@ module Bank =
 
     let add_transaction (t : transaction) (l : ledger) : unit =
       if verify_transaction t l then
+        let _ = print_endline "IS THIS VERIFIED" in
         let _ = l := (MT.add_element t !l) in
         export_ledger l
-      else ()
+      else print_endline "I AM NOT VERIFIED"
 
     let verify_ledger (t : ledger) : bool =
       let rec verify (t : ledger) (n : int) : bool =
