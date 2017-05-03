@@ -7,6 +7,7 @@ module Keychain :
     val pub_to_string : pub_key -> string
     val string_to_pub : string -> pub_key
     val generate_keypair : unit -> (priv_key * pub_key)
+    val run_tests : unit -> unit
   end
 
 module Signature :
@@ -16,9 +17,14 @@ module Signature :
     val json_to_signature : Yojson.Basic.json -> signature
     val sign : Keychain.priv_key -> string -> signature
     val verify : string -> Keychain.pub_key -> signature -> bool
+    val run_tests : unit -> unit
   end
 
-module type HASH = sig val hash_text : string -> string end
+module type HASH =
+  sig
+    val hash_text : string -> string
+    val run_tests : unit -> unit
+  end
 module MD5 : HASH
 module SHA1 : HASH
 module SHA224 : HASH

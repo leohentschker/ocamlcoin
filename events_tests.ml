@@ -1,6 +1,7 @@
 open TestHelpers
 open Networking_tests
 open Payments_tests
+open Mining.Miner
 open Mining_tests
 open Events
 open Networking
@@ -33,7 +34,7 @@ let test_broadcast_nodes_serialization () =
   | _ -> failwith "Broadcast nodes serialization the incorrect event type"
 
 let run_tests () =
-  test_ping_discovery();
+  TestHelpers.run_tests test_ping_discovery();
   TestHelpers.run_tests test_solved_block_serialization;
   TestHelpers.run_tests test_new_transaction_serialization;
   TestHelpers.run_tests test_broadcast_nodes_serialization

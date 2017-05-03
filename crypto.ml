@@ -1,5 +1,6 @@
 open Sexplib
 open Nocrypto
+open TestHelpers
 
 let () = Nocrypto_entropy_unix.initialize ()
 
@@ -14,6 +15,19 @@ module Keychain =
     let generate_keypair () =
       let private_key = Dsa.generate (`Fips1024) in
       private_key, Dsa.pub_of_priv private_key
+    (* TESTING *)
+    let test_key_serialize () =
+      let priv, pub = generate_keypair () in
+      let serialized_priv = string_to_priv (priv_to_string priv) in
+      let serialized_pub = string_to_pub (pub_to_string pub) in
+      assert(priv = serialized_priv);
+      assert(pub = serialized_pub)
+    let test_generate_keypair () =
+      let (priv_key, pub_key) = generate_keypair () in
+      assert (pub_key = Dsa.pub_of_priv priv_key)
+    let run_tests () =
+      test_key_serialize ();
+      test_generate_keypair ()
   end
 
 open Keychain
@@ -32,9 +46,26 @@ module Signature =
       Dsa.sign ~key:pk (Cstruct.of_string s)
     let verify (plaintext : string) (pub : pub_key) (s : signature) =
       Dsa.verify ~key:pub s (Cstruct.of_string plaintext)
-  end
+    (* TESTING *)
+    let test_signature_serialize () =
+      let (priv, pub) = generate_keypair () in
+      let signed = sign priv (TestHelpers.random_string ()) in
+      assert(signed = json_to_signature (signature_to_json signed))
+    let test_sign () =
+      let (priv_key, pub_key) = generate_keypair () in
+      let message = TestHelpers.random_string () in
+      let signed = sign priv_key message in
+      assert (verify message pub_key signed)
+    let run_tests () =
+      test_signature_serialize ();
+      test_sign ()
+end
 
-module type HASH = sig val hash_text : string -> string end
+module type HASH =
+  sig
+    val hash_text : string -> string
+    val run_tests : unit -> unit
+  end
 
 module MakeHash(H : Hash.S) : HASH =
   struct
@@ -42,7 +73,11 @@ module MakeHash(H : Hash.S) : HASH =
       let init = H.init () in
       H.feed init (Cstruct.of_string s);
       let digest = H.digest (H.get init) in
-      Cstruct.to_string digest ;;
+      Cstruct.to_string digest
+    let test_hash_equivalence () =
+      let rand_str = random_string () in
+      assert(hash_text rand_str = rand_str)
+    let run_tests () = test_hash_equivalence ()
   end
 
 module MD5 = MakeHash(Hash.MD5)
