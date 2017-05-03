@@ -55,7 +55,8 @@ module TransactionSerializable : (SERIALIZE with type amount = float
       let priv, pub = generate_keypair () in
       create_transaction originator target amount timestamp priv
 
-    let get (t : transaction) = (t#originator, t#target, t#amount, t#timestamp, t#solver)
+    let get (t : transaction) =
+      (t#originator, t#target, t#amount, t#timestamp, t#solver)
 
     let compare (t1 : time) (t2 : time) : ordering = compare t1 t2
 
@@ -138,7 +139,8 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) :
                                     else xs) l1 l2 in
       match t1, t2 with
       | Leaf (s1, e1), Leaf (s2, e2) ->
-          let (id11, id12, _, time1, _), (id21, id22, _, time2, _) = get e1, get e2 in
+          let (id11, id12, _, time1, _), (id21, id22, _, time2, _) =
+            get e1, get e2 in
           (Tree (tree_hash (s1 ^ s2), union [id11; id12] [id21; id22],
                  S.min time1 time2, t1, t2))
       | Leaf (s1, e), Tree (s2, lst, time2, _, _) ->
