@@ -148,9 +148,14 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       let half_list (lst : 'a list) : 'a list * 'a list =
         let len = List.length lst in
         (sublist lst 0 (len / 2 - 1), sublist lst (len / 2) (len - 1)) in
+      (* Splits a list into two lists, the first of which with length as the
+         greatest power of 2 less than or equal to the initial list length. This
+         is done so our trees satisfy the invariant that any left subtree is
+         always a complete binary tree. *)
       let rec split_list (lst : 'a list) : 'a list * 'a list =
         let len = List.length lst in
         (sublist lst 0 (exp2 (log2 len) - 1), sublist lst (exp2 (log2 len)) (len - 1)) in
+      (* Allows us to build trees from lists that are exact powers of 2. *)
       let rec tree_helper (lst : element list) : mtree =
         let (l, r) = half_list lst in
         match List.length lst with
@@ -158,6 +163,9 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
         | 1 -> let e = List.hd lst in (Leaf (base_hash e, e))
         | _ -> let ltree, rtree = tree_helper l, tree_helper r in
                combine_trees ltree rtree in
+      (* Recursively creates a tree from an element list by splitting it into
+         its base 2 representation and using tree_helper to create the separate
+         trees, making every left subtree a complete binary tree *)
       let (l, r) = split_list datalist in
       if r = [] then tree_helper datalist
       else match List.length datalist with
