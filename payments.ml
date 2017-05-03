@@ -13,6 +13,13 @@ let c_BLOCK_SIZE = 10
 
 module Transaction =
   struct
+    let string_of_transaction_data (originator : pub_key)
+                                   (target : pub_key)
+                                   (amount : float)
+                                   (timestamp : float) : string =
+      (pub_to_string originator) ^ (pub_to_string target) ^
+      (string_of_float amount) ^ (string_of_float timestamp)
+
     class transaction
         (originator : pub_key)
         (target : pub_key)
@@ -34,7 +41,7 @@ module Transaction =
         method signature = signature
         method solution = solution
         method to_string =
-          this#to_json |> Y.Basic.to_string
+          string_of_transaction_data originator target amount timestamp
         method authenticated =
           Crypto.Signature.verify this#to_string originator signature
         (* https://realworldocaml.org/v1/en/html/handling-json-data.html *)
@@ -47,11 +54,9 @@ module Transaction =
                  (c_SOLUTION_KEY, `Int solution)]
       end
       (* DO WE WANNA MAKE THIS CONSISTENT???? *)
-    let string_of_transaction_data (orig : pub_key)
-                                   (target : pub_key)
-                                   (amount : float)
-                                   (timestamp : float) : string =
-      string_of_float amount
+
+    let string_of_transaction (t : transaction) : string =
+      t#to_string
 
     let create_transaction (orig : pub_key) (target : pub_key) (amount : float)
                            (timestamp : float) (priv : priv_key) : transaction =
