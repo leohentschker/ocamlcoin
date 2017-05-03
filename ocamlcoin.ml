@@ -53,6 +53,7 @@ module OcamlcoinRunner =
               print_endline "SOLVED BLOCK";
               Bank.add_transaction t Bank.ledger
           | PingDiscovery ->
+              print_endline "I GOT PINGED!";
               add_peer node;
               (match get_peers () with
               | _h :: _t as nlist ->

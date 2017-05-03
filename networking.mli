@@ -17,6 +17,7 @@ module OcamlcoinNetwork :
       method serialize : string
       method equal : ocamlcoin_node -> bool
     end
+    val default_node : ocamlcoin_node
     val broadcast_to_node : Yojson.Basic.json -> ocamlcoin_node -> unit
     val attach_broadcast_listener : (Yojson.Basic.json -> ocamlcoin_node -> unit) -> unit
     val json_to_ocamlcoin_node : Yojson.Basic.json -> ocamlcoin_node

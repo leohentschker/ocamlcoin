@@ -5,6 +5,7 @@ let c_IP_JSON_KEY = "ip"
 let c_PORT_JSON_KEY = "port"
 let c_DATA_JSON_KEY = "message_data"
 let c_DEFAULT_COIN_PORT = 8332
+let c_DEFAULT_IP = "10.252.197.92"
 
 let c_USE_LOCAL_NETWORK = ref false
 
@@ -103,6 +104,7 @@ module OcamlcoinNetwork =
         method to_json : Basic.json =
           `Assoc [(c_IP_JSON_KEY, `String ip); (c_PORT_JSON_KEY, `Int port)]
       end
+    let default_node = new ocamlcoin_node c_DEFAULT_IP c_DEFAULT_COIN_PORT
     let json_to_ocamlcoin_node json =
       let open Basic.Util in
       new ocamlcoin_node
