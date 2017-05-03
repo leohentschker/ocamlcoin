@@ -24,4 +24,6 @@ setup.log
 profile.json
 
 # don't store personal files
-files/*
+files/ledger.json
+files/profile.json
+files/unverified.json
