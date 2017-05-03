@@ -6,6 +6,7 @@ open Payments.Transaction
 open Merkletree
 module IO = IOHelpers
 module Y = Yojson
+open Mining
 
 
 let c_MASTERKEY_FILE_NAME = "files/masterkey.json"
@@ -54,7 +55,7 @@ module Bank =
       && ((not (eltlst = [])
            && total_amount < amount
            && amount > 0.
-           && Mining.Miner.verify t#to_string t#solution)
+           && Mining.Miner.verify t#to_string (Miner.Solution t#solution))
           ||
          (id1 = masterpub || id1 = masterpub_test))
 

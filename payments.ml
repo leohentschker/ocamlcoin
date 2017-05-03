@@ -41,6 +41,12 @@ module Transaction =
         method timestamp = timestamp
         method signature = signature
         method solution = solution
+        method equal (t2 : transaction) =
+          (this#amount = t2#amount) &&
+          (this#originator = t2#originator) &&
+          (this#target = t2#target) &&
+          (this#timestamp = t2#timestamp)
+
         method to_string =
           string_of_transaction_data originator target amount timestamp
         method authenticated =
@@ -112,6 +118,7 @@ let unmined_transactions =
     | _ -> failwith "Unexpected transaction json format"
   with Yojson.Json_error _ | Sys_error _ ->
     ref []
+
 let add_unmined_transaction (t : transaction) =
   unmined_transactions := t :: !unmined_transactions
 
@@ -124,3 +131,8 @@ let get_unmined_transaction () =
 let export_unverified () =
   IO.write_json (`List (List.map (fun t -> t#to_json) !unmined_transactions))
                 c_UNVERIFIED_TRANSACTIONS_FILE
+
+let remove_mined_transaction (t : transaction) : unit =
+  Printf.printf "NUMBER UNVERIFIED AT START: %d" (List.length (!unmined_transactions));
+  unmined_transactions := List.filter (fun t2 -> not (t#equal t2)) !unmined_transactions;
+  Printf.printf "NUMBER UNVERIFIED AT END: %d" (List.length (!unmined_transactions));

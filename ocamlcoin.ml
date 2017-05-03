@@ -10,7 +10,7 @@ let c_NODE_JSON_KEY = "node"
 let c_MAX_TRANSACTION_BROADCAST_SIZE = 5
 
 let c_AVERAGE_PING_WAITTIME = 5
-let c_MAX_NODE_TIMEOUT = 1000.
+let c_MAX_NODE_TIMEOUT = 30.
 let random_chance a = a = Random.int (a + 1)
 
 exception InvalidBroadcast of string
@@ -28,8 +28,8 @@ module OcamlcoinRunner =
       let msg_json = `Assoc[(c_DATA_JSON_KEY, (event_to_json event));
                             (c_NODE_JSON_KEY, node#to_json)] in
       try
-        OcamlcoinNetwork.broadcast_to_node msg_json node with
-      Failure(a) ->
+        OcamlcoinNetwork.broadcast_to_node msg_json node;
+      with Failure(a) ->
         Printf.printf "Error broadcasting to node: %s\n" a
     let add_peer new_node =
       if not(List.fold_left (fun a n -> a || new_node#equal n)
@@ -46,7 +46,9 @@ module OcamlcoinRunner =
         (fun (n, t) -> t -. Unix.time () < c_MAX_NODE_TIMEOUT) !peer_tuples;
       if !peer_tuples = [] then raise EmptyNetwork
     let broadcast_event_over_network (e : network_event) =
-      List.iter (broadcast_event e) (get_peers ())
+      Printf.printf "LEN PEERS: %d\n" (List.length (get_peers ()));
+      List.iter (broadcast_event e) (get_peers ());
+      print_endline "Finished broadcast"
     let store_state () =
       User.export_nodes (get_peers ());
       Bank.export_ledger (Bank.book);
@@ -81,10 +83,13 @@ module OcamlcoinRunner =
                 Payments.add_unmined_transaction t
           | SolvedTransaction(t, nonce) ->
               print_endline "SOLVED BLOCK";
-                let _ = print_endline "VERIFIED TRANS" in
-              Bank.add_transaction t Bank.book
+              Bank.add_transaction t Bank.book;
+              let _ = print_endline "VERIFIED TRANS" in
+              Payments.remove_mined_transaction t;
+              print_endline "RMOVED MINED"
           | PingDiscovery ->
               Printf.printf "I GOT PINGED BY %s\n" node#ip;
+              print_string "PINGED";
               add_peer node;
               (match Bank.get_transactions(Bank.book) with
               | _h :: _t as tlist ->
@@ -102,7 +107,7 @@ module OcamlcoinRunner =
               List.iter (fun t -> Bank.add_transaction t Bank.book) tlist);
       ping_peers ();
       let rec network_loop () =
-        Unix.sleep 10;
+        Unix.sleep 5;
         if random_chance c_AVERAGE_PING_WAITTIME then ping_peers ();
         update_stored_nodes ();
         store_state ();

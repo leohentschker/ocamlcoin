@@ -13,6 +13,7 @@ module Transaction : sig
         method authenticated : bool
         method signature : signature
         method solution : int
+        method equal : transaction -> bool
       end
 
     val create_transaction : pub_key -> pub_key -> float -> float ->
@@ -40,3 +41,4 @@ exception NoUnverified
 val add_unmined_transaction : transaction -> unit
 val get_unmined_transaction : unit -> transaction
 val export_unverified : unit -> unit
+val remove_mined_transaction : transaction -> unit

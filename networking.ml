@@ -8,9 +8,10 @@ let c_IP_JSON_KEY = "ip"
 let c_PORT_JSON_KEY = "port"
 let c_DEFAULT_COIN_PORT = 8332
 let c_DEFAULT_IP = "10.252.197.92"
+let c_CONNECTIONS = 10
 
 let c_INCOMING_MESSAGE_SIZE = 16777216
-let c_USE_LOCAL_NETWORK = ref false
+let c_USE_LOCAL_NETWORK = ref true
 
 let is_valid_ip ip_str =
   Str.string_match (Str.regexp "\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)") ip_str 0 ;;
@@ -53,29 +54,29 @@ class coinserver =
     method send_message s inet_addr port =
       if !c_USE_LOCAL_NETWORK then
         let _ = this#handle_message s in
-        true
+        ()
       else try
         let fd, sock_addr = this#initialize_sock inet_addr port in
         Unix.connect fd sock_addr;
         let buf = Bytes.of_string s in
         let _ = Unix.send fd buf 0 (String.length buf) [] in
-        true
+        ()
       with
-        | Unix.Unix_error (_, _, _) -> false
+        | Unix.Unix_error (_, _, _) ->
+            Printf.printf "Failed to send message over network"
     method add_listener f =
       listeners := f :: !listeners
     method run_server () : unit =
       (* bind to a local socket *)
       let fd, sock_addr = this#initialize_sock Unix.inet_addr_any c_DEFAULT_COIN_PORT in
       Unix.bind fd sock_addr;
-      Unix.listen fd 5;
+      Unix.listen fd c_CONNECTIONS;
       let rec server_loop () =
         (* pull new data over the socket *)
         let (client_fd, _) = Unix.accept fd in
         let buf = Bytes.create c_INCOMING_MESSAGE_SIZE in
         let len = Unix.recv client_fd buf 0 (String.length buf) [] in
         let request = String.sub buf 0 len in
-        Printf.printf "SIZE OF REQ: %d" (String.length request);
         this#handle_message request;
         Unix.close client_fd;
         (* wait for the next connection *)
@@ -127,8 +128,7 @@ module OcamlcoinNetwork =
     let broadcast_to_node (json_msg : Yojson.Basic.json)
                            (node : ocamlcoin_node)  =
       try
-        let _ = node#send_message(Yojson.Basic.to_string json_msg) in
-        ()
+        node#send_message(Yojson.Basic.to_string json_msg)
       with Yojson.Json_error _ -> failwith "Invalid JSON format"
     let run () =
       (* run the server on an asynchronous thread *)

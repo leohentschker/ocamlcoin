@@ -5,6 +5,7 @@ open Payments
 val c_DEFAULT_COIN_PORT : int
 val is_valid_ip : string -> bool
 val get_private_ip : unit -> string
+val c_DEFAULT_COIN_PORT : int
 
 module OcamlcoinNetwork :
   sig
@@ -15,7 +16,7 @@ module OcamlcoinNetwork :
       method ip : string
       method port : int
       method pub : pub_key
-      method send_message : string -> bool
+      method send_message : string -> unit
       method to_json : Yojson.Basic.json
       method serialize : string
       method equal : ocamlcoin_node -> bool

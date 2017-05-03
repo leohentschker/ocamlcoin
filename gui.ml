@@ -63,8 +63,8 @@ class gui =
       with Failure float_of_string ->
         payment_total_edit#set_text c_INVALID_AMOUNT_TEXT
     method mining_solution_listener (t : transaction) (n : Miner.nonce) =
-      OcamlcoinRunner.broadcast_event_over_network (SolvedTransaction(t, n));
-      mining_button#set_label "You solved a block! Mine again?"
+      mining_button#set_label "You solved a block! Mine again?";
+      OcamlcoinRunner.broadcast_event_over_network (SolvedTransaction(t, n))
     method initialize () =
       (* Kill the program when we close the window *)
       let _ = window#connect#destroy ~callback:Main.quit in
