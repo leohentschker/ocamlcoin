@@ -6,6 +6,7 @@ module Miner :
     val add_solution_listener : (transaction -> nonce -> unit) -> unit
     val currently_mining : unit -> bool
     val stop_mining : unit -> unit
+    val leading_zeros : int ref
     val nonce_to_string : nonce -> string
     val string_to_nonce : string -> nonce
     val hash_text : string -> string

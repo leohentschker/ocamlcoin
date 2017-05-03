@@ -14,13 +14,17 @@ let c_INCOMING_MESSAGE_SIZE = 16777216
 let c_USE_LOCAL_NETWORK = ref true
 
 let is_valid_ip ip_str =
-  Str.string_match (Str.regexp "\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)") ip_str 0 ;;
+  Str.string_match (Str.regexp "\\([0-9]+\\)\\.\\([0-9]+\\)
+                    \\.\\([0-9]+\\)\\.\\([0-9]+\\)") ip_str 0 ;;
 
 (* attempt to determine a private ip *)
 let rec get_private_ip () =
   (* uses regex to check if the ip we entered was valid *)
-  let mac_output = IO.syscall "ifconfig en0 | grep 'inet ' | awk '{print $2}'" in
-  let ubuntu_output = IO.syscall "ifconfig -a | grep 'inet addr' | awk {'print $2'} | sed -e 's/^addr://' | sed -n 2p" in
+  let mac_output =
+    IO.syscall "ifconfig en0 | grep 'inet ' | awk '{print $2}'" in
+  let ubuntu_output =
+    IO.syscall "ifconfig -a | grep 'inet addr' | awk {'print $2'}
+                | sed -e 's/^addr://' | sed -n 2p" in
   if is_valid_ip mac_output then
     mac_output
   else if is_valid_ip ubuntu_output then
@@ -31,7 +35,7 @@ let rec get_private_ip () =
     if is_valid_ip manually_entered_ip then
       manually_entered_ip
     else
-      let _ = Printf.printf "Invalid IP: %s" manually_entered_ip in
+      let _ = Printf.printf "Invalid IP: %s \n" manually_entered_ip in
       get_private_ip ()
 
 (* exposes two-way port communication over the network *)
@@ -68,7 +72,8 @@ class coinserver =
       listeners := f :: !listeners
     method run_server () : unit =
       (* bind to a local socket *)
-      let fd, sock_addr = this#initialize_sock Unix.inet_addr_any c_DEFAULT_COIN_PORT in
+      let fd, sock_addr =
+        this#initialize_sock Unix.inet_addr_any c_DEFAULT_COIN_PORT in
       Unix.bind fd sock_addr;
       Unix.listen fd c_CONNECTIONS;
       let rec server_loop () =

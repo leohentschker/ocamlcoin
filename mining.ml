@@ -23,7 +23,7 @@ module Miner =
     let currently_mining () = !is_mining
 
     (* control how long it takes to mine by increasing leading_zeros *)
-    let leading_zeros = 2
+    let leading_zeros = ref 2
 
     (* Takes a string and extracts the SHA256 hash of that string*)
     let hash_text = Crypto.SHA256.hash_text
@@ -31,6 +31,7 @@ module Miner =
     (* Checks whether or not the hash of str with nonce on the back
        has *size* or more zeroes on the front *)
     let verify (str : string) (n : nonce) : bool =
+<<<<<<< HEAD
       match n with
       | Solution i ->
           let combo = str ^ (string_of_int i) in
@@ -38,6 +39,12 @@ module Miner =
           let first_chars = String.sub hashed 0 leading_zeros in
           first_chars = String.make leading_zeros '0'
       | Nosolution -> false
+=======
+      let combo = str ^ (string_of_int n) in
+      let hashed = hash_text combo in
+      let first_chars = String.sub hashed 0 !leading_zeros in
+      first_chars = String.make !leading_zeros '0'
+>>>>>>> master
 
     (* Implementation of the mining algorithm for proof-of-work *)
     let mine (t : transaction) (iters: int) : nonce =
@@ -55,21 +62,31 @@ module Miner =
           Solution n
         else iterate_check (n - 1) in
       iterate_check iters
+
     let mine_async () =
       let t = Payments.get_unmined_transaction () in
       let _ = Thread.create (fun () -> mine t max_int) () in
       ()
+
     let generate_fake_nonce () =
       string_to_nonce (TestHelpers.random_string ())
+
     let basic_test () =
       let word = "hello" in
       let bad = generate_fake_nonce () in
       assert (not (verify word bad))
-    let test_mining () = 
+
+    let test_mining () =
       let t = generate_fake_transaction () in
+<<<<<<< HEAD
       match mine t 500000 with
       | Solution i -> 
           assert (String.sub (hash_text(t#to_string ^ (string_of_int i)))
                     0 leading_zeros = String.make leading_zeros '0') 
       | Nosolution -> failwith "Unable to find solution"
+=======
+      let nonce = string_of_int (mine t 500000) in
+      assert (String.sub (hash_text(t#to_string ^ nonce)) 0 !leading_zeros =
+        String.make !leading_zeros '0')
+>>>>>>> master
   end
