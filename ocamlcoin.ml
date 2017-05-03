@@ -19,9 +19,10 @@ module OcamlcoinRunner =
     let broadcast_event event node =
       try OcamlcoinNetwork.broadcast_to_node (event_to_json event) node with
       Failure(a) -> Printf.printf "Error broadcasting to node: %s" a
-    let add_peer n =
-      if not(List.memq n (get_peers ())) then
-        peer_tuples := (n, Unix.time ()) :: !peer_tuples
+    let add_peer new_node =
+      if not(List.fold_left (fun a n -> a || new_node#equal n)
+                            false (get_peers ())) then
+        peer_tuples := (new_node, Unix.time ()) :: !peer_tuples
     (* ping a list of nodes *)
     let ping_peers () =
       List.iter (broadcast_event PingDiscovery) (get_peers ())
@@ -47,7 +48,7 @@ module OcamlcoinRunner =
               print_endline "SOLVED BLOCK";
               List.iter (fun t -> Bank.add_transaction t Bank.ledger) block#transactions
           | PingDiscovery ->
-              print_endline ("PING DISCOVERY from ip: " ^ node#ip ^ "asd");
+              print_endline ("PING DISCOVERY from ip: " ^ node#ip);
               broadcast_event (BroadcastNodes(get_peers ())) node;
               add_peer node;
           | BroadcastNodes(nlist) ->

@@ -97,6 +97,7 @@ module OcamlcoinNetwork =
         val port = port_number
         method ip = ip
         method port = port
+        method equal (n2 : ocamlcoin_node) = (ip = n2#ip) && (port = n2#port)
         method serialize = this#ip ^ "," ^ (string_of_int this#port)
         method send_message s =
           server#send_message s (Unix.inet_addr_of_string ip) port
