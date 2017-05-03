@@ -37,7 +37,7 @@ class gui =
     (* variabeles for mining *)
     val mutable mining_button = GButton.button ()
     val mutable payment_button = GButton.button ()
-    method set_balance () =
+    method set_balance =
       let balance = Bank.get_balance (User.public_key) (Unix.time ()) (Bank.book) in
       balance_label#set_text ("Current balance: " ^ (string_of_float balance))
     (* User toggled the mining button *)
@@ -70,10 +70,11 @@ class gui =
         payment_total_edit#set_text c_INVALID_AMOUNT_TEXT
     method mining_solution_listener (t : transaction) (n : Miner.nonce) =
       mining_button#set_label "You solved a block! Mine again?";
-      let open Crypto.Keychain in
       OcamlcoinRunner.broadcast_event_over_network
         (SolvedTransaction(t, n, User.public_key,
            Signature.sign User.private_key t#to_string))
+    method update_ui () =
+      this#set_balance
     method initialize () =
       (* Kill the program when we close the window *)
       let _ = window#connect#destroy ~callback:Main.quit in
@@ -88,7 +89,7 @@ class gui =
       (* set the balance *)
       balance_label <- GMisc.label ~text:""
                                    ~ypad:c_YPAD ~packing:vbox#pack ();
-      this#set_balance ();
+      this#set_balance;
       balance_label#misc#modify_font_by_name c_HEADER_FONT;
       (* payment UI elements *)
       let payment_vbox = GPack.vbox ~packing:vbox#pack ~border_width:20 () in
@@ -115,6 +116,7 @@ class gui =
       (* Run the ocamlcoin code *)
       let _ = Thread.create OcamlcoinRunner.run () in
       Miner.add_solution_listener this#mining_solution_listener;
+      OcamlcoinRunner.attach_broadcast_listener (fun _ _ -> this#update_ui());
       Main.main ()
   end
 
