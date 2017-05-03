@@ -62,4 +62,5 @@ module Miner =
       assert (String.sub (hash_text(t#to_string ^ nonce)) 0 leading_zeros =
         String.make leading_zeros '0');
       print_endline "Test Passed!"
+    end
 (* let _ = Miner.test_mining () *)
