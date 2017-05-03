@@ -183,15 +183,15 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       | Leaf (s, _) | Tree (s, _, _, _, _) -> if hash = s then (children t) else []
 
     let test_add_element () =
-      let l1, l2 = TestHelpers.generate_list S.gen,
-                   TestHelpers.generate_list S.gen in
+      let l1, l2 = TestHelpers.generate_list S.gen (Random.int 20),
+                   TestHelpers.generate_list S.gen (Random.int 20) in
       let t1 = List.fold_left (fun t e -> add_element e t) (build_tree l1) l2 in
       let t2 = build_tree (l1 @ l2) in
       assert (root_hash t1 = root_hash t2)
 
     let test_combine_trees_and_children () =
       let l1, l2 = TestHelpers.generate_list S.gen 4,
-                   TestHelpers.generate_list S.gen 3 in 
+                   TestHelpers.generate_list S.gen 3 in
       let lcomb = l1 @ l2 in
       let t1 = build_tree l1 in
       let t2 = build_tree l2 in
@@ -201,10 +201,6 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       assert (children tbig = children tcomb)
 
     let test_queryid () =
-      let e1 = S.gen () in
-      let e2 = S.gen () in
-      let e3 = S.gen () in
-      let e4 = S.gen () in
       assert (1 = 1)
 
     let run_tests () =
