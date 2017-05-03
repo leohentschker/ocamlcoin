@@ -32,7 +32,7 @@ let test_query () =
 let test_verify_transaction () =
   let ledger = empty in
   let valid_list = generate_transaction_list () in
-  let invalid_list = generatetransaction_list () in
+  let invalid_list = generate_transaction_list () in
   let invalid_transaction = bad_amount_transaction () in
   List.iter (fun t -> add_transaction t ledger) valid_list;
   add_transaction invalid_transaction ledger;
