@@ -32,7 +32,7 @@ module User =
       | `List jsonlist -> List.map json_to_ocamlcoin_node jsonlist
       | _ -> failwith "Unexpected json format for stored nodes" in
       match stored with
-      | _h :: _t -> Printf.printf "len %d" (List.length stored); print_endline "MATCHING SOMETHING"; stored
+      | _h :: _t -> stored
       | [] -> print_endline "NOT MATCHING ANYRHING"; [default_node]
     let export_nodes (nlist : ocamlcoin_node list) =
       IO.write_json (make_profile_json private_key public_key nlist)
