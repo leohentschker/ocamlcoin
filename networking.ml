@@ -8,7 +8,7 @@ let c_IP_JSON_KEY = "ip"
 let c_PORT_JSON_KEY = "port"
 let c_DEFAULT_COIN_PORT = 8332
 let c_DEFAULT_IP = "10.252.197.92"
-let c_CONNECTIONS = 15
+let c_CONNECTIONS = 5
 
 let c_INCOMING_MESSAGE_SIZE = 16777216
 let c_USE_LOCAL_NETWORK = ref false
@@ -53,7 +53,9 @@ class coinserver =
       fd, sock_addr
     (* handle an incoming message over the network *)
     method handle_message s =
-      List.iter (fun a -> a s) !listeners
+      let _ = Thread.create
+        (fun () -> List.iter (fun a -> a s) !listeners) () in
+      ()
     (* sends the message over the internet address *)
     method send_message s inet_addr port =
       if !c_USE_LOCAL_NETWORK then

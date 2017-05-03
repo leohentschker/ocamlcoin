@@ -66,25 +66,21 @@ module OcamlcoinRunner =
             let json = Yojson.Basic.from_string s in
             f (json |> member c_DATA_JSON_KEY)
               (json |> member c_NODE_JSON_KEY |> json_to_ocamlcoin_node)
-          with Yojson.Json_error _ -> raise (InvalidBroadcast s))
+          with Yojson.Json_error _ ->
+            Printf.printf "Received invalid broadcast: %s\n" s)
     (* run everything! *)
     let run () =
       OcamlcoinNetwork.run ();
       attach_broadcast_listener
         (fun json node ->
-          print_endline "ASDASDS";
           match json_to_event json with
           | NewTransaction t ->
-              print_endline "NEW TRANS";
               if Bank.verify_transaction t Bank.book then
                 Payments.add_unmined_transaction t
           | SolvedTransaction(t, nonce) ->
-              print_endline "SOLVED BLOCK";
               Bank.add_transaction t Bank.book;
               Payments.remove_mined_transaction t;
           | PingDiscovery ->
-              Printf.printf "I GOT PINGED BY %s\n" node#ip;
-              print_string "PINGED";
               add_peer node;
               (match Bank.get_transactions(Bank.book) with
               | _h :: _t as tlist ->
@@ -109,3 +105,5 @@ module OcamlcoinRunner =
         network_loop () in
       network_loop ()
   end
+
+let _ = OcamlcoinRunner.run ()
