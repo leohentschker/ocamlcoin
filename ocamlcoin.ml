@@ -12,7 +12,7 @@ open Mining.Miner
 let c_DATA_JSON_KEY = "message_data"
 let c_NODE_JSON_KEY = "node"
 let c_MAX_TRANSACTION_BROADCAST_SIZE = 5
-let c_MAX_PEER_BROADCAST_SIZE = 3
+let c_MAX_PEER_BROADCAST_SIZE = 1
 
 let c_AVERAGE_PING_WAITTIME = 5
 let c_MAX_NODE_TIMEOUT = 30.
