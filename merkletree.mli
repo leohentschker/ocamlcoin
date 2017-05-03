@@ -1,4 +1,9 @@
+open Sexplib
+open IOHelpers
 open Crypto
+open Crypto.Keychain
+open Payments.Transaction
+
 type ordering
 
 module type SERIALIZE =
@@ -14,7 +19,10 @@ module type SERIALIZE =
     val min : time -> time -> time
   end
 
-module TransactionSerializable : SERIALIZE
+module TransactionSerializable : (SERIALIZE with type amount = float
+                                             and type time = float
+                                             and type t = transaction
+                                             and type id = pub_key)
 
 module type MERKLETREE =
   sig
@@ -38,4 +46,7 @@ module type MERKLETREE =
     val run_tests : unit -> unit
   end
 
-module  MakeMerkle (S : SERIALIZE) (H : HASH) : MERKLETREE
+module  MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S.t
+                                                            and type id = S.id
+                                                            and type amount = S.amount
+                                                            and type time = S.time)

@@ -212,18 +212,17 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       assert (root_hash tbig = root_hash tcomb);
       assert (children tbig = children tcomb)
 
-    let test_queryid () = 
-      let e1 = S.gen () in 
+    let test_queryid () =
+      let e1 = S.gen () in
       let e2 = S.gen () in
       let e3 = S.gen () in
       let e4 = S.gen () in
       assert (1 = 1)
 
     let run_tests () =
-      test1 () ;
-      test_combine_trees () ;
-      print_endline "All tests passed" ;
-      ()
+      test_add_element ();
+      test_combine_trees_and_children ();
+      test_queryid ()
   end
 
 module FakeMerkle = MakeMerkle (TransactionSerializable) (SHA256) ;;
