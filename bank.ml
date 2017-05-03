@@ -106,12 +106,16 @@ module Bank =
       let bad_transaction1 = create_transaction pub1 pub2 100. 250. priv1 in
       let bad_transaction2 = create_transaction pub2 pub1 300. 300. priv2 in
       let bad_transaction3 = create_transaction pub2 pub1 100. ~-.(250.) priv2 in
-      let bad_transaction4 = create_transaction pub2 pub1 ~-(100.) 250. pri21 in
+      let bad_transaction4 = create_transaction pub2 pub1 ~-(100.) 250. priv1 in
       let valid_list = generate_transaction_list () in
       let invalid_transaction = bad_amount_transaction () in
       List.iter (fun t -> add_transaction t ledger) valid_list;
       add_transaction invalid_transaction ledger;
-      List.iter (fun t -> assert (verify_transaction t ledger)) valid_list
+      List.iter (fun t -> assert (verify_transaction t ledger)) valid_list;
+      assert (not (verify_transaction bad_transaction1 ledger));
+      assert (not (verify_transaction bad_transaction2 ledger));
+      assert (not (verify_transaction bad_transaction3 ledger));
+      assert (not (verify_transaction bad_transaction4 ledger))
 
     let test_verify_ledger () =
       let good_ledger = ref empty in
@@ -136,5 +140,5 @@ module Bank =
       TestHelpers.run_tests test_query;
       print_endline "All tests passed!"
   end
-  
+
 let _ = Bank.run_tests ()
