@@ -119,9 +119,6 @@ let unmined_transactions =
   with Yojson.Json_error _ | Sys_error _ ->
     ref []
 
-let add_unmined_transaction (t : transaction) =
-  unmined_transactions := t :: !unmined_transactions
-
 exception NoUnverified
 let get_unmined_transaction () =
   match !unmined_transactions with
@@ -131,6 +128,10 @@ let get_unmined_transaction () =
 let export_unverified () =
   IO.write_json (`List (List.map (fun t -> t#to_json) !unmined_transactions))
                 c_UNVERIFIED_TRANSACTIONS_FILE
+
+let add_unmined_transaction (t : transaction) =
+  unmined_transactions := t :: !unmined_transactions;
+  export_unverified ()
 
 let remove_mined_transaction (t : transaction) : unit =
   unmined_transactions := List.filter (fun t2 -> not (t#equal t2)) !unmined_transactions;

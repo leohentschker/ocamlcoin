@@ -76,7 +76,8 @@ module Bank =
 
     let add_transaction (t : transaction) (l : ledger) : unit =
       if verify_transaction t l then
-        l := (MT.add_element t !l)
+        let _ = l := (MT.add_element t !l) in
+        export_ledger book
       else ()
 
     let verify_ledger (t : ledger) : bool =

@@ -15,6 +15,8 @@ let c_YPAD = 20 ;;
 let c_TITLE_FONT = "Verdana 20" ;;
 let c_HEADER_FONT = "Verdana 15" ;;
 let c_MINING_TEXT = "Mine OCamlcoins" ;;
+let c_PAYMENT_TOTAL_TEXT = "Number of OCamlcoins"
+let c_PAYMENT_TARGET_TEXT = "IP of person to pay"
 let c_INVALID_AMOUNT_TEXT = "Invalid payment amount" ;;
 let c_INVALID_IP_TEXT = "Cannot find IP. Try again?" ;;
 let c_NO_BLOCKS_MINING_TEXT = "No blocks to mine. Try again?" ;;
@@ -56,8 +58,9 @@ class gui =
             (NewTransaction(create_transaction User.public_key
                               target#pub amount (Unix.time ())
                               User.private_key));
-          payment_button#set_label c_SUCCESSFUL_TRANSACTION_TEXT
-          
+          payment_button#set_label c_SUCCESSFUL_TRANSACTION_TEXT;
+          payment_target_edit#set_text c_PAYMENT_TARGET_TEXT;
+          payment_total_edit#set_text c_PAYMENT_TOTAL_TEXT
         with NodeNotFound ->
           payment_target_edit#set_text c_INVALID_IP_TEXT
       with Failure float_of_string ->
@@ -85,9 +88,9 @@ class gui =
       let payment_label = GMisc.label ~text:"Make Payment" ~ypad:c_YPAD
                                       ~packing:payment_vbox#pack () in
       payment_label#misc#modify_font_by_name c_HEADER_FONT;
-      payment_total_edit <- GEdit.entry ~text:"Number of OCamlcoins"
+      payment_total_edit <- GEdit.entry ~text:c_PAYMENT_TOTAL_TEXT
                                            ~packing:payment_vbox#pack ();
-      payment_target_edit <- GEdit.entry ~text:"IP of person to pay"
+      payment_target_edit <- GEdit.entry ~text:c_PAYMENT_TARGET_TEXT
                                          ~packing:payment_vbox#pack ();
       payment_button <- GButton.button ~label:"Make Payment"
                                           ~packing:payment_vbox#pack ();
