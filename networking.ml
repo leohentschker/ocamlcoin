@@ -69,7 +69,7 @@ class coinserver =
         | Unix.Unix_error (_, _, _) ->
             Printf.printf "Failed to send message over network"
     method add_listener f =
-      listeners := f :: !listeners
+      listeners := !listeners @ [f]
     method run_server () : unit =
       (* bind to a local socket *)
       let fd, sock_addr =

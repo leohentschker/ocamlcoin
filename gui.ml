@@ -60,14 +60,11 @@ class gui =
           let transaction = create_transaction User.public_key
                               target#pub amount (Unix.time ())
                               User.private_key in
-          if Ledger.Bank.verify_transaction transaction Ledger.Bank.book then
-            let _ = OcamlcoinRunner.broadcast_event_over_network
-              (NewTransaction(transaction)) in
-            let _ = payment_button#set_label c_SUCCESSFUL_TRANSACTION_TEXT in
-            let _ = payment_target_edit#set_text c_PAYMENT_TARGET_TEXT in
-            payment_total_edit#set_text c_PAYMENT_TOTAL_TEXT
-          else
-            payment_button#set_label "Invalid transaction"
+           let _ = OcamlcoinRunner.broadcast_event_over_network
+             (NewTransaction(transaction)) in
+           let _ = payment_button#set_label c_SUCCESSFUL_TRANSACTION_TEXT in
+           let _ = payment_target_edit#set_text c_PAYMENT_TARGET_TEXT in
+           payment_total_edit#set_text c_PAYMENT_TOTAL_TEXT
         with NodeNotFound ->
           payment_target_edit#set_text c_INVALID_IP_TEXT
       with Failure float_of_string ->
