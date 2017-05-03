@@ -7,7 +7,7 @@ open Crypto.Signature
 type network_event =
   | PingDiscovery
   | NewTransaction of transaction
-  | SolvedTransaction of (transaction * nonce * pub_key * auth_sig)
+  | SolvedTransaction of (transaction * nonce * pub_key * signature)
   | BroadcastNodes of (OcamlcoinNetwork.ocamlcoin_node list)
   | BroadcastTransactions of (transaction list)
 

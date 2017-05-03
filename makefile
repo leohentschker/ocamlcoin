@@ -1,4 +1,4 @@
-all: io_helpers networking crypto merkle ocamlcoin events tests mining payments gui mining_tests ledger
+all: io_helpers networking crypto merkle ocamlcoin events tests mining payments gui mining_tests ledger merkletree
 
 tests: payments_tests events_tests networking_tests crypto_tests ledger_tests merkle_tests
 

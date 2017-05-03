@@ -217,7 +217,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) :
       match t with
       | Empty -> []
       | Leaf (_, e) ->
-          let (id1, id2, _, _) = get e in
+          let (id1, id2, _, _, _) = get e in
           if id = id1 || id = id2 then [e] else []
       | Tree (_, lst, _, l, r) ->
           if List.mem id lst then (queryid id l) @ (queryid id r)
