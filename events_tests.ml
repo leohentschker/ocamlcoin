@@ -15,7 +15,7 @@ let test_ping_discovery () =
 let test_new_transaction_serialization () =
   let t = generate_fake_transaction () in
   match json_to_event (event_to_json (NewTransaction t)) with
-  | NewTransaction serialized_t -> assert(transactions_equal t serialized_t)
+  | NewTransaction serialized_t -> assert(t#equal serialized_t)
   | _ -> failwith "Returning the incorrect event type"
 
 let test_solved_block_serialization () =
@@ -23,7 +23,7 @@ let test_solved_block_serialization () =
   let fake_nonce = generate_fake_nonce () in
   match json_to_event (event_to_json (SolvedTransaction (t, fake_nonce))) with
   | SolvedTransaction (t_serialized, serialized_nonce) ->
-      assert(transactions_equal t t_serialized);
+      assert(t#equal t_serialized);
       assert(fake_nonce = serialized_nonce)
   | _ -> failwith "Returning the incorrect event type"
 

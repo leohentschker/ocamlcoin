@@ -31,20 +31,13 @@ module Miner =
     (* Checks whether or not the hash of str with nonce on the back
        has *size* or more zeroes on the front *)
     let verify (str : string) (n : nonce) : bool =
-<<<<<<< HEAD
       match n with
       | Solution i ->
           let combo = str ^ (string_of_int i) in
           let hashed = hash_text combo in
-          let first_chars = String.sub hashed 0 leading_zeros in
-          first_chars = String.make leading_zeros '0'
+          let first_chars = String.sub hashed 0 !leading_zeros in
+          first_chars = String.make !leading_zeros '0'
       | Nosolution -> false
-=======
-      let combo = str ^ (string_of_int n) in
-      let hashed = hash_text combo in
-      let first_chars = String.sub hashed 0 !leading_zeros in
-      first_chars = String.make !leading_zeros '0'
->>>>>>> master
 
     (* Implementation of the mining algorithm for proof-of-work *)
     let mine (t : transaction) (iters: int) : nonce =
@@ -78,15 +71,9 @@ module Miner =
 
     let test_mining () =
       let t = generate_fake_transaction () in
-<<<<<<< HEAD
       match mine t 500000 with
       | Solution i -> 
           assert (String.sub (hash_text(t#to_string ^ (string_of_int i)))
-                    0 leading_zeros = String.make leading_zeros '0') 
+                    0 !leading_zeros = String.make !leading_zeros '0') 
       | Nosolution -> failwith "Unable to find solution"
-=======
-      let nonce = string_of_int (mine t 500000) in
-      assert (String.sub (hash_text(t#to_string ^ nonce)) 0 !leading_zeros =
-        String.make !leading_zeros '0')
->>>>>>> master
   end

@@ -14,8 +14,8 @@ let c_INCOMING_MESSAGE_SIZE = 16777216
 let c_USE_LOCAL_NETWORK = ref true
 
 let is_valid_ip ip_str =
-  Str.string_match (Str.regexp "\\([0-9]+\\)\\.\\([0-9]+\\)
-                    \\.\\([0-9]+\\)\\.\\([0-9]+\\)") ip_str 0 ;;
+  Str.string_match (Str.regexp ("\\([0-9]+\\)\\.\\([0-9]+\\)" ^
+                    "\\.\\([0-9]+\\)\\.\\([0-9]+\\)")) ip_str 0 ;;
 
 (* attempt to determine a private ip *)
 let rec get_private_ip () =
@@ -23,8 +23,8 @@ let rec get_private_ip () =
   let mac_output =
     IO.syscall "ifconfig en0 | grep 'inet ' | awk '{print $2}'" in
   let ubuntu_output =
-    IO.syscall "ifconfig -a | grep 'inet addr' | awk {'print $2'}
-                | sed -e 's/^addr://' | sed -n 2p" in
+    IO.syscall ("ifconfig -a | grep 'inet addr' | awk {'print $2'}" ^
+                "| sed -e 's/^addr://' | sed -n 2p") in
   if is_valid_ip mac_output then
     mac_output
   else if is_valid_ip ubuntu_output then

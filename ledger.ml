@@ -70,15 +70,9 @@ module Bank =
       && ((not (eltlst = [])
            && total_amount >= amount
            && amount > 0.
-<<<<<<< HEAD
-           && Mining.Miner.verify t#to_string (Miner.Solution t#solution))
-          ||
-         (id1 = masterpub || id1 = masterpub_test))
-=======
            && timestamp > 0.
-           && Mining.Miner.verify t#to_string t#solution)
+           && Mining.Miner.verify t#to_string (Miner.Solution t#solution))
           || (id1 = masterpub || id1 = masterpub_test))
->>>>>>> master
 
     let add_transaction (t : transaction) (l : ledger) : unit =
       if verify_transaction t l then

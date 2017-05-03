@@ -133,6 +133,5 @@ let export_unverified () =
                 c_UNVERIFIED_TRANSACTIONS_FILE
 
 let remove_mined_transaction (t : transaction) : unit =
-  Printf.printf "NUMBER UNVERIFIED AT START: %d" (List.length (!unmined_transactions));
   unmined_transactions := List.filter (fun t2 -> not (t#equal t2)) !unmined_transactions;
-  Printf.printf "NUMBER UNVERIFIED AT END: %d" (List.length (!unmined_transactions));
+  export_unverified ()

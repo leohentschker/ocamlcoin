@@ -36,9 +36,7 @@ let generate_fake_block () =
 let test_blocks_equal b1 b2 =
   List.iter
     (fun t1 ->
-      assert(List.fold_left (fun a t2 -> a || (transactions_equal t1 t2))
-                            false
-                            b1#transactions))
+      assert(List.fold_left (fun a t2 -> a || (t1#equal t2)) false b1#transactions))
     b2#transactions
 
 let test_block_instantiation () =

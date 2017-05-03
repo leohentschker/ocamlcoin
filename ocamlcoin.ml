@@ -37,7 +37,6 @@ module OcamlcoinRunner =
         peer_tuples := (new_node, Unix.time ()) :: !peer_tuples
     (* ping a list of nodes *)
     let ping_peers () =
-      print_endline "PING THE PEERS";
       List.iter (broadcast_event PingDiscovery) (get_peers ())
     (* update our list of stored nodes and store it in a file *)
     let update_stored_nodes () =
@@ -46,9 +45,7 @@ module OcamlcoinRunner =
         (fun (n, t) -> t -. Unix.time () < c_MAX_NODE_TIMEOUT) !peer_tuples;
       if !peer_tuples = [] then raise EmptyNetwork
     let broadcast_event_over_network (e : network_event) =
-      Printf.printf "LEN PEERS: %d\n" (List.length (get_peers ()));
-      List.iter (broadcast_event e) (get_peers ());
-      print_endline "Finished broadcast"
+      List.iter (broadcast_event e) (get_peers ())
     let store_state () =
       User.export_nodes (get_peers ());
       Bank.export_ledger (Bank.book);
@@ -79,14 +76,11 @@ module OcamlcoinRunner =
           | NewTransaction t ->
               print_endline "NEW TRANS";
               if Bank.verify_transaction t Bank.book then
-                let _ = print_endline "VERIFIED TRANS" in
                 Payments.add_unmined_transaction t
           | SolvedTransaction(t, nonce) ->
               print_endline "SOLVED BLOCK";
               Bank.add_transaction t Bank.book;
-              let _ = print_endline "VERIFIED TRANS" in
               Payments.remove_mined_transaction t;
-              print_endline "RMOVED MINED"
           | PingDiscovery ->
               Printf.printf "I GOT PINGED BY %s\n" node#ip;
               print_string "PINGED";
