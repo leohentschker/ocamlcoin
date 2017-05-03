@@ -33,7 +33,7 @@ let rec get_private_ip () =
     if is_valid_ip manually_entered_ip then
       manually_entered_ip
     else
-      let _ = Printf.printf "Invalid IP: %s" manually_entered_ip in
+      let _ = Printf.printf "Invalid IP: %s \n" manually_entered_ip in
       get_private_ip ()
 
 (* exposes two-way port communication over the network *)
