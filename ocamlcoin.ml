@@ -30,7 +30,7 @@ module OcamlcoinRunner =
     (* load the peers we are aware of *)
     let broadcast_event event node =
       let msg_json = `Assoc[(c_DATA_JSON_KEY, (event_to_json event));
-                            (c_NODE_JSON_KEY, node#to_json)] in
+                            (c_NODE_JSON_KEY, User.personal_node#to_json)] in
       try
         OcamlcoinNetwork.broadcast_to_node msg_json node;
       with Failure(a) ->
@@ -112,11 +112,11 @@ module OcamlcoinRunner =
               List.iter add_peer nlist
           | BroadcastTransactions(tlist) ->
               List.iter (fun t -> Bank.add_transaction t Bank.book) tlist);
-      ping_peers ();
+      (* ping_peers (); *)
       let rec network_loop () =
         print_endline "NETWORK LOOP RUNNING";
         Unix.sleep 5;
-        if random_chance c_AVERAGE_PING_WAITTIME then ping_peers ();
+        (* if random_chance c_AVERAGE_PING_WAITTIME then ping_peers (); *)
         update_stored_nodes ();
         store_state ();
         network_loop () in

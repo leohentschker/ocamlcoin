@@ -53,6 +53,8 @@ class coinserver =
       fd, sock_addr
     (* handle an incoming message over the network *)
     method handle_message s =
+      print_endline s;
+      raise End_of_file;
       let _ = Thread.create
         (fun () -> List.iter (fun a -> a s) !listeners) () in
       ()

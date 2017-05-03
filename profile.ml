@@ -28,9 +28,9 @@ module User =
       string_to_pub (profile_json |> member c_PUB_JSON_KEY |> to_string)
     let private_key =
       string_to_priv (profile_json |> member c_PRIV_JSON_KEY |> to_string)
+    let personal_node = new ocamlcoin_node (Networking.get_private_ip ())
+      c_DEFAULT_COIN_PORT public_key
     let stored_nodes =
-      let personal_node = new ocamlcoin_node (Networking.get_private_ip ())
-        c_DEFAULT_COIN_PORT public_key in
       let stored = match profile_json |> member c_STORED_NODES_KEY with
       | `List jsonlist -> List.map json_to_ocamlcoin_node jsonlist
       | _ -> failwith "Unexpected json format for stored nodes" in
