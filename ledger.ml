@@ -65,7 +65,8 @@ module Bank =
       net +. c_REWARD *. (float_of_int (List.length rlst))
 
     let verify_transaction (t : transaction) (l: ledger) : bool =
-      let id1, id2, amount, timestamp = t#originator, t#target, t#amount, t#timestamp in
+      let id1, id2, amount, timestamp =
+        t#originator, t#target, t#amount, t#timestamp in
       let eltlst = MT.queryid id1 !l in
       let total_amount = get_balance id1 timestamp l in
       authenticate_transaction t

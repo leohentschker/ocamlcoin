@@ -72,8 +72,8 @@ module Miner =
     let test_mining () =
       let t = generate_fake_transaction () in
       match mine t 500000 with
-      | Solution i -> 
+      | Solution i ->
           assert (String.sub (hash_text(t#to_string ^ (string_of_int i)))
-                    0 !leading_zeros = String.make !leading_zeros '0') 
+                    0 !leading_zeros = String.make !leading_zeros '0')
       | Nosolution -> failwith "Unable to find solution"
   end
