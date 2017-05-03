@@ -95,7 +95,7 @@ module OcamlcoinRunner =
               | Nosolution ->
                   print_endline "Can't solve without solution")
           | PingDiscovery ->
-              print_endline "PINGED";
+              print_endline ("PINGED" ^ node#ip);
               add_peer node;
               (match Bank.get_transactions(Bank.book) with
               | _h :: _t as tlist ->
@@ -113,6 +113,7 @@ module OcamlcoinRunner =
               List.iter (fun t -> Bank.add_transaction t Bank.book) tlist);
       ping_peers ();
       let rec network_loop () =
+        print_endline "NETWORK LOOP RUNNING";
         Unix.sleep 5;
         if random_chance c_AVERAGE_PING_WAITTIME then ping_peers ();
         update_stored_nodes ();
