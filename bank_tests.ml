@@ -9,7 +9,7 @@ open TestHelpers ;;
 open Networking ;;
 open Networking.OcamlcoinNetwork ;;
 
-let generate_transaction () =
+let generate_valid_transaction () =
   let priv, orig  = generate_keypair () in
   let _, target = generate_keypair () in
   let amount = Random.float 1000000.
@@ -18,7 +18,8 @@ let generate_transaction () =
   in create_transaction orig target amount timestamp priv solution
 
 let test_verify_transaction () =
-  new ocamlcoin_node (generate_valid_ip ()) (800 + Random.int 100)
+  let transaction = generate_transaction () in
+  assert (verify_transaction transaction ledger) 
 
 let test_add_transaction () =
   assert(is_valid_ip "10.255.255.255");

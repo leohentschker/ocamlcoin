@@ -64,7 +64,6 @@ module type MERKLETREE =
     val empty : mtree
     val root_hash: mtree -> string
     val combine_trees : mtree -> mtree -> mtree
-    val tree_helper : element list -> mtree
     val build_tree : element list -> mtree
     val children : mtree -> element list
     val add_element : element -> mtree -> mtree
@@ -125,20 +124,20 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
       | Empty, _ -> t2
       | _, Empty -> t1
 
-    let rec build_tree (datalist : element list) : mtree=
+    let rec build_tree (datalist : element list) : mtree =
+      let log2 (n : int) : int =
+        truncate (log (float n) /. (log 2.)) in
+      let rec exp2 (n : int) : int =
+        match n with
+        | 0 -> 1
+        | _ -> 2 * exp2 (n - 1) in
+      let half_list (lst : 'a list) : 'a list * 'a list =
+        let len = List.length lst in
+        (sublist lst 0 (len / 2 - 1), sublist lst (len / 2) (len - 1)) in
+      let rec split_list (lst : 'a list) : 'a list * 'a list =
+        let len = List.length lst in
+        (sublist lst 0 (exp2 (log2 len) - 1), sublist lst (exp2 (log2 len)) (len - 1)) in
       let rec tree_helper (lst : element list) : mtree =
-        let log2 (n : int) : int =
-          truncate (log (float n) /. (log 2.)) in
-        let rec exp2 (n : int) : int =
-          match n with
-          | 0 -> 1
-          | _ -> 2 * exp2 (n - 1) in
-        let half_list (lst : 'a list) : 'a list * 'a list =
-          let len = List.length lst in
-          (sublist lst 0 (len / 2 - 1), sublist lst (len / 2) (len - 1)) in
-        let rec split_list (lst : 'a list) : 'a list * 'a list =
-          let len = List.length lst in
-          (sublist lst 0 (exp2 (log2 len) - 1), sublist lst (exp2 (log2 len)) (len - 1)) in
         let (l, r) = half_list lst in
         match List.length lst with
         | 0 -> Empty
