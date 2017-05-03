@@ -52,10 +52,10 @@ module Bank =
     let query (p : pub_key) (m : ledger) : transaction list =
       (MT.queryid p !m) @ (MT.queryhash (pub_to_string p) !m)
 
-    let get_balance (p : pub_key) (t : timestamp) (l : ledger) : float =
+    let get_balance (p : pub_key) (t : float) (l : ledger) : float =
       let eltlst = MT.queryid p !l in
       let timedlst = List.filter (fun x -> x#timestamp < t) eltlst in
-      List.fold_left (fun acc x -> if x#originator = id then acc -. x#amount
+      List.fold_left (fun acc x -> if x#originator = p then acc -. x#amount
                                    else acc +. x#amount) 0. timedlst
 
     let verify_transaction (t : transaction) (l: ledger) : bool =
