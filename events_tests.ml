@@ -18,11 +18,11 @@ let test_new_transaction_serialization () =
   | _ -> failwith "Returning the incorrect event type"
 
 let test_solved_block_serialization () =
-  let b = generate_fake_block () in
+  let t = generate_fake_transaction () in
   let fake_nonce = generate_fake_nonce () in
-  match json_to_event (event_to_json (SolvedBlock (b, fake_nonce))) with
-  | SolvedBlock (b_serialized, serialized_nonce) ->
-      test_blocks_equal b b_serialized;
+  match json_to_event (event_to_json (SolvedTransaction (t, fake_nonce))) with
+  | SolvedTransaction (t_serialized, serialized_nonce) ->
+      transactions_equal t t_serialized;
       assert(fake_nonce = serialized_nonce)
   | _ -> failwith "Returning the incorrect event type"
 

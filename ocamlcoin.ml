@@ -44,9 +44,9 @@ module OcamlcoinRunner =
               print_endline "NEW TRANS";
               if Bank.verify_transaction t Bank.ledger then
                 Payments.add_unmined_transaction t
-          | SolvedBlock(block, nonce) ->
+          | SolvedTransaction(t, nonce) ->
               print_endline "SOLVED BLOCK";
-              List.iter (fun t -> Bank.add_transaction t Bank.ledger) block#transactions
+              Bank.add_transaction t Bank.ledger
           | PingDiscovery ->
               print_endline ("PING DISCOVERY from ip: " ^ node#ip);
               broadcast_event (BroadcastNodes(get_peers ())) node;
