@@ -30,8 +30,11 @@ module OcamlcoinRunner =
     let get_peers = fun () -> List.map fst !peer_tuples
     (* load the peers we are aware of *)
     let broadcast_event event node =
+      print_endline "\n\n\n\n";
       let msg_json = `Assoc[(c_DATA_JSON_KEY, (event_to_json event));
                             (c_NODE_JSON_KEY, User.personal_node#to_json)] in
+      print_endline (Yojson.Basic.to_string msg_json);
+      print_endline "\n\n";
       try
         OcamlcoinNetwork.broadcast_to_node msg_json node;
       with Failure(a) ->
@@ -113,8 +116,10 @@ module OcamlcoinRunner =
                       (IO.chunk_list c_MAX_PEER_BROADCAST_SIZE nlist)
                 | [] -> ())
           | BroadcastNodes(nlist) ->
+              print_endline "Received new nodes";
               List.iter add_peer nlist
           | BroadcastTransactions(tlist) ->
+              print_endline "Received new transactions";
               List.iter (fun t -> Bank.add_transaction t Bank.book) tlist);
       ping_peers ();
       let rec network_loop () =

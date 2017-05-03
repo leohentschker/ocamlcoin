@@ -41,8 +41,10 @@ let event_to_json (e : network_event) : Y.Basic.json =
                  (c_PUB_KEY, `String (pub_to_string id));
                  (c_SIGNATURE_KEY, signature_to_json s)])
   | BroadcastNodes nlist ->
-      make_event_json c_BROADCAST_NODES_TYPE
-        (`List (List.map (fun n -> n#to_json) nlist))
+      let out = make_event_json c_BROADCAST_NODES_TYPE
+        (`List (List.map (fun n -> n#to_json) nlist)) in
+      print_endline (Yojson.Basic.to_string (out));
+      out
   | BroadcastTransactions (tlist) ->
       make_event_json c_BROADCAST_TRANSACTION_TYPE
         (`List (List.map (fun t -> t#to_json) tlist))
