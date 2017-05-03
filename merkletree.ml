@@ -153,7 +153,7 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
 
     let rec children (t : mtree) : element list =
       match t with
-      | Empty -> failwith "empty"
+      | Empty -> failwith "empty list"
       | Leaf (_, e) -> [e]
       | Tree (_, _, _, t1, t2) -> (children t1) @ (children t2)
 
