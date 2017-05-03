@@ -3,6 +3,8 @@ open Nocrypto
 open TestHelpers
 
 let () = Nocrypto_entropy_unix.initialize ()
+let c_PRIV_JSON_KEY = "private_key"
+let c_PUB_JSON_KEY = "public_key"
 
 module Keychain =
   struct

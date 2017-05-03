@@ -3,11 +3,25 @@ open Crypto
 open Crypto.Keychain
 open Payments.Transaction
 open Merkletree
-open IOHelpers
+module IO = IOHelpers
 open Mining
 open Mining.Miner
 
-let masterkey = snd (generate_keypair ())
+let c_MASTERKEY_FILE_NAME = "masterkeys.json"
+
+let (masterpriv, masterpub) =
+  try
+    let json = Yojson.Basic.from_file c_MASTERKEY_FILE_NAME in
+    let open Yojson.Basic.Util in
+    string_to_priv (json |> member c_PRIV_JSON_KEY |> to_string),
+    string_to_pub (json |> member c_PUB_JSON_KEY |> to_string)
+  with Sys_error _ ->
+    let priv, pub = generate_keypair () in
+    let json = `Assoc[(c_PUB_JSON_KEY, `String(pub_to_string pub));
+                      (c_PRIV_JSON_KEY, `String(priv_to_string priv))] in
+    IO.write_json json c_MASTERKEY_FILE_NAME;
+    priv, pub
+
 module MT = MakeMerkle (TransactionSerializable) (SHA256)
 
 let ledger = ref MT.empty
@@ -19,7 +33,7 @@ let verify_transaction (t : transaction) (l: MT.mtree ref) : bool =
   let total_amount = List.fold_left
     (fun acc x -> if x#originator = id1 then acc -. x#amount
                   else acc +. x#amount) 0. timedlst in
-  not (eltlst = [] || id1 = masterkey) && (total_amount < amount) &&
+  not (eltlst = [] || id1 = masterpub) && (total_amount < amount) &&
        amount > 0. && authenticate_transaction t &&
        Mining.Miner.verify t#to_string t#solution
 
@@ -32,7 +46,7 @@ let verify_tree (t : MT.mtree) =
     if n = 0 then true
     else
       let tlist = MT.children t in
-      let slist = sublist tlist 0 (n - 1) in
+      let slist = IO.sublist tlist 0 (n - 1) in
       let tn = List.nth tlist n in
       verify_transaction tn (ref (MT.build_tree slist)) && (verify t (n - 1)) in
   verify t (List.length (MT.children t) - 1)

@@ -1,25 +1,22 @@
 module IO = IOHelpers
+open Crypto
 open Crypto.Keychain
 open Networking.OcamlcoinNetwork
 module Y = Yojson
 
 let c_PROFILE_FILE_NAME = "profile.json"
-
-let c_PUB_JSON_KEY = "public_key"
-let c_PEER_KEY = "public_key"
-let c_PRIV_JSON_KEY = "private_key"
 let c_STORED_NODES_KEY = "nodes"
 
 module User =
   struct
     open Y.Basic.Util
     let make_profile_json priv pub nodes =
-      `Assoc [(c_PUB_JSON_KEY, `String (pub_to_string pub));
-              (c_STORED_NODES_KEY, `List (List.map (fun n -> n#to_json) nodes));
-              (c_PRIV_JSON_KEY, `String (priv_to_string priv))]
+      `Assoc[(c_PUB_JSON_KEY, `String (pub_to_string pub));
+             (c_STORED_NODES_KEY, `List (List.map (fun n -> n#to_json) nodes));
+             (c_PRIV_JSON_KEY, `String (priv_to_string priv))]
     let profile_json = 
       try Y.Basic.from_file c_PROFILE_FILE_NAME
-      with Sys_error s ->
+      with Sys_error _ ->
         print_endline "Generating a User Profile";
         let priv, pub = generate_keypair () in
         let json = make_profile_json priv pub [] in
