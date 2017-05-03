@@ -12,13 +12,17 @@ let c_DEFAULT_IP = "10.252.197.92"
 let c_USE_LOCAL_NETWORK = ref false
 
 let is_valid_ip ip_str =
-  Str.string_match (Str.regexp "\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)") ip_str 0 ;;
+  Str.string_match (Str.regexp "\\([0-9]+\\)\\.\\([0-9]+\\)
+                    \\.\\([0-9]+\\)\\.\\([0-9]+\\)") ip_str 0 ;;
 
 (* attempt to determine a private ip *)
 let rec get_private_ip () =
   (* uses regex to check if the ip we entered was valid *)
-  let mac_output = IO.syscall "ifconfig en0 | grep 'inet ' | awk '{print $2}'" in
-  let ubuntu_output = IO.syscall "ifconfig -a | grep 'inet addr' | awk {'print $2'} | sed -e 's/^addr://' | sed -n 2p" in
+  let mac_output =
+    IO.syscall "ifconfig en0 | grep 'inet ' | awk '{print $2}'" in
+  let ubuntu_output =
+    IO.syscall "ifconfig -a | grep 'inet addr' | awk {'print $2'}
+                | sed -e 's/^addr://' | sed -n 2p" in
   if is_valid_ip mac_output then
     mac_output
   else if is_valid_ip ubuntu_output then
@@ -65,7 +69,8 @@ class coinserver =
       listeners := f :: !listeners
     method run_server () : unit =
       (* bind to a local socket *)
-      let fd, sock_addr = this#initialize_sock Unix.inet_addr_any c_DEFAULT_COIN_PORT in
+      let fd, sock_addr =
+        this#initialize_sock Unix.inet_addr_any c_DEFAULT_COIN_PORT in
       Unix.bind fd sock_addr;
       Unix.listen fd 5;
       let rec server_loop () =

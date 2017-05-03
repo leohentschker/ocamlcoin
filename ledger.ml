@@ -52,7 +52,8 @@ module Bank =
       (MT.queryid p !m) @ (MT.queryhash (pub_to_string p) !m)
 
     let verify_transaction (t : transaction) (l: ledger) : bool =
-      let id1, id2, amount, timestamp = t#originator, t#target, t#amount, t#timestamp in
+      let id1, id2, amount, timestamp =
+        t#originator, t#target, t#amount, t#timestamp in
       let eltlst = MT.queryid id1 !l in
       let timedlst = List.filter (fun x -> x#timestamp < timestamp) eltlst in
       let total_amount = List.fold_left
@@ -100,7 +101,8 @@ module Bank =
       let transaction_list = generate_transaction_list () in
       add_transaction new_transaction ledger;
       List.iter (fun t -> add_transaction t ledger) transaction_list;
-      List.iter (fun t -> assert (List.mem t (MT.children !ledger))) transaction_list
+      List.iter (fun t -> assert (List.mem t (MT.children !ledger)))
+                transaction_list
 
     let test_query () =
       let ledger = ref empty in
@@ -124,8 +126,10 @@ module Bank =
       let good_transaction2 = create_transaction pub1 pub2 100. 200. priv1 in
       let bad_transaction1 = create_transaction pub1 pub2 150. 250. priv1 in
       let bad_transaction2 = create_transaction pub2 pub1 300. 300. priv2 in
-      let bad_transaction3 = create_transaction pub2 pub1 100. ~-.(250.) priv2 in
-      let bad_transaction4 = create_transaction pub2 pub1 ~-.(100.) 250. priv1 in
+      let bad_transaction3 =
+        create_transaction pub2 pub1 100. ~-.(250.) priv2 in
+      let bad_transaction4 =
+        create_transaction pub2 pub1 ~-.(100.) 250. priv1 in
       let valid_list = generate_transaction_list () in
       Miner.leading_zeros := 0;
       List.iter (fun t -> add_transaction t ledger) valid_list;

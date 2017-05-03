@@ -82,10 +82,11 @@ module type MERKLETREE =
 (* Functor that takes in a serializable and a hash module, which is just a
    module that contains a cryptographic function, and returns a merkle tree
    with appropriate types *)
-module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S.t
-                                                            and type id = S.id
-                                                            and type amount = S.amount
-                                                            and type time = S.time) =
+module MakeMerkle (S : SERIALIZE) (H : HASH) :
+  (MERKLETREE with type element = S.t
+               and type id = S.id
+               and type amount = S.amount
+               and type time = S.time) =
   struct
 
     type element = S.t
@@ -103,10 +104,13 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
 
     let tree_hash (s : string) : string =
       H.hash_text s
-      (* Our merkle tree will, in generate, store at each node a hash of the transactions,
-         A list of the users who were involved in the transactions, and a timestamp*)
+      (* Our merkle tree will, in generate, store at each node a hash of
+         the transactions, a list of the users who were involved in the
+         transactions, and a timestamp *)
     type mtree =
-      Empty | Leaf of string * element | Tree of string * id list * time * mtree * mtree
+      | Empty
+      | Leaf of string * element
+      | Tree of string * id list * time * mtree * mtree
 
     let empty = Empty
     (* root_hash function returns the top root of the tree, which is the result
@@ -120,19 +124,25 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
        the initial trees as subtrees. Combines left to right. *)
     let combine_trees (t1 : mtree) (t2 : mtree) : mtree =
       let union (l1 : 'a list) (l2 : 'a list) : 'a list =
-        List.fold_left (fun xs x -> if not (List.mem x l1) then xs @ [x] else xs) l1 l2 in
+        List.fold_left (fun xs x -> if not (List.mem x l1)
+                                      then xs @ [x]
+                                    else xs) l1 l2 in
       match t1, t2 with
       | Leaf (s1, e1), Leaf (s2, e2) ->
           let (id11, id12, _, time1), (id21, id22, _, time2) = get e1, get e2 in
-          (Tree (tree_hash (s1 ^ s2), union [id11; id12] [id21; id22], S.min time1 time2, t1, t2))
+          (Tree (tree_hash (s1 ^ s2), union [id11; id12] [id21; id22],
+                 S.min time1 time2, t1, t2))
       | Leaf (s1, e), Tree (s2, lst, time2, _, _) ->
           let (id1, id2, _, time1) = get e in
-          (Tree (tree_hash (s1 ^ s2), union [id1; id2] lst, S.min time1 time2, t1, t2))
+          (Tree (tree_hash (s1 ^ s2), union [id1; id2] lst,
+                 S.min time1 time2, t1, t2))
       | Tree (s1, lst, time1, _, _), Leaf (s2, e) ->
           let (id1, id2, _, time2) = get e in
-          (Tree (tree_hash (s1 ^ s2), union lst [id1; id2], S.min time1 time2, t1, t2))
+          (Tree (tree_hash (s1 ^ s2), union lst [id1; id2],
+                 S.min time1 time2, t1, t2))
       | Tree (s1, l1, time1, _, _), Tree (s2, l2, time2, _, _) ->
-          (Tree (tree_hash (s1 ^ s2), union l1 l2, S.min time1 time2, t1, t2))
+          (Tree (tree_hash (s1 ^ s2), union l1 l2,
+                 S.min time1 time2, t1, t2))
       | Empty, _ -> t2
       | _, Empty -> t1
 
@@ -154,7 +164,8 @@ module MakeMerkle (S : SERIALIZE) (H : HASH) : (MERKLETREE with type element = S
          always a complete binary tree. *)
       let rec split_list (lst : 'a list) : 'a list * 'a list =
         let len = List.length lst in
-        (sublist lst 0 (exp2 (log2 len) - 1), sublist lst (exp2 (log2 len)) (len - 1)) in
+        (sublist lst 0 (exp2 (log2 len) - 1),
+         sublist lst (exp2 (log2 len)) (len - 1)) in
       (* Allows us to build trees from lists that are exact powers of 2. *)
       let rec tree_helper (lst : element list) : mtree =
         let (l, r) = half_list lst in

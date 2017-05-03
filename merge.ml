@@ -16,7 +16,9 @@ let merge_trees (tree1 : MT.mtree ref)
                        (subtree2 : MT.mtree ref) : unit =
     if not ((verify_tree !subtree1) || (verify_tree !subtree2))
       then raise (Invalid_argument "Stop trying to cheat")
-    else if (MT.root_hash subtree1 = MT.root_hash subtree2) || (subtree2 = MT.empty) then ()
+    else if (MT.root_hash subtree1 = MT.root_hash subtree2)
+            || (subtree2 = MT.empty)
+      then ()
     else
       match !subtree1, !subtree2 with
       | Empty, _ -> subtree1 := !subtree2
