@@ -25,7 +25,6 @@ module Miner =
     let verify (str : string) (n : nonce) : bool =
       let combo = str ^ (string_of_int n) in
       let hashed = hash_text combo in
-      print_string " ";
       let first_chars = String.sub hashed 0 leading_zeros in
       first_chars = String.make leading_zeros '0'
 
@@ -58,8 +57,7 @@ module Miner =
       let bad = generate_fake_nonce () in
       assert (not (verify word bad));
       let t = generate_fake_transaction () in
-      let nonce = string_of_int (mine (generate_fake_transaction ()) 100000) in 
+      let nonce = string_of_int (mine t 100000) in
       assert (String.sub (hash_text(t#to_string ^ nonce)) 0 leading_zeros =
         String.make leading_zeros '0') 
   end
-let _ = Miner.test_mining ()

@@ -24,7 +24,6 @@ module OcamlcoinRunner =
         peer_tuples := (n, Unix.time ()) :: !peer_tuples
     (* ping a list of nodes *)
     let ping_peers () =
-      Printf.printf "Length of peers in ping: %d\n" (List.length (get_peers ()));
       List.iter (broadcast_event PingDiscovery) (get_peers ())
     (* update our list of stored nodes and store it in a file *)
     let update_stored_nodes () =
