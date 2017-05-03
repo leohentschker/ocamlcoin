@@ -1,4 +1,4 @@
-(* Follow tutorial of https://ocaml.org/learn/tutorials/introduction_to_gtk.html *)
+(* Followed https://ocaml.org/learn/tutorials/introduction_to_gtk.html *)
 open GdkKeysyms
 open Mining
 open GMain
